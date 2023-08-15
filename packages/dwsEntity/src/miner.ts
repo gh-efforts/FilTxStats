@@ -46,4 +46,12 @@ export class MinerEntity extends Model {
     comment: '长地址',
   })
   address: string;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: '',
+    comment: '是否同步过历史数据',
+  })
+  isSyncHistory: boolean;
 }
