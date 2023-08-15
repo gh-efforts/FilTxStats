@@ -1,0 +1,15 @@
+version: '3'
+services:
+  insight:
+    image: insight
+    container_name: insight
+    restart: unless-stopped
+    build:
+      context: ./ #表示dockerfile文件存在的目录
+      dockerfile: Dockerfile #表示dockerfile的文件名
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 8001:7001
+    env_file:
+      - ./.env
