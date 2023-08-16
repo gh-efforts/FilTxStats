@@ -1,10 +1,12 @@
 import { Config, Init, Inject, Provide } from '@midwayjs/core';
 
-import { MinerSnapshotEntity } from '@dws/entity';
+import {
+  MinerMapping,
+  MinerSnapshotEntity,
+  MinerSnapshotMapping,
+} from '@dws/entity';
 import { PixiuSdk } from '@pixiu/http';
 import { BaseService } from '../../core/baseService';
-import { MinerMapping } from '../mapping/dws/miner';
-import { MinerSnapshotMapping } from '../mapping/dws/minerSnapshot';
 
 @Provide()
 export class MinerSnapshotService extends BaseService<MinerSnapshotEntity> {
