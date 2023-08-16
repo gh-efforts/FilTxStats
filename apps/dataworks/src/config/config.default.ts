@@ -156,5 +156,11 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     password: '6pyNH5R%%Paz',
   };
 
+  config.bull = {
+    defaultQueueOptions: {
+      redis: 'redis://127.0.0.1:6379',
+    },
+  };
+
   return config;
 };
