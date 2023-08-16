@@ -22,8 +22,10 @@ export interface IGasFeeByDateRes {
   minerId: string;
   date: string;
   minerPenalty: string;
-  minerGasDetails: { method: 4 | 6 | 7 | 25 | 26; gas_fee: string }[];
-  PreAndProveBatchBurn: { method: 4 | 6 | 7 | 25 | 26; gas_fee: string }[];
+  minerGasDetails: { method: 4 | 6 | 7 | 25 | 26; gas_fee: string }[] | null;
+  PreAndProveBatchBurn:
+    | { method: 4 | 6 | 7 | 25 | 26; gas_fee: string }[]
+    | null;
 }
 
 interface IGasFeeGroupItem {
@@ -53,6 +55,13 @@ export type MinerBaseRes = {
   initial_pledge: string;
   // 余额
   balance: string;
+};
+
+export type MinerStaticRes = {
+  // 短地址
+  minerId: string;
   // 长地址
   address: string;
+  // 扇区大小/byte
+  sector_size: number;
 };

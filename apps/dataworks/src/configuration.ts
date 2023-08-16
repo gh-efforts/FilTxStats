@@ -1,31 +1,29 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import * as koa from '@midwayjs/koa';
 import * as bull from '@midwayjs/bull';
-import * as validate from '@midwayjs/validate';
-import * as crossDomain from '@midwayjs/cross-domain';
 import {
-  ILifeCycle,
-  IMidwayContainer,
   App,
   Configuration,
+  ILifeCycle,
+  IMidwayContainer,
   Logger,
 } from '@midwayjs/core';
+import * as crossDomain from '@midwayjs/cross-domain';
+import * as jwt from '@midwayjs/jwt';
+import * as koa from '@midwayjs/koa';
 import { IMidwayLogger } from '@midwayjs/logger';
-import * as swagger from '@midwayjs/swagger';
 import * as redis from '@midwayjs/redis';
 import * as sequlize from '@midwayjs/sequelize';
+import * as swagger from '@midwayjs/swagger';
+import * as validate from '@midwayjs/validate';
 import { join } from 'path';
-import * as jwt from '@midwayjs/jwt';
 
-import { RequestIdMiddleware } from './middleware/requestId';
-import { FormatMiddleware } from './middleware/format';
 import { AccessLogMiddleware } from './middleware/accessLog';
-import { JwtMiddleware } from './middleware/jwt';
+import { FormatMiddleware } from './middleware/format';
+import { RequestIdMiddleware } from './middleware/requestId';
+// import { JwtMiddleware } from './middleware/jwt';
 import { NotFoundFilter } from './filter/notfound';
-
-
 
 @Configuration({
   importConfigs: [join(__dirname, './config')],
@@ -52,14 +50,12 @@ export class ContainerLifeCycle implements ILifeCycle {
       RequestIdMiddleware,
       AccessLogMiddleware,
       FormatMiddleware,
-      JwtMiddleware,
+      // JwtMiddleware,
     ]);
     this.app.useFilter([NotFoundFilter]);
   }
 
-  async onServerReady(container: IMidwayContainer): Promise<void> {
-
-  }
+  async onServerReady(container: IMidwayContainer): Promise<void> {}
 
   async onStop(): Promise<void> {}
 }

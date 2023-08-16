@@ -1,1 +1,1 @@
-export * from './src';
+export { PixiuSdk } from './src';

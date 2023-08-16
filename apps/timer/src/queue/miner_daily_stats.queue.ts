@@ -19,6 +19,7 @@ export class MinerDailyStatsProcessor implements IProcessor {
   job: Job;
 
   async execute() {
+    console.log('===');
     try {
       // TODO 每天晚上 2 点 35 分执行同步 miner 昨日数据
     } catch (error) {

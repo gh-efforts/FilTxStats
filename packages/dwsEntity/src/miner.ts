@@ -12,14 +12,10 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
       fields: [{ name: 'id' }],
     },
     {
-      name: 'idx_miner',
+      name: 'idx_miner_address',
+      unique: true,
       using: 'BTREE',
-      fields: [{ name: 'miner' }],
-    },
-    {
-      name: 'idx_address',
-      using: 'BTREE',
-      fields: [{ name: 'address' }],
+      fields: [{ name: 'miner' }, { name: 'address' }],
     },
   ],
 })
@@ -48,9 +44,18 @@ export class MinerEntity extends Model {
   address: string;
 
   @Column({
+    type: DataType.DECIMAL(32, 0),
+    allowNull: true,
+    defaultValue: 0,
+    comment: '有效算力，单位byte',
+    field: 'sector_size',
+  })
+  sectoSize: number;
+
+  @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
-    defaultValue: '',
+    defaultValue: false,
     comment: '是否同步过历史数据',
   })
   isSyncHistory: boolean;

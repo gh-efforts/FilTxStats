@@ -160,6 +160,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     defaultQueueOptions: {
       redis: 'redis://127.0.0.1:6379',
     },
+    clearRepeatJobWhenStart: false,
   };
 
   return config;
