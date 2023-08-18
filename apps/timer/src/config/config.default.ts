@@ -1,8 +1,16 @@
 import * as dwsEntity from '@dws/entity';
 import * as lilyEntity from '@lily/entity';
-
 import { MidwayAppInfo, MidwayConfig } from '@midwayjs/core';
 
+const entity = () => {
+  const arr = [];
+  Object.keys(dwsEntity).map(key => {
+    if (!new RegExp('Mapping').test(key)) {
+      arr.push(dwsEntity[key]);
+    }
+  });
+  return arr;
+};
 export default (appInfo: MidwayAppInfo): MidwayConfig => {
   const config = {} as MidwayConfig;
 
@@ -73,7 +81,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
           bigNumberStrings: true, // bigInt和decimal 以字符串返回
         },
         sync: false, // 本地的时候，可以通过sync: true直接createTable
-        entities: Object.values(dwsEntity),
+        entities: entity(),
       },
       lily: {
         dialect: 'postgres',

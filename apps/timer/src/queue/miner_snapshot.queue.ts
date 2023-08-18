@@ -1,8 +1,6 @@
 import { Context, IProcessor, Processor } from '@midwayjs/bull';
 import { Inject } from '@midwayjs/core';
-
 import { MinerSnapshotService } from '../app/service/minerSnapshot';
-
 @Processor('minerSnapshot', {
   repeat: {
     cron: '*/1 * * * *',
@@ -25,7 +23,7 @@ export class MinerSnapshotProcessor implements IProcessor {
 
   async execute() {
     const { job } = this.ctx;
-
+    console.log('==============');
     try {
       // TODO 每隔 30 分钟，获取一次节点快照数据
       await this.service.syncMinerSnapshot();

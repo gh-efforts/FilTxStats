@@ -1,9 +1,10 @@
-import { IProcessor, Job, Processor } from '@midwayjs/bull';
+import { Context, IProcessor, Processor } from '@midwayjs/bull';
 import { Inject } from '@midwayjs/core';
-
-@Processor('miner', {
+import { MinerDailyService } from '../app/service/minerDailyStats';
+@Processor('minerDailyStats', {
   repeat: {
-    cron: '0 35 2 * * *',
+    // cron: '0 35 2 * * *',
+    cron: '*/1 * * * *',
   },
   attempts: 5,
   backoff: {
@@ -16,20 +17,25 @@ export class MinerDailyStatsProcessor implements IProcessor {
   logger;
 
   @Inject()
-  job: Job;
+  ctx: Context;
+
+  @Inject()
+  service: MinerDailyService;
 
   async execute() {
-    console.log('===');
+    const { job } = this.ctx;
+
     try {
-      // TODO 每天晚上 2 点 35 分执行同步 miner 昨日数据
+      console.log('job');
+      await this.service.syncMinerDailyStats();
     } catch (error) {
+      console.log('error', error);
       // I/O 操作失败，记录日志并重试
-      console.error(`Job ${this.job.id} failed: ${error.message}`);
-      if (this.job.attemptsMade < this.job.opts.attempts) {
+      this.logger.error(`Job ${job.id} failed: ${error.message}`);
+      // TODO send lark message
+      if (job.attemptsMade > job.opts.attempts) {
         // 重试该任务
-        await this.job.retry();
-      } else {
-        // TODO send lark message
+        // await job.retry();
       }
     }
   }
