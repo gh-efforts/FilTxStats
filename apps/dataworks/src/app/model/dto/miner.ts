@@ -11,5 +11,16 @@ export class RegisterDTO {
     description: '节点号',
   })
   @Rule(RuleType.array().items(RuleType.string()).required())
-  miner: string[];
+  miners: string[];
+}
+
+export class SyncHisFromFilfoxDTO {
+  @Rule(RuleType.string().required())
+  miner: string;
+
+  @Rule(RuleType.string().required())
+  startAt: string;
+
+  @Rule(RuleType.string().optional())
+  endAt: string;
 }

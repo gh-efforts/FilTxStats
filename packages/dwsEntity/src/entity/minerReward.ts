@@ -1,7 +1,7 @@
 import { Column, DataType, Table, Model } from 'sequelize-typescript';
 
 @Table({
-  tableName: 'miner_release_record',
+  tableName: 'miner_reward',
   timestamps: true,
   paranoid: true,
   indexes: [
@@ -13,7 +13,7 @@ import { Column, DataType, Table, Model } from 'sequelize-typescript';
     },
   ],
 })
-export class MinerReleaseRecordEntity extends Model {
+export class MinerRewardEntity extends Model {
   @Column({
     autoIncrement: true,
     type: DataType.INTEGER,
@@ -43,33 +43,24 @@ export class MinerReleaseRecordEntity extends Model {
   @Column({
     type: DataType.DECIMAL,
     allowNull: false,
-    comment: '释放金额，单位fil',
-    field: 'release_fil',
+    comment: '区块奖励，单位fil',
+    field: 'reward',
   })
-  releaseFil: string;
-
-  @Column({
-    type: DataType.DECIMAL,
-    allowNull: false,
-    defaultValue: 2,
-    comment: '释放奖励类型：1-线性，2-立即',
-    field: 'type',
-  })
-  type: number;
-
-  @Column({
-    type: DataType.DATE,
-    allowNull: false,
-    comment: '释放日期',
-    field: 'date_at',
-  })
-  dateAt: string;
+  reward: string;
 
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
-    comment: '释放的时间戳',
-    field: 'timestamp',
+    comment: '区块奖励高度',
+    field: 'height',
   })
-  timestamp: number;
+  height: number;
+
+  @Column({
+    type: DataType.TIME,
+    allowNull: false,
+    comment: '区块奖励时间',
+    field: 'time',
+  })
+  time: string;
 }

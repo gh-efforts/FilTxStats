@@ -23,8 +23,18 @@ import { AccessLogMiddleware } from './middleware/accessLog';
 import { FormatMiddleware } from './middleware/format';
 import { RequestIdMiddleware } from './middleware/requestId';
 // import { JwtMiddleware } from './middleware/jwt';
+import * as dwsEntity from '@dws/entity';
 import { NotFoundFilter } from './filter/notfound';
 
+const entity = () => {
+  const arr = [];
+  Object.keys(dwsEntity).map(key => {
+    if (new RegExp('Mapping').test(key)) {
+      arr.push(dwsEntity[key]);
+    }
+  });
+  return arr;
+};
 @Configuration({
   importConfigs: [join(__dirname, './config')],
   conflictCheck: true,
@@ -37,6 +47,7 @@ import { NotFoundFilter } from './filter/notfound';
     validate,
     sequlize,
     jwt,
+    ...entity(),
   ],
 })
 export class ContainerLifeCycle implements ILifeCycle {

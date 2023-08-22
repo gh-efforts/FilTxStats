@@ -1,19 +1,23 @@
 // 导出数据库所有表的 Entity 类
 import { MinerEntity } from './src/entity/miner';
 import { MinerDailyStatsEntity } from './src/entity/minerDailyStats';
+import { MinerLockedRewardEntity } from './src/entity/minerLockedReward';
 import { MinerReleaseRecordEntity } from './src/entity/minerReleaseRecord';
-import { MinerRewardReleaseEntity } from './src/entity/minerRewardRelease';
+import { MinerRewardEntity } from './src/entity/minerReward';
 import { MinerSnapshotEntity } from './src/entity/minerSnapshot';
 
 import { MinerMapping } from './src/mapping/miner';
+import { MinerDailyStatsMapping } from './src/mapping/minerDailyStats';
 import { MinerSnapshotMapping } from './src/mapping/minerSnapshot';
 
 export {
   MinerDailyStatsEntity,
+  MinerDailyStatsMapping,
   MinerEntity,
+  MinerLockedRewardEntity,
   MinerMapping,
   MinerReleaseRecordEntity,
-  MinerRewardReleaseEntity,
+  MinerRewardEntity,
   MinerSnapshotEntity,
   MinerSnapshotMapping,
 };

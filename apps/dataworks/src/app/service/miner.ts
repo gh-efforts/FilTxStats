@@ -1,11 +1,16 @@
-import { Config, Init, Inject, Provide } from '@midwayjs/core';
-
 import { MinerEntity, MinerMapping, MinerSnapshotMapping } from '@dws/entity';
+import { FilfoxSdk } from '@filfox/http';
+import * as bull from '@midwayjs/bull';
+import { Config, Init, Inject, Provide } from '@midwayjs/core';
 import { PixiuSdk } from '@pixiu/http';
 import { BaseService } from '../../core/baseService';
+import { SyncHisFromFilfoxDTO } from '../model/dto/miner';
 
 @Provide()
 export class MinerService extends BaseService<MinerEntity> {
+  @Inject()
+  bullFramework: bull.Framework;
+
   @Inject()
   mapping: MinerMapping;
 
@@ -15,11 +20,17 @@ export class MinerService extends BaseService<MinerEntity> {
   @Config('pixiuConfig.url')
   pixiuUrl;
 
+  @Config('filfoxConfig.url')
+  filfoxUrl;
+
   private pixiu: PixiuSdk;
+
+  filfox: FilfoxSdk;
 
   @Init()
   async initMethod() {
     this.pixiu = new PixiuSdk(this.pixiuUrl);
+    this.filfox = new FilfoxSdk(this.filfoxUrl);
   }
 
   async register(miners: string[]) {
@@ -53,5 +64,32 @@ export class MinerService extends BaseService<MinerEntity> {
       ]);
     }
     return true;
+  }
+
+  async syncMinerRewardByFilfox(param: SyncHisFromFilfoxDTO) {
+    const { miner, startAt, endAt } = param;
+    // 获取 Processor 相关的队列
+    const minerRewardQueue = this.bullFramework.getQueue('minerReward');
+    console.log('minerRewardQueue', minerRewardQueue);
+    // 立即执行这个任务
+    await minerRewardQueue.runJob({
+      miner,
+      startAt,
+      endAt,
+      isHisiory: true,
+    });
+
+    // const [startHeight, endHeight] = [
+    //   getHeightByTime(startAt),
+    //   getHeightByTime(endAt),
+    // ];
+
+    // const rewards = await this.filfox.getMinerReward(
+    //   miner,
+    //   startHeight,
+    //   endHeight
+    // );
+    // console.log('records', rewards);
+    // await this.minerSnapshotMapping.addMinerReward(records);
   }
 }

@@ -5,7 +5,7 @@ import {
   MinerDailyStatsMapping,
   MinerMapping,
 } from '@dws/entity';
-import { PixiuSdk } from '@pixiu/http';
+import { IGasFeeByDateRes, PixiuSdk } from '@pixiu/http';
 import * as dayjs from 'dayjs';
 import { BaseService } from '../../core/baseService';
 
@@ -27,6 +27,46 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
     this.pixiu = new PixiuSdk(this.pixiuUrl);
   }
 
+  private _getMinerGas(minerGas: IGasFeeByDateRes[], method?: number) {
+    return minerGas.map(item => {
+      const {
+        minerGasDetails,
+        minerPenalty = 0,
+        PreAndProveBatchBurn = [],
+      } = item;
+      let gas = 0;
+      console.log('minerGasDetails', minerGasDetails);
+      minerGasDetails?.forEach(gasDetail => {
+        //  miner gas 费
+        if (!method && gasDetail.method !== 5) {
+          gas += Number(gasDetail.gas_fee);
+        }
+        // method = 5, 为扇区的 wp 消耗
+        if (method && gasDetail.method === method) {
+          gas += Number(gasDetail.gas_fee);
+        }
+      });
+
+      PreAndProveBatchBurn?.forEach(gasDetail => {
+        gas += Number(gasDetail.gas_fee);
+      });
+
+      gas += Number(minerPenalty);
+
+      return {
+        ...item,
+        gas,
+      };
+    });
+  }
+
+  private _getMinerResult(miner: string, list: any[]) {
+    const minerResult = list.find(
+      item => item.miner_id === miner || item.minerId === miner
+    );
+    return minerResult || {};
+  }
+
   async syncMinerDailyStats() {
     console.log('======启动');
     const date = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
@@ -40,12 +80,23 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
       this.pixiu.getMinerDcSealed(miners, date),
       this.pixiu.getMinerPledge(miners, date),
     ]);
-    console.log(
-      'gasFee, reward, dcSealed, pledge',
-      gasFee,
-      reward,
-      dcSealed,
-      pledge
-    );
+
+    const gasList = this._getMinerGas(gasFee);
+    const wpList = this._getMinerGas(gasFee, 5);
+
+    const minerDailyStats = miners.map(miner => {
+      return {
+        miner,
+        reward: this._getMinerResult(miner, reward).reward || 0,
+        powerIncrease24H: this._getMinerResult(miner, dcSealed).sealed || 0,
+        gas: this._getMinerResult(miner, gasList).gas || 0,
+        windowPost: this._getMinerResult(miner, wpList).gas || 0,
+        pledgeConsume: this._getMinerResult(miner, pledge).pledge_incr || 0,
+        pledgeReturn: this._getMinerResult(miner, pledge).pledge_reduce || 0,
+        dateAt: date,
+      };
+    });
+    console.log('minerDailyStats', minerDailyStats);
+    await this.mapping.bulkCreateMinerDailyStats(minerDailyStats);
   }
 }

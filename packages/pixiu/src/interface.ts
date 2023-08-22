@@ -22,9 +22,11 @@ export interface IGasFeeByDateRes {
   minerId: string;
   date: string;
   minerPenalty: string;
-  minerGasDetails: { method: 4 | 6 | 7 | 25 | 26; gas_fee: string }[] | null;
+  minerGasDetails:
+    | { method: 5 | 4 | 6 | 7 | 25 | 26; gas_fee: string }[]
+    | null;
   PreAndProveBatchBurn:
-    | { method: 4 | 6 | 7 | 25 | 26; gas_fee: string }[]
+    | { method: 5 | 4 | 6 | 7 | 25 | 26; gas_fee: string }[]
     | null;
 }
 
@@ -57,11 +59,34 @@ export type MinerBaseRes = {
   balance: string;
 };
 
+export type MinerRewardRes = {
+  // 节点名称
+  minerId: string;
+  // 奖励
+  reward: string;
+};
+
 export type MinerStaticRes = {
-  // 短地址
+  // 节点 id
   minerId: string;
   // 长地址
   address: string;
   // 扇区大小/byte
   sector_size: number;
+};
+
+export type MinerDcSealedRes = {
+  // 节点id
+  minerId: string;
+  // 算力
+  sealed: string;
+};
+
+export type MinerPledgeRes = {
+  // 节点id
+  miner_id: string;
+  // 质押币消耗
+  pledge_incr: number;
+  // 质押币返还
+  pledge_reduce: number;
 };

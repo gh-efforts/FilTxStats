@@ -1,10 +1,23 @@
 import axios, { Axios } from 'axios';
-import {
+import type {
   IGasFeeByDateRes,
   IGet,
   MinerBaseRes,
+  MinerDcSealedRes,
+  MinerPledgeRes,
+  MinerRewardRes,
   MinerStaticRes,
 } from './interface';
+
+export type {
+  IGasFeeByDateRes,
+  IGet,
+  MinerBaseRes,
+  MinerDcSealedRes,
+  MinerPledgeRes,
+  MinerRewardRes,
+  MinerStaticRes,
+};
 
 import * as _ from 'lodash';
 
@@ -16,12 +29,19 @@ export class PixiuSdk {
    * @param url pixiu访问地址
    */
   constructor(url: string) {
+    console.log('url', url);
     this._instance = axios.create({
       baseURL: url,
       timeout: 1000 * 60 * 2,
     });
   }
 
+  /**
+   *  http Get 请求
+   * @param params query 参数
+   * @param errorMsg 错误信息
+   * @param errorCount 错误次数， 超过 3 次则抛出错误
+   */
   private async _get(
     params: IGet,
     errorMsg: string[] = [],
@@ -51,6 +71,13 @@ export class PixiuSdk {
     }
   }
 
+  /**
+   * 根据 count 数量拆分 minerIds，分批请求
+   * @param url 接口地址
+   * @param minerIds 节点列表
+   * @param count 每次请求的节点数量
+   * @param params 参数
+   */
   private async requestChunk(
     url: string,
     minerIds: string[],
@@ -71,36 +98,101 @@ export class PixiuSdk {
           ...params,
         },
       });
-      arr.push(...res.data);
+      if (res.data instanceof Array) {
+        arr.push(...res.data);
+      } else {
+        arr.push(...res.data.list);
+      }
     }
 
     return arr;
   }
 
-  // 获取  miner 数据快照
+  /**
+   * 获取  miner 数据快照
+   * @param minerIds 节点列表
+   */
   public async getMinerBaseInfo(minerIds: string[]): Promise<MinerBaseRes[]> {
     return this.requestChunk('/v2/miner/minerBaseInfo', minerIds, 5);
   }
 
-  // 获取 miner 基础静态数据
+  /**
+   * 获取 miner 基础静态数据
+   * @param minerIds 节点列表
+   */
   public async getMinerStaticState(
     minerIds: string[]
   ): Promise<MinerStaticRes[]> {
     return this.requestChunk('/v2/miner/minerStaticState', minerIds, 5);
   }
-
-  public async gasFeeByDate(
-    minerName: string,
+  /**
+   *  获取 miner gas fee
+   * @param minerIds 节点列表
+   * @param date 日期
+   */
+  public async gasMinerGasFee(
+    minerIds: string[],
     date: string
   ): Promise<IGasFeeByDateRes[]> {
-    const res = await this._get({
-      url: `/v2/miner/gasFeeByDate`,
-      query: {
-        minerId: minerName,
-        date,
-      },
+    return this.requestChunk('/v2/miner/gasFeeByDate', minerIds, 5, {
+      date,
     });
+  }
 
-    return res.data;
+  /**
+   * 获取 miner 奖励
+   * @param minerIds 节点列表
+   * @param startAt 起始日期
+   * @param endAt 终止日期
+   */
+  public async getMinerReward(
+    minerIds: string[],
+    startAt: number,
+    endAt: number
+  ): Promise<MinerRewardRes[]> {
+    return this.requestChunk('/v2/miner/rewards', minerIds, 5, {
+      startTime: startAt,
+      endTime: endAt,
+    });
+  }
+
+  /**
+   *
+   * 获取算力新增
+   * @param {string[]} minerIds 节点列表
+   * @param {string} date 日期
+   */
+  public async getMinerDcSealed(
+    minerIds: string[],
+    date: string
+  ): Promise<MinerDcSealedRes[]> {
+    return this.requestChunk('/v2/chain/dc/sealed', minerIds, 5, {
+      date,
+    });
+  }
+
+  /**
+   * 质押币
+   * @param minerIds 节点列表
+   * @param date 日期
+   */
+  public async getMinerPledge(
+    minerIds: string[],
+    date: string
+  ): Promise<MinerPledgeRes[]> {
+    return this.requestChunk('/v2/miner/minerPledge', minerIds, 5, {
+      date,
+    });
+  }
+
+  public async getMinerRewardDetail(
+    minerIds: string[],
+    startAt: number,
+    endAt: number
+  ) {
+    return this.requestChunk('/v2/miner/rewardDetail', minerIds, 5, {
+      startTime: startAt,
+      endTime: endAt,
+    });
   }
 }

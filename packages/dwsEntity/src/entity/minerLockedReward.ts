@@ -1,7 +1,7 @@
 import { Column, DataType, Table, Model } from 'sequelize-typescript';
 
 @Table({
-  tableName: 'miner_release_record',
+  tableName: 'miner_locked_reward',
   timestamps: true,
   paranoid: true,
   indexes: [
@@ -13,7 +13,7 @@ import { Column, DataType, Table, Model } from 'sequelize-typescript';
     },
   ],
 })
-export class MinerReleaseRecordEntity extends Model {
+export class MinerLockedRewardEntity extends Model {
   @Column({
     autoIncrement: true,
     type: DataType.INTEGER,
@@ -43,33 +43,49 @@ export class MinerReleaseRecordEntity extends Model {
   @Column({
     type: DataType.DECIMAL,
     allowNull: false,
-    comment: '释放金额，单位fil',
-    field: 'release_fil',
+    comment: '总共锁仓的奖励，单位fil',
+    field: 'locked_reward',
   })
-  releaseFil: string;
+  lockedReward: string;
 
   @Column({
     type: DataType.DECIMAL,
     allowNull: false,
-    defaultValue: 2,
-    comment: '释放奖励类型：1-线性，2-立即',
-    field: 'type',
+    comment: '每天释放金额，单位fil',
+    field: 'daily_reward',
   })
-  type: number;
+  dailyReward: string;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.TIME,
     allowNull: false,
-    comment: '释放日期',
-    field: 'date_at',
+    comment: '锁仓奖励开始释放的时间',
+    field: 'time',
   })
-  dateAt: string;
+  time: string;
 
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
-    comment: '释放的时间戳',
-    field: 'timestamp',
+    comment: '锁仓奖励开始释放的高度',
+    field: 'height',
   })
-  timestamp: number;
+  height: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    comment: '奖励开始释放的小时数',
+    field: 'hour',
+  })
+  hour: number;
+
+  @Column({
+    type: DataType.TINYINT,
+    allowNull: false,
+    defaultValue: 0,
+    comment: '0未完成，1完成',
+    field: 'is_completed',
+  })
+  isCompleted: number;
 }

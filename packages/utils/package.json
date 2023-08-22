@@ -1,0 +1,16 @@
+{
+  "name": "@dws/utils",
+  "main": "index.ts",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.9"
+  },
+  "devDependencies": {
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
