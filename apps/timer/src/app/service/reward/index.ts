@@ -46,7 +46,7 @@ export class RewardService {
   // 从 filfox 同步 miner 奖励历史
   async syncMinerRewardHistory(miner: string, startAt: string, endAt: string) {
     const t = await this.defaultDataSource.transaction();
-
+    throw Error('test message');
     try {
       const [startHeight, endHeight] = [
         getHeightByTime(startAt),

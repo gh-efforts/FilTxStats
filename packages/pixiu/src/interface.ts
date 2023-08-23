@@ -83,10 +83,26 @@ export type MinerDcSealedRes = {
 };
 
 export type MinerPledgeRes = {
-  // 节点id
+  // 节点名称
   miner_id: string;
   // 质押币消耗
   pledge_incr: number;
   // 质押币返还
   pledge_reduce: number;
+};
+
+export type MinerRewardDetailRes = {
+  // 节点名称
+  miner_id: string;
+
+  Rewards: {
+    // 节点名称
+    miner_id: string;
+    // 区块高度
+    height: number;
+    // 区块id
+    cid: string;
+    // 奖励
+    reward: string;
+  }[];
 };

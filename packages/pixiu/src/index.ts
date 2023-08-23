@@ -5,6 +5,7 @@ import type {
   MinerBaseRes,
   MinerDcSealedRes,
   MinerPledgeRes,
+  MinerRewardDetailRes,
   MinerRewardRes,
   MinerStaticRes,
 } from './interface';
@@ -15,6 +16,7 @@ export type {
   MinerBaseRes,
   MinerDcSealedRes,
   MinerPledgeRes,
+  MinerRewardDetailRes,
   MinerRewardRes,
   MinerStaticRes,
 };
@@ -29,7 +31,6 @@ export class PixiuSdk {
    * @param url pixiu访问地址
    */
   constructor(url: string) {
-    console.log('url', url);
     this._instance = axios.create({
       baseURL: url,
       timeout: 1000 * 60 * 2,
@@ -185,11 +186,17 @@ export class PixiuSdk {
     });
   }
 
+  /**
+   * 按照范围日期获取 miner 的区块奖励，区块维度
+   * @param minerIds 节点列表
+   * @param startAt 起始时间 unix
+   * @param endAt 结束时间 unix
+   */
   public async getMinerRewardDetail(
     minerIds: string[],
     startAt: number,
     endAt: number
-  ) {
+  ): Promise<MinerRewardDetailRes[]> {
     return this.requestChunk('/v2/miner/rewardDetail', minerIds, 5, {
       startTime: startAt,
       endTime: endAt,

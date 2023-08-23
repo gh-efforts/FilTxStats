@@ -1,10 +1,12 @@
 import { Context, IProcessor, Processor } from '@midwayjs/bull';
 import { Inject } from '@midwayjs/core';
+import MyError from '../app/comm/myError';
 import { MinerDailyService } from '../app/service/minerDailyStats';
+
+import { LarkSdk } from '@lark/core';
 @Processor('minerDailyStats', {
   repeat: {
     cron: '0 35 2 * * *',
-    // cron: '*/ * * * *',
   },
   attempts: 5,
   backoff: {
@@ -19,8 +21,14 @@ export class MinerDailyStatsProcessor implements IProcessor {
   @Inject()
   ctx: Context;
 
+  lark: LarkSdk;
+
   @Inject()
   service: MinerDailyService;
+
+  constructor() {
+    this.lark = new LarkSdk();
+  }
 
   async execute() {
     const { job } = this.ctx;
@@ -29,14 +37,23 @@ export class MinerDailyStatsProcessor implements IProcessor {
       console.log('job');
       await this.service.syncMinerDailyStats();
     } catch (error) {
-      console.log('error', error);
       // I/O 操作失败，记录日志并重试
       this.logger.error(`Job ${job.id} failed: ${error.message}`);
+      const attemptsMade = job.attemptsMade + 1;
+      this.logger.error(`Job: ${job.id} 任务已经重试的次数: `, attemptsMade);
+      this.logger.error(
+        `Job: ${job.id} 最多可以重试的次数: `,
+        job.opts.attempts
+      );
       // TODO send lark message
-      if (job.attemptsMade > job.opts.attempts) {
+      if (attemptsMade < job.opts.attempts) {
         // 重试该任务
-        // await job.retry();
+        this.logger.error(`Job ${job.id} start retry`);
+      } else {
+        this.logger.error(`Job ${job.id} retry failed`);
+        await this.lark.larkNotify(error.message);
       }
+      throw new MyError('syncMinerDailyStats error', error.message);
     }
   }
 

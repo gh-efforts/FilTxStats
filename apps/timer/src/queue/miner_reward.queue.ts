@@ -3,6 +3,8 @@ import { Inject } from '@midwayjs/core';
 import MyError from '../app/comm/myError';
 import { RewardService } from '../app/service/reward';
 
+import { LarkSdk } from '@lark/core';
+
 type MinerRewardParams = {
   miner: string;
   startAt: string;
@@ -17,8 +19,14 @@ export class MinerRewardProcessor implements IProcessor {
   @Inject()
   ctx: Context;
 
+  lark: LarkSdk;
+
   @Inject()
   rewardService: RewardService;
+
+  constructor() {
+    this.lark = new LarkSdk();
+  }
 
   async execute(params: MinerRewardParams) {
     const { job } = this.ctx;
@@ -44,7 +52,7 @@ export class MinerRewardProcessor implements IProcessor {
         this.logger.error(`Job ${job.id} start retry`);
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
-        // TODO send error message lark
+        await this.lark.larkNotify(error.message);
       }
       throw new MyError('syncMinerRewardHistory error', error.message);
     }
