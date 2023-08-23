@@ -4,6 +4,7 @@ import { Context, IProcessor, Processor } from '@midwayjs/bull';
 import { Inject } from '@midwayjs/core';
 import MyError from '../app/comm/myError';
 import { MinerSnapshotService } from '../app/service/minerSnapshot';
+
 @Processor('minerSnapshot', {
   repeat: {
     cron: '*/30 * * * *',
@@ -36,9 +37,10 @@ export class MinerSnapshotProcessor implements IProcessor {
       // TODO 每隔 30 分钟，获取一次节点快照数据
       await this.service.syncMinerSnapshot();
     } catch (error) {
+      const attemptsMade = job.attemptsMade + 1;
+
       // I/O 操作失败，记录日志并重试
       this.logger.error(`Job ${job.id} failed: ${error.message}`);
-      const attemptsMade = job.attemptsMade + 1;
       this.logger.error(`Job: ${job.id} 任务已经重试的次数: `, attemptsMade);
       this.logger.error(
         `Job: ${job.id} 最多可以重试的次数: `,

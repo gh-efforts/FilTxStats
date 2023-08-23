@@ -1,4 +1,6 @@
+import { LarkSdk } from '@lark/core';
 import axios, { Axios } from 'axios';
+import * as _ from 'lodash';
 import type {
   IGasFeeByDateRes,
   IGet,
@@ -21,11 +23,10 @@ export type {
   MinerStaticRes,
 };
 
-import * as _ from 'lodash';
-
 export class PixiuSdk {
   private _instance: Axios;
 
+  private lark: LarkSdk;
   /**
    *
    * @param url pixiu访问地址
@@ -35,6 +36,8 @@ export class PixiuSdk {
       baseURL: url,
       timeout: 1000 * 60 * 2,
     });
+
+    this.lark = new LarkSdk();
   }
 
   /**
@@ -65,8 +68,8 @@ export class PixiuSdk {
       errorMsg.push(message);
 
       if (errorCount >= 3) {
-        // TODO send to lark
-        throw new Error(JSON.stringify(errorMsg));
+        await this.lark.larkNotify(errorMsg.join('\n'));
+        throw new Error(errorMsg.join('\n'));
       }
       return this._get(params, errorMsg, errorCount + 1);
     }

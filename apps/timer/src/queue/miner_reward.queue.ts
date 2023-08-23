@@ -9,7 +9,7 @@ type MinerRewardParams = {
   miner: string;
   startAt: string;
   endAt: string;
-  isHisiory: boolean;
+  isHisiory?: boolean;
 };
 @Processor('minerReward')
 export class MinerRewardProcessor implements IProcessor {
@@ -19,10 +19,10 @@ export class MinerRewardProcessor implements IProcessor {
   @Inject()
   ctx: Context;
 
-  lark: LarkSdk;
-
   @Inject()
   rewardService: RewardService;
+
+  lark: LarkSdk;
 
   constructor() {
     this.lark = new LarkSdk();
@@ -30,17 +30,17 @@ export class MinerRewardProcessor implements IProcessor {
 
   async execute(params: MinerRewardParams) {
     const { job } = this.ctx;
-    console.log('params', params);
-    const { miner, startAt, endAt, isHisiory } = params;
+    const { miner, startAt, endAt, isHisiory = false } = params;
 
     try {
       if (isHisiory) {
         await this.rewardService.syncMinerRewardHistory(miner, startAt, endAt);
       }
     } catch (error) {
+      const attemptsMade = job.attemptsMade + 1;
+
       // I/O 操作失败，记录日志并重试
       this.logger.error(`Job ${job.id} failed: ${error.message}`);
-      const attemptsMade = job.attemptsMade + 1;
       this.logger.error(`Job: ${job.id} 任务已经重试的次数: `, attemptsMade);
       this.logger.error(
         `Job: ${job.id} 最多可以重试的次数: `,

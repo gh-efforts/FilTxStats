@@ -21,10 +21,10 @@ export class MinerDailyStatsProcessor implements IProcessor {
   @Inject()
   ctx: Context;
 
-  lark: LarkSdk;
-
   @Inject()
   service: MinerDailyService;
+
+  lark: LarkSdk;
 
   constructor() {
     this.lark = new LarkSdk();
@@ -34,12 +34,12 @@ export class MinerDailyStatsProcessor implements IProcessor {
     const { job } = this.ctx;
 
     try {
-      console.log('job');
       await this.service.syncMinerDailyStats();
     } catch (error) {
+      const attemptsMade = job.attemptsMade + 1;
+
       // I/O 操作失败，记录日志并重试
       this.logger.error(`Job ${job.id} failed: ${error.message}`);
-      const attemptsMade = job.attemptsMade + 1;
       this.logger.error(`Job: ${job.id} 任务已经重试的次数: `, attemptsMade);
       this.logger.error(
         `Job: ${job.id} 最多可以重试的次数: `,
