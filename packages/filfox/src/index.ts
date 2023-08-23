@@ -1,5 +1,6 @@
-import { getTimeByHeight } from '@dws/utils';
+import { bigDiv, bigMul, getTimeByHeight, transferFilValue } from '@dws/utils';
 import axios, { Axios } from 'axios';
+import * as dayjs from 'dayjs';
 import * as _ from 'lodash';
 import type { IBlocksRes, IGet } from './interface';
 
@@ -109,8 +110,11 @@ export class FilfoxSdk {
       miner: string;
       cid: string;
       height: number;
-      reward: number;
+      reward: string;
       time: string;
+      hour: number;
+      lockedReward: string;
+      dailyReward: string;
     }[] = [];
     let page = 0;
     while (true) {
@@ -128,17 +132,25 @@ export class FilfoxSdk {
         continue;
       }
 
-      blocks.forEach(({ height, reward, cid }) => {
+      blocks.forEach(({ height, reward: rawReward, cid }) => {
         if (height < startHeight) {
           return records;
         }
         if (height <= endHeight) {
+          const time = getTimeByHeight(height);
+          const hour = dayjs(time).hour();
+          const reward = transferFilValue(rawReward);
+          const lockedReward = bigMul(reward, 0.75).toString();
+          const dailyReward = bigDiv(lockedReward, 180).toString();
           records.push({
             miner,
             cid,
             height,
-            reward: Number(reward) / 1e18,
-            time: getTimeByHeight(height),
+            hour,
+            reward,
+            lockedReward,
+            dailyReward,
+            time: dayjs(time).add(1, 'day').format('YYYY-MM-DD HH:mm:ss'),
           });
         }
       });

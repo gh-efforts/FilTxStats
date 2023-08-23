@@ -35,7 +35,6 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
         PreAndProveBatchBurn = [],
       } = item;
       let gas = 0;
-      console.log('minerGasDetails', minerGasDetails);
       minerGasDetails?.forEach(gasDetail => {
         //  miner gas 费
         if (!method && gasDetail.method !== 5) {
@@ -68,7 +67,6 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
   }
 
   async syncMinerDailyStats() {
-    console.log('======启动');
     const date = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
     const startAt = dayjs().subtract(1, 'day').startOf('day').valueOf();
     const endAt = dayjs().subtract(1, 'day').endOf('day').valueOf();
@@ -96,7 +94,6 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
         dateAt: date,
       };
     });
-    console.log('minerDailyStats', minerDailyStats);
     await this.mapping.bulkCreateMinerDailyStats(minerDailyStats);
   }
 }

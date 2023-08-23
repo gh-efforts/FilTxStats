@@ -155,6 +155,10 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     url: 'https://pixiu-mainnet.filmeta.net',
   };
 
+  config.filfoxConfig = {
+    url: 'https://filfox.info/api/v1',
+  };
+
   config.galaxyConfig = {
     url: 'https://pixiu-mainnet.filmeta.net',
   };

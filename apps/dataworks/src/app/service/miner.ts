@@ -1,10 +1,11 @@
 import { MinerEntity, MinerMapping, MinerSnapshotMapping } from '@dws/entity';
-import { FilfoxSdk } from '@filfox/http';
 import * as bull from '@midwayjs/bull';
 import { Config, Init, Inject, Provide } from '@midwayjs/core';
 import { PixiuSdk } from '@pixiu/http';
 import { BaseService } from '../../core/baseService';
-import { SyncHisFromFilfoxDTO } from '../model/dto/miner';
+import { SyncMinerRewardHistoryDTO } from '../model/dto/miner';
+
+import * as dayjs from 'dayjs';
 
 @Provide()
 export class MinerService extends BaseService<MinerEntity> {
@@ -20,17 +21,11 @@ export class MinerService extends BaseService<MinerEntity> {
   @Config('pixiuConfig.url')
   pixiuUrl;
 
-  @Config('filfoxConfig.url')
-  filfoxUrl;
-
   private pixiu: PixiuSdk;
-
-  filfox: FilfoxSdk;
 
   @Init()
   async initMethod() {
     this.pixiu = new PixiuSdk(this.pixiuUrl);
-    this.filfox = new FilfoxSdk(this.filfoxUrl);
   }
 
   async register(miners: string[]) {
@@ -44,6 +39,13 @@ export class MinerService extends BaseService<MinerEntity> {
         minerBases.find(item => item.minerId === miner),
         minerSnapshots.find(item => item.miner_id === miner),
       ];
+
+      const startAt = dayjs()
+        .subtract(180, 'day')
+        .format('YYYY-MM-DD HH:mm:ss');
+
+      const endAt = dayjs().format('YYYY-MM-DD HH:mm:ss');
+
       await Promise.all([
         // 新增 miner
         this.mapping.addMiner({
@@ -59,37 +61,40 @@ export class MinerService extends BaseService<MinerEntity> {
           balance: minerSnapshot.balance || 0,
           pledge: minerSnapshot.initial_pledge || 0,
           lockFunds: minerSnapshot.locked_funds || 0,
-          dateAt: new Date(),
         }),
       ]);
+
+      // 开始同步历史数据
+      await this.syncMinerRewardHistory({
+        miner,
+        startAt,
+        endAt,
+      });
     }
     return true;
   }
 
-  async syncMinerRewardByFilfox(param: SyncHisFromFilfoxDTO) {
-    const { miner, startAt, endAt } = param;
+  async syncMinerRewardHistory(param: SyncMinerRewardHistoryDTO) {
     // 获取 Processor 相关的队列
-    const minerRewardQueue = this.bullFramework.getQueue('minerReward');
-    console.log('minerRewardQueue', minerRewardQueue);
+    const minerRewardQueue = this.bullFramework.ensureQueue('minerReward');
+
+    const opts = {
+      // 失败可重试次数
+      attempts: 5,
+      // 固定 5 秒后开始重试
+      backoff: {
+        type: 'fixed',
+        delay: 5000,
+      },
+    };
     // 立即执行这个任务
-    await minerRewardQueue.runJob({
-      miner,
-      startAt,
-      endAt,
-      isHisiory: true,
-    });
-
-    // const [startHeight, endHeight] = [
-    //   getHeightByTime(startAt),
-    //   getHeightByTime(endAt),
-    // ];
-
-    // const rewards = await this.filfox.getMinerReward(
-    //   miner,
-    //   startHeight,
-    //   endHeight
-    // );
-    // console.log('records', rewards);
-    // await this.minerSnapshotMapping.addMinerReward(records);
+    await minerRewardQueue?.add(
+      {
+        ...param,
+        isHisiory: true,
+      },
+      opts
+    );
+    return true;
   }
 }

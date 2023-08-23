@@ -17,8 +17,8 @@ export class MinerController {
     summary: '从filfox同步历史区块奖励数据',
   })
   async getMinerHisRewardFromFilfox(
-    @Body(ALL) param: MinerDTO.SyncHisFromFilfoxDTO
+    @Body(ALL) param: MinerDTO.SyncMinerRewardHistoryDTO
   ) {
-    return this.service.syncMinerRewardByFilfox(param);
+    return this.service.syncMinerRewardHistory(param);
   }
 }

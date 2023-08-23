@@ -14,7 +14,7 @@ export class RegisterDTO {
   miners: string[];
 }
 
-export class SyncHisFromFilfoxDTO {
+export class SyncMinerRewardHistoryDTO {
   @Rule(RuleType.string().required())
   miner: string;
 

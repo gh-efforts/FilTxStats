@@ -1,3 +1,5 @@
+import * as dayjs from 'dayjs';
+
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
@@ -79,8 +81,9 @@ export class MinerSnapshotEntity extends Model {
   lockFunds: number;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.DECIMAL,
     allowNull: false,
+    defaultValue: dayjs().format('YYYY-MM-DD'),
     comment: '日期',
     field: 'date_at',
   })

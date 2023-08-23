@@ -8,6 +8,9 @@ import { MinerSnapshotEntity } from './src/entity/minerSnapshot';
 
 import { MinerMapping } from './src/mapping/miner';
 import { MinerDailyStatsMapping } from './src/mapping/minerDailyStats';
+import { MinerLockedRewardMapping } from './src/mapping/minerLockedReward';
+import { MinerReleaseRecordMapping } from './src/mapping/minerReleaseRecord';
+import { MinerRewardMapping } from './src/mapping/minerReward';
 import { MinerSnapshotMapping } from './src/mapping/minerSnapshot';
 
 export {
@@ -15,9 +18,12 @@ export {
   MinerDailyStatsMapping,
   MinerEntity,
   MinerLockedRewardEntity,
+  MinerLockedRewardMapping,
   MinerMapping,
   MinerReleaseRecordEntity,
+  MinerReleaseRecordMapping,
   MinerRewardEntity,
+  MinerRewardMapping,
   MinerSnapshotEntity,
   MinerSnapshotMapping,
 };
