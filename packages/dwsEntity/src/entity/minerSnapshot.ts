@@ -39,7 +39,7 @@ export class MinerSnapshotEntity extends Model {
   minerName: string;
 
   @Column({
-    type: DataType.DECIMAL(32, 0),
+    type: DataType.DECIMAL,
     allowNull: true,
     defaultValue: 0,
     comment: '原始算力，单位byte',
@@ -48,7 +48,7 @@ export class MinerSnapshotEntity extends Model {
   rawPower: number;
 
   @Column({
-    type: DataType.DECIMAL(32, 0),
+    type: DataType.DECIMAL,
     allowNull: true,
     defaultValue: 0,
     comment: '有效算力，单位byte',
@@ -56,7 +56,7 @@ export class MinerSnapshotEntity extends Model {
   power: number;
 
   @Column({
-    type: DataType.DECIMAL(30, 18),
+    type: DataType.DECIMAL,
     allowNull: false,
     defaultValue: 0.0,
     comment: '余额，单位fil',
@@ -64,7 +64,7 @@ export class MinerSnapshotEntity extends Model {
   balance: number;
 
   @Column({
-    type: DataType.DECIMAL(30, 18),
+    type: DataType.DECIMAL,
     allowNull: false,
     defaultValue: 0.0,
     comment: '扇区质押币，单位fil',
@@ -72,7 +72,7 @@ export class MinerSnapshotEntity extends Model {
   pledge: number;
 
   @Column({
-    type: DataType.DECIMAL(30, 18),
+    type: DataType.DECIMAL,
     allowNull: false,
     defaultValue: 0.0,
     comment: '锁仓资产，单位fil',
@@ -81,7 +81,7 @@ export class MinerSnapshotEntity extends Model {
   lockFunds: number;
 
   @Column({
-    type: DataType.DECIMAL,
+    type: DataType.DATEONLY,
     allowNull: false,
     defaultValue: dayjs().format('YYYY-MM-DD'),
     comment: '日期',
