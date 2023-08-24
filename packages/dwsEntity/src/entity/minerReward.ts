@@ -1,4 +1,4 @@
-import { Column, DataType, Table, Model } from 'sequelize-typescript';
+import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
   tableName: 'miner_reward',
@@ -10,6 +10,17 @@ import { Column, DataType, Table, Model } from 'sequelize-typescript';
       unique: true,
       using: 'BTREE',
       fields: [{ name: 'id' }],
+    },
+    {
+      name: 'idx_miner',
+      using: 'BTREE',
+      fields: [{ name: 'miner' }],
+    },
+    {
+      name: 'idx_unique',
+      unique: true,
+      using: 'BTREE',
+      fields: [{ name: 'miner' }, { name: 'cid' }, { name: 'height' }],
     },
   ],
 })

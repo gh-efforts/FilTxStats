@@ -56,7 +56,16 @@ export class MinerEntity extends Model {
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: false,
-    comment: '是否同步过历史数据',
+    comment: '是否同步过奖励历史数据',
+    field: 'is_sync_reward_history',
   })
-  isSyncHistory: boolean;
+  isSyncRewardHistory: boolean;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: false,
+    comment: '区块奖励结束时间',
+    field: 'reward_end_at',
+  })
+  rewardEndAt: string;
 }

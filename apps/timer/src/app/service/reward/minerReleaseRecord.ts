@@ -36,6 +36,7 @@ export class MinerReleaseRecordService extends BaseService<MinerReleaseRecordEnt
     });
     return this.mapping.bulkCreateMinerReleaseRecord(data, {
       transaction: t,
+      updateOnDuplicate: ['releaseFil', 'updatedAt'],
     });
   }
 
@@ -53,7 +54,8 @@ export class MinerReleaseRecordService extends BaseService<MinerReleaseRecordEnt
       const releaseFil = bigDiv(lockedReward, 180).toString();
       let dateAt = dayjs(time).add(1, 'day').format('YYYY-MM-DD'); // 开始释放日期
       let timeAt = dayjs(time).add(1, 'day').format('YYYY-MM-DD HH:mm:ss'); // 第一次释放时间
-      while (timeAt <= now) {
+      let count = 0;
+      while (timeAt <= now && count < 180) {
         data.push({
           miner,
           cid,
@@ -62,12 +64,14 @@ export class MinerReleaseRecordService extends BaseService<MinerReleaseRecordEnt
           dateAt,
           timestamp: dayjs(timeAt).unix(),
         });
+        ++count;
         timeAt = dayjs(timeAt).add(1, 'day').format('YYYY-MM-DD HH:mm:ss'); // 下一次释放日期
         dateAt = dayjs(dateAt).add(1, 'day').format('YYYY-MM-DD'); // 下一次释放时间
       }
     }
     return this.mapping.bulkCreateMinerReleaseRecord(data, {
       transaction: t,
+      updateOnDuplicate: ['releaseFil', 'updatedAt'],
     });
   }
 }

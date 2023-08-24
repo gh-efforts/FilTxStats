@@ -10,9 +10,9 @@ export class MinerRewardService extends BaseService<MinerRewardEntity> {
   mapping: MinerRewardMapping;
 
   async addMinerReward(minerReward: MinerRewardOptions[], t: Transaction) {
-    console.log('=====', minerReward);
     return this.mapping.bulkCreateMinerReward(minerReward, {
       transaction: t,
+      updateOnDuplicate: ['reward', 'updatedAt'],
     });
   }
 }

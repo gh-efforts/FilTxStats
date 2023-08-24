@@ -36,6 +36,8 @@ const entity = () => {
   return arr;
 };
 
+console.log(entity());
+
 @Configuration({
   importConfigs: [join(__dirname, './config')],
   conflictCheck: true,

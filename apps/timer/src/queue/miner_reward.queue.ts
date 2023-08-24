@@ -1,6 +1,7 @@
 import { Context, IProcessor, Processor } from '@midwayjs/bull';
 import { Inject } from '@midwayjs/core';
 import MyError from '../app/comm/myError';
+import { MinerService } from '../app/service/miner';
 import { RewardService } from '../app/service/reward';
 
 import { LarkSdk } from '@lark/core';
@@ -11,13 +12,25 @@ type MinerRewardParams = {
   endAt: string;
   isHisiory?: boolean;
 };
-@Processor('minerReward')
+@Processor('minerReward', {
+  repeat: {
+    cron: '*/1 * * * *',
+  },
+  attempts: 5,
+  backoff: {
+    type: 'fixed',
+    delay: 5000,
+  },
+})
 export class MinerRewardProcessor implements IProcessor {
   @Inject()
   logger;
 
   @Inject()
   ctx: Context;
+
+  @Inject()
+  minerService: MinerService;
 
   @Inject()
   rewardService: RewardService;
@@ -29,14 +42,32 @@ export class MinerRewardProcessor implements IProcessor {
   }
 
   async execute(params: MinerRewardParams) {
+    console.log('params======', params);
     const { job } = this.ctx;
     const { miner, startAt, endAt, isHisiory = false } = params;
 
     try {
       if (isHisiory) {
-        await this.rewardService.syncMinerRewardHistory(miner, startAt, endAt);
+        const reward = await this.rewardService.syncMinerRewardHistory(
+          miner,
+          startAt,
+          endAt
+        );
+        // 更新奖励状态字段
+        await this.minerService.modifyMiner(
+          {
+            rewardEndAt: reward.time,
+            isSyncRewardHistory: true,
+          },
+          {
+            miner,
+          }
+        );
+      } else {
+        await this.rewardService.syncMinerRewardLatest();
       }
     } catch (error) {
+      console.log('error', error);
       const attemptsMade = job.attemptsMade + 1;
 
       // I/O 操作失败，记录日志并重试
@@ -57,10 +88,4 @@ export class MinerRewardProcessor implements IProcessor {
       throw new MyError('syncMinerRewardHistory error', error.message);
     }
   }
-
-  // TODO 计算 miner 奖励释放
-  async rewardRelease() {}
-
-  // TODO 计算 miner 冻结奖励释放明细
-  async rewardReleaseRecord() {}
 }

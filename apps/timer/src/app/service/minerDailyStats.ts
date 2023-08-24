@@ -70,7 +70,9 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
     const date = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
     const startAt = dayjs().subtract(1, 'day').startOf('day').valueOf();
     const endAt = dayjs().subtract(1, 'day').endOf('day').valueOf();
-    const miners = await this.minerMapping.getMinerList();
+    const miners = (await this.minerMapping.getMinerList()).map(
+      item => item.miner
+    );
 
     const [gasFee, reward, dcSealed, pledge] = await Promise.all([
       this.pixiu.gasMinerGasFee(miners, date),
@@ -94,6 +96,8 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
         dateAt: date,
       };
     });
-    await this.mapping.bulkCreateMinerDailyStats(minerDailyStats);
+    await this.mapping.bulkCreateMinerDailyStats(minerDailyStats, {
+      updateOnDuplicate: ['miner', 'dateAt'],
+    });
   }
 }

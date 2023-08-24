@@ -1,6 +1,9 @@
+import { bigDiv, bigMul, getTimeByHeight, transferFilValue } from '@dws/utils';
 import { LarkSdk } from '@lark/core';
 import axios, { Axios } from 'axios';
+import * as dayjs from 'dayjs';
 import * as _ from 'lodash';
+
 import type {
   IGasFeeByDateRes,
   IGet,
@@ -200,9 +203,36 @@ export class PixiuSdk {
     startAt: number,
     endAt: number
   ): Promise<MinerRewardDetailRes[]> {
-    return this.requestChunk('/v2/miner/rewardDetail', minerIds, 5, {
-      startTime: startAt,
-      endTime: endAt,
+    let result = await this.requestChunk(
+      '/v2/miner/rewardDetail',
+      minerIds,
+      5,
+      {
+        startTime: startAt,
+        endTime: endAt,
+      }
+    );
+    return result.map(item => {
+      item.Rewards = item.Rewards.map(
+        ({ miner_id: miner, reward: rawReward, cid, height }) => {
+          const time = getTimeByHeight(height);
+          const hour = dayjs(time).hour();
+          const reward = transferFilValue(rawReward);
+          const lockedReward = bigMul(reward, 0.75).toString();
+          const dailyReward = bigDiv(lockedReward, 180).toString();
+          return {
+            miner,
+            cid,
+            time,
+            height,
+            hour,
+            reward,
+            lockedReward,
+            dailyReward,
+          };
+        }
+      );
+      return item;
     });
   }
 }

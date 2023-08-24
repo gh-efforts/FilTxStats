@@ -27,7 +27,9 @@ export class MinerSnapshotService extends BaseService<MinerSnapshotEntity> {
   }
 
   async syncMinerSnapshot() {
-    const miners = await this.minerMapping.getMinerList();
+    const miners = (await this.minerMapping.getMinerList()).map(
+      item => item.miner
+    );
     const minerSnapshots = await this.pixiu.getMinerBaseInfo(miners);
 
     for (let miner of miners) {

@@ -137,8 +137,11 @@ export class FilfoxSdk {
           return records;
         }
         if (height <= endHeight) {
+          // 根据高度获取时间
           const time = getTimeByHeight(height);
+          // 根据时间获取小时
           const hour = dayjs(time).hour();
+          // 转换奖励单位为 Fil
           const reward = transferFilValue(rawReward);
           const lockedReward = bigMul(reward, 0.75).toString();
           const dailyReward = bigDiv(lockedReward, 180).toString();
@@ -150,7 +153,7 @@ export class FilfoxSdk {
             reward,
             lockedReward,
             dailyReward,
-            time: dayjs(time).add(1, 'day').format('YYYY-MM-DD HH:mm:ss'),
+            time,
           });
         }
       });

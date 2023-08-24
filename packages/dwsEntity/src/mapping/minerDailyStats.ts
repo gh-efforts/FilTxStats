@@ -1,7 +1,7 @@
 import { Provide } from '@midwayjs/core';
 
 import { MinerDailyStatsEntity } from '@dws/entity';
-import { Optional } from 'sequelize';
+import { BulkCreateOptions, Optional } from 'sequelize';
 
 @Provide()
 export class MinerDailyStatsMapping {
@@ -13,7 +13,10 @@ export class MinerDailyStatsMapping {
     return this.getModel().create(params);
   }
 
-  async bulkCreateMinerDailyStats(values: Optional<any, string>[]) {
-    return this.getModel().bulkCreate(values);
+  async bulkCreateMinerDailyStats(
+    values: Optional<any, string>[],
+    options?: BulkCreateOptions
+  ) {
+    return this.getModel().bulkCreate(values, options);
   }
 }
