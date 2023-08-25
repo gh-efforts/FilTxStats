@@ -63,7 +63,7 @@ export class MinerEntity extends Model {
 
   @Column({
     type: DataType.DATE,
-    allowNull: false,
+    allowNull: true,
     comment: '区块奖励结束时间',
     field: 'reward_end_at',
   })

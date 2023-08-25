@@ -23,4 +23,7 @@ export class SyncMinerRewardHistoryDTO {
 
   @Rule(RuleType.string().optional())
   endAt: string;
+
+  @Rule(RuleType.boolean().optional())
+  isHisiory: boolean;
 }

@@ -49,6 +49,22 @@ export class RewardService {
     this.filfox = new FilfoxSdk(this.filfoxUrl);
   }
 
+  // 释放锁仓奖励
+  public async releaseLockedReward() {
+    // 获取上个时间点的小时
+    const hour = dayjs().add(-1, 'hour').hour();
+    // 严格获取当前小时的高度
+    const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD [HH:00:00]'));
+    // 获取释放记录
+    const records =
+      await this.minerLockedRewardService.getLockedRewardByRelease(hour);
+    // 保存释放记录
+    await this.minerReleaseRecordService.bulkCreate(records);
+    // 将释放到180天的冻结奖励改为完成状态
+    await this.minerLockedRewardService.completeRecord(nowHeight);
+    return true;
+  }
+
   async syncMinerRewardLatest() {
     const t = await this.defaultDataSource.transaction();
     try {
@@ -82,8 +98,8 @@ export class RewardService {
       );
       // 转换成 map 结构
       const minerRewardMap = _.keyBy(_.flatten(rewards), 'miner_id');
-      console.log('minerRewardMap', minerRewardMap);
       if (Object.keys(minerRewardMap).length === 0) {
+        await t.commit();
         return true;
       }
 
@@ -92,12 +108,21 @@ export class RewardService {
         const latestReward = _.maxBy(reward.Rewards, 'height');
 
         await Promise.all([
-          this.minerRewardService.addMinerReward(reward.Rewards, t),
-          this.minerLockedRewardService.addLockedReward(reward.Rewards, t),
-          this.minerReleaseRecordService.releasePercent25ByFilfox(
-            reward.Rewards,
+          this.minerRewardService.addMinerReward(
+            _.cloneDeep(reward.Rewards),
             t
           ),
+          this.minerLockedRewardService.addLockedReward(
+            _.cloneDeep(reward.Rewards),
+            t
+          ),
+          this.minerReleaseRecordService.releasePercent25ByFilfox(
+            _.cloneDeep(reward.Rewards),
+            t
+          ),
+        ]);
+
+        if (latestReward && latestReward.time) {
           await this.minerService.modifyMiner(
             {
               rewardEndAt: latestReward.time,
@@ -105,8 +130,8 @@ export class RewardService {
             {
               miner,
             }
-          ),
-        ]);
+          );
+        }
       }
       await t.commit();
       return true;
@@ -119,17 +144,23 @@ export class RewardService {
 
   // 从 filfox 同步 miner 奖励历史
   async syncMinerRewardHistory(miner: string, startAt: string, endAt: string) {
+    const [startHeight, endHeight] = [
+      getHeightByTime(startAt),
+      getHeightByTime(endAt),
+    ];
+    const rewards = await this.filfox.getMinerReward(
+      miner,
+      startHeight,
+      endHeight
+    );
+
+    if (rewards.length === 0) {
+      return null;
+    }
+
     const t = await this.defaultDataSource.transaction();
+
     try {
-      const [startHeight, endHeight] = [
-        getHeightByTime(startAt),
-        getHeightByTime(endAt),
-      ];
-      const rewards = await this.filfox.getMinerReward(
-        miner,
-        startHeight,
-        endHeight
-      );
       await Promise.all([
         this.minerRewardService.addMinerReward(_.cloneDeep(rewards), t),
         this.minerLockedRewardService.addLockedReward(_.cloneDeep(rewards), t),

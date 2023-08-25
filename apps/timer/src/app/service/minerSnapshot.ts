@@ -6,6 +6,7 @@ import {
   MinerSnapshotMapping,
 } from '@dws/entity';
 import { PixiuSdk } from '@pixiu/http';
+import * as dayjs from 'dayjs';
 import { BaseService } from '../../core/baseService';
 
 @Provide()
@@ -43,7 +44,7 @@ export class MinerSnapshotService extends BaseService<MinerSnapshotEntity> {
         balance: minerSnapshot.balance || 0,
         pledge: minerSnapshot.initial_pledge || 0,
         lockFunds: minerSnapshot.locked_funds || 0,
-        dateAt: new Date(),
+        dateAt: dayjs().format('YYYY-MM-DD'),
       });
     }
     return true;

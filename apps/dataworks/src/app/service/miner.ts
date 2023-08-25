@@ -3,7 +3,6 @@ import * as bull from '@midwayjs/bull';
 import { Config, Init, Inject, Provide } from '@midwayjs/core';
 import { PixiuSdk } from '@pixiu/http';
 import { BaseService } from '../../core/baseService';
-import { SyncMinerRewardHistoryDTO } from '../model/dto/miner';
 
 import * as dayjs from 'dayjs';
 
@@ -23,22 +22,32 @@ export class MinerService extends BaseService<MinerEntity> {
 
   private pixiu: PixiuSdk;
 
+  bullOpts: {
+    removeOnComplete: true;
+    removeOnFail: true;
+    // 失败可重试次数
+    attempts: 5;
+    // 固定 5 秒后开始重试
+    backoff: {
+      type: 'fixed';
+      delay: 5000;
+    };
+  };
+
   @Init()
   async initMethod() {
     this.pixiu = new PixiuSdk(this.pixiuUrl);
   }
 
   async register(miners: string[]) {
-    const [minerBases, minerSnapshots] = await Promise.all([
-      this.pixiu.getMinerStaticState(miners),
-      this.pixiu.getMinerBaseInfo(miners),
-    ]);
+    const minerBases = await this.pixiu.getMinerStaticState(miners);
 
     for (let miner of miners) {
-      const [minerBase, minerSnapshot] = [
-        minerBases.find(item => item.minerId === miner),
-        minerSnapshots.find(item => item.miner_id === miner),
-      ];
+      const minerBase = minerBases.find(item => item.minerId === miner);
+      if (!minerBase) {
+        this.ctx.logger.error('miner base not found', miner);
+        continue;
+      }
 
       const startAt = dayjs()
         .subtract(180, 'day')
@@ -47,54 +56,30 @@ export class MinerService extends BaseService<MinerEntity> {
       const endAt = dayjs().format('YYYY-MM-DD HH:mm:ss');
 
       await Promise.all([
-        // 新增 miner
+        // 新增 miner 基础信息
         this.mapping.addMiner({
           miner: minerBase.minerId,
           address: minerBase.address,
           sectoSize: minerBase.sector_size,
         }),
-        // 新增当前时间快照
-        this.minerSnapshotMapping.addMinerSnapshot({
-          minerName: minerSnapshot.miner_id,
-          rawPower: minerSnapshot.raw_byte_power || 0,
-          power: minerSnapshot.quality_adj_power || 0,
-          balance: minerSnapshot.balance || 0,
-          pledge: minerSnapshot.initial_pledge || 0,
-          lockFunds: minerSnapshot.locked_funds || 0,
+        this.runJob('minerReward', {
+          miner,
+          startAt,
+          endAt,
+          isHisiory: true,
         }),
+        this.runJob('minerDailyStats'),
+        this.runJob('minerSnapshot'),
       ]);
-
-      // 开始同步历史数据
-      await this.syncMinerRewardHistory({
-        miner,
-        startAt,
-        endAt,
-      });
     }
     return true;
   }
 
-  async syncMinerRewardHistory(param: SyncMinerRewardHistoryDTO) {
+  async runJob(queueName: string, param: any = {}) {
     // 获取 Processor 相关的队列
-    const minerRewardQueue = this.bullFramework.ensureQueue('minerReward');
-
-    const opts = {
-      // 失败可重试次数
-      attempts: 5,
-      // 固定 5 秒后开始重试
-      backoff: {
-        type: 'fixed',
-        delay: 5000,
-      },
-    };
+    const bullQueue = this.bullFramework.ensureQueue(queueName);
     // 立即执行这个任务
-    await minerRewardQueue?.add(
-      {
-        ...param,
-        isHisiory: true,
-      },
-      opts
-    );
+    await bullQueue?.add(param, this.bullOpts);
     return true;
   }
 }

@@ -13,13 +13,9 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     },
     {
       name: 'idx_miner_date_at',
+      unique: true,
       using: 'BTREE',
       fields: [{ name: 'miner' }, { name: 'date_at' }],
-    },
-    {
-      name: 'idx_date_at',
-      using: 'BTREE',
-      fields: [{ name: 'date_at' }],
     },
   ],
 })

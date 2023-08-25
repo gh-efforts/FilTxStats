@@ -1,4 +1,4 @@
-import { MidwayConfig, MidwayAppInfo } from '@midwayjs/core';
+import { MidwayAppInfo, MidwayConfig } from '@midwayjs/core';
 
 export default (appInfo: MidwayAppInfo): MidwayConfig => {
   const config = {} as MidwayConfig;
@@ -41,7 +41,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
         password: process.env.PG_DATABASE_PASSWORD,
         host: process.env.PG_DATABASE_HOST,
         port: +process.env.PG_DATABASE_PORT,
-        logging: false,
+        logging: true,
       },
     },
   };

@@ -9,6 +9,8 @@ import { MinerSnapshotService } from '../app/service/minerSnapshot';
   repeat: {
     cron: '*/30 * * * *',
   },
+  removeOnComplete: true,
+  removeOnFail: true,
   attempts: 5,
   backoff: {
     type: 'fixed',
@@ -34,7 +36,6 @@ export class MinerSnapshotProcessor implements IProcessor {
   async execute() {
     const { job } = this.ctx;
     try {
-      // TODO 每隔 30 分钟，获取一次节点快照数据
       await this.service.syncMinerSnapshot();
     } catch (error) {
       const attemptsMade = job.attemptsMade + 1;

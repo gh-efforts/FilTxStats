@@ -69,6 +69,7 @@ export class MinerReleaseRecordService extends BaseService<MinerReleaseRecordEnt
         dateAt = dayjs(dateAt).add(1, 'day').format('YYYY-MM-DD'); // 下一次释放时间
       }
     }
+
     return this.mapping.bulkCreateMinerReleaseRecord(data, {
       transaction: t,
       updateOnDuplicate: ['releaseFil', 'updatedAt'],

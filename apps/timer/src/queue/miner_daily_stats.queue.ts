@@ -8,6 +8,8 @@ import { LarkSdk } from '@lark/core';
   repeat: {
     cron: '0 35 2 * * *',
   },
+  removeOnComplete: true,
+  removeOnFail: true,
   attempts: 5,
   backoff: {
     type: 'fixed',

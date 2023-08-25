@@ -26,6 +26,8 @@ import { FormatMiddleware } from './middleware/format';
 import { JwtMiddleware } from './middleware/jwt';
 import { RequestIdMiddleware } from './middleware/requestId';
 
+import * as bullBoard from '@midwayjs/bull-board';
+
 const entity = () => {
   const arr = [];
   Object.keys(dwsEntity).map(key => {
@@ -36,8 +38,6 @@ const entity = () => {
   return arr;
 };
 
-console.log(entity());
-
 @Configuration({
   importConfigs: [join(__dirname, './config')],
   conflictCheck: true,
@@ -45,6 +45,7 @@ console.log(entity());
     crossDomain,
     koa,
     bull,
+    bullBoard,
     { component: swagger, enabledEnvironment: ['local'] },
     redis,
     validate,

@@ -213,25 +213,26 @@ export class PixiuSdk {
       }
     );
     return result.map(item => {
-      item.Rewards = item.Rewards.map(
-        ({ miner_id: miner, reward: rawReward, cid, height }) => {
-          const time = getTimeByHeight(height);
-          const hour = dayjs(time).hour();
-          const reward = transferFilValue(rawReward);
-          const lockedReward = bigMul(reward, 0.75).toString();
-          const dailyReward = bigDiv(lockedReward, 180).toString();
-          return {
-            miner,
-            cid,
-            time,
-            height,
-            hour,
-            reward,
-            lockedReward,
-            dailyReward,
-          };
-        }
-      );
+      item.Rewards =
+        item.Rewards?.map(
+          ({ miner_id: miner, reward: rawReward, cid, height }) => {
+            const time = getTimeByHeight(height);
+            const hour = dayjs(time).hour();
+            const reward = transferFilValue(rawReward);
+            const lockedReward = bigMul(reward, 0.75).toString();
+            const dailyReward = bigDiv(lockedReward, 180).toString();
+            return {
+              miner,
+              cid,
+              time,
+              height,
+              hour,
+              reward,
+              lockedReward,
+              dailyReward,
+            };
+          }
+        ) || [];
       return item;
     });
   }

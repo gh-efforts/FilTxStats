@@ -14,8 +14,10 @@ type MinerRewardParams = {
 };
 @Processor('minerReward', {
   repeat: {
-    cron: '*/1 * * * *',
+    cron: '0 */1 * * *',
   },
+  removeOnComplete: true,
+  removeOnFail: true,
   attempts: 5,
   backoff: {
     type: 'fixed',
@@ -42,7 +44,6 @@ export class MinerRewardProcessor implements IProcessor {
   }
 
   async execute(params: MinerRewardParams) {
-    console.log('params======', params);
     const { job } = this.ctx;
     const { miner, startAt, endAt, isHisiory = false } = params;
 
@@ -56,7 +57,7 @@ export class MinerRewardProcessor implements IProcessor {
         // 更新奖励状态字段
         await this.minerService.modifyMiner(
           {
-            rewardEndAt: reward.time,
+            rewardEndAt: reward?.time || null,
             isSyncRewardHistory: true,
           },
           {
@@ -66,6 +67,11 @@ export class MinerRewardProcessor implements IProcessor {
       } else {
         await this.rewardService.syncMinerRewardLatest();
       }
+
+      this.logger.info(
+        `Job ${job.id} success, ${JSON.stringify(params)}`,
+        '同步结束'
+      );
     } catch (error) {
       console.log('error', error);
       const attemptsMade = job.attemptsMade + 1;

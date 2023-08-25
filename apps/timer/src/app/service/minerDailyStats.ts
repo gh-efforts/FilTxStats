@@ -97,7 +97,14 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
       };
     });
     await this.mapping.bulkCreateMinerDailyStats(minerDailyStats, {
-      updateOnDuplicate: ['miner', 'dateAt'],
+      updateOnDuplicate: [
+        'reward',
+        'powerIncrease24H',
+        'gas',
+        'windowPost',
+        'pledgeConsume',
+        'pledgeReturn',
+      ],
     });
   }
 }
