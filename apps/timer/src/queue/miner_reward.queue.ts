@@ -21,7 +21,7 @@ type MinerRewardParams = {
   attempts: 5,
   backoff: {
     type: 'fixed',
-    delay: 5000,
+    delay: 1000 * 60,
   },
 })
 export class MinerRewardProcessor implements IProcessor {
@@ -90,8 +90,8 @@ export class MinerRewardProcessor implements IProcessor {
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
         await this.lark.larkNotify(error.message);
+        throw new MyError('syncMinerRewardHistory error', error.message);
       }
-      throw new MyError('syncMinerRewardHistory error', error.message);
     }
   }
 }

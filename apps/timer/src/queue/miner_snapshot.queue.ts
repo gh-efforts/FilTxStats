@@ -14,7 +14,7 @@ import { MinerSnapshotService } from '../app/service/minerSnapshot';
   attempts: 5,
   backoff: {
     type: 'fixed',
-    delay: 5000,
+    delay: 1000 * 60,
   },
 })
 export class MinerSnapshotProcessor implements IProcessor {
@@ -54,8 +54,8 @@ export class MinerSnapshotProcessor implements IProcessor {
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
         await this.lark.larkNotify(error.message);
+        throw new MyError('syncMinerSnapshot error', error.message);
       }
-      throw new MyError('syncMinerSnapshot error', error.message);
     }
   }
 }

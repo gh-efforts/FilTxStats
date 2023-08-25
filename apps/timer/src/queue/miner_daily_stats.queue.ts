@@ -13,7 +13,7 @@ import { LarkSdk } from '@lark/core';
   attempts: 5,
   backoff: {
     type: 'fixed',
-    delay: 5000,
+    delay: 1000 * 60,
   },
 })
 export class MinerDailyStatsProcessor implements IProcessor {
@@ -54,14 +54,8 @@ export class MinerDailyStatsProcessor implements IProcessor {
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
         await this.lark.larkNotify(error.message);
+        throw new MyError('syncMinerDailyStats error', error.message);
       }
-      throw new MyError('syncMinerDailyStats error', error.message);
     }
   }
-
-  // TODO 计算 miner 奖励释放
-  async rewardRelease() {}
-
-  // TODO 计算 miner 冻结奖励释放明细
-  async rewardReleaseRecord() {}
 }

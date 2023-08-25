@@ -35,13 +35,13 @@ export class RewardService {
   minerService: MinerService;
 
   @Inject()
-  minerRewardService: MinerRewardService;
+  mrs: MinerRewardService;
 
   @Inject()
-  minerLockedRewardService: MinerLockedRewardService;
+  mlrs: MinerLockedRewardService;
 
   @Inject()
-  minerReleaseRecordService: MinerReleaseRecordService;
+  mrrs: MinerReleaseRecordService;
 
   @Init()
   async initMethod() {
@@ -56,17 +56,17 @@ export class RewardService {
     // 严格获取当前小时的高度
     const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD [HH:00:00]'));
     // 获取释放记录
-    const records =
-      await this.minerLockedRewardService.getLockedRewardByRelease(hour);
+    const records = await this.mlrs.getLockedRewardByRelease(hour);
     // 保存释放记录
-    await this.minerReleaseRecordService.bulkCreate(records);
+    await this.mrrs.bulkCreate(records);
     // 将释放到180天的冻结奖励改为完成状态
-    await this.minerLockedRewardService.completeRecord(nowHeight);
+    await this.mlrs.completeRecord(nowHeight);
     return true;
   }
 
   async syncMinerRewardLatest() {
     const t = await this.defaultDataSource.transaction();
+
     try {
       // 只找同步完历史的 miner
       const miners = await this.minerService.getMinerList();
@@ -88,7 +88,7 @@ export class RewardService {
 
       const rewards = await Promise.all(
         params.map(param => {
-          // 每个 miner 的奖励数据, 每个 miner 的上一次结束时间可能不通，保证数据部缺失
+          // 每个 miner 的奖励数据, 每个 miner 的上一次结束时间可能不同，保证数据部缺失
           return this.pixiu.getMinerRewardDetail(
             [param.miner],
             param.startAt,
@@ -96,9 +96,12 @@ export class RewardService {
           );
         })
       );
+
       // 转换成 map 结构
       const minerRewardMap = _.keyBy(_.flatten(rewards), 'miner_id');
+
       if (Object.keys(minerRewardMap).length === 0) {
+        // 释放事务
         await t.commit();
         return true;
       }
@@ -108,18 +111,9 @@ export class RewardService {
         const latestReward = _.maxBy(reward.Rewards, 'height');
 
         await Promise.all([
-          this.minerRewardService.addMinerReward(
-            _.cloneDeep(reward.Rewards),
-            t
-          ),
-          this.minerLockedRewardService.addLockedReward(
-            _.cloneDeep(reward.Rewards),
-            t
-          ),
-          this.minerReleaseRecordService.releasePercent25ByFilfox(
-            _.cloneDeep(reward.Rewards),
-            t
-          ),
+          this.mrs.addMinerReward(reward.Rewards, t),
+          this.mlrs.addLockedReward(reward.Rewards, t),
+          this.mrrs.releasePercent25(reward.Rewards, t),
         ]);
 
         if (latestReward && latestReward.time) {
@@ -148,35 +142,34 @@ export class RewardService {
       getHeightByTime(startAt),
       getHeightByTime(endAt),
     ];
-    const rewards = await this.filfox.getMinerReward(
-      miner,
-      startHeight,
-      endHeight
-    );
-
-    if (rewards.length === 0) {
-      return null;
-    }
 
     const t = await this.defaultDataSource.transaction();
 
     try {
+      // 获取 filfox 历史数据
+      const rewards = await this.filfox.getMinerReward(
+        miner,
+        startHeight,
+        endHeight
+      );
+
+      if (rewards.length === 0) {
+        await t.commit();
+        return null;
+      }
+
+      // 插入数据
       await Promise.all([
-        this.minerRewardService.addMinerReward(_.cloneDeep(rewards), t),
-        this.minerLockedRewardService.addLockedReward(_.cloneDeep(rewards), t),
-        this.minerReleaseRecordService.releasePercent25ByFilfox(
-          _.cloneDeep(rewards),
-          t
-        ),
-        this.minerReleaseRecordService.releaseHisLockedRewardByFilfox(
-          _.cloneDeep(rewards),
-          t
-        ),
+        this.mrs.addMinerReward(rewards, t),
+        this.mlrs.addLockedReward(rewards, t),
+        this.mrrs.releasePercent25(rewards, t),
+        this.mrrs.releaseHisLockedReward(rewards, t),
       ]);
-      const reward = _.maxBy(rewards, 'height');
+
       // 保证一批数据是准确的
       await t.commit();
-      return reward;
+      // 获取最新的一条的数据，流程同步之后的数据
+      return _.maxBy(rewards, 'height');
     } catch (error) {
       console.log('error', error);
       await t.rollback();

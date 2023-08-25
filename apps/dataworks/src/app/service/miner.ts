@@ -42,6 +42,8 @@ export class MinerService extends BaseService<MinerEntity> {
   async register(miners: string[]) {
     const minerBases = await this.pixiu.getMinerStaticState(miners);
 
+    await this.runJob('minerDailyStats');
+    await this.runJob('minerSnapshot');
     for (let miner of miners) {
       const minerBase = minerBases.find(item => item.minerId === miner);
       if (!minerBase) {
@@ -68,10 +70,9 @@ export class MinerService extends BaseService<MinerEntity> {
           endAt,
           isHisiory: true,
         }),
-        this.runJob('minerDailyStats'),
-        this.runJob('minerSnapshot'),
       ]);
     }
+
     return true;
   }
 
@@ -79,7 +80,7 @@ export class MinerService extends BaseService<MinerEntity> {
     // 获取 Processor 相关的队列
     const bullQueue = this.bullFramework.ensureQueue(queueName);
     // 立即执行这个任务
-    await bullQueue?.add(param, this.bullOpts);
+    await bullQueue.add(param);
     return true;
   }
 }

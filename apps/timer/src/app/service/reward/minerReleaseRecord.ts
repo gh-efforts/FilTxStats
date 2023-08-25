@@ -17,7 +17,7 @@ export class MinerReleaseRecordService extends BaseService<MinerReleaseRecordEnt
   mapping: MinerReleaseRecordMapping;
 
   // 立即释放-filfox
-  public async releasePercent25ByFilfox(
+  public async releasePercent25(
     minersReward: MinerRewardOptions[],
     t: Transaction
   ) {
@@ -41,7 +41,7 @@ export class MinerReleaseRecordService extends BaseService<MinerReleaseRecordEnt
   }
 
   // 释放历史冻结奖励
-  public async releaseHisLockedRewardByFilfox(
+  public async releaseHisLockedReward(
     minersReward: MinerRewardOptions[],
     t: Transaction
   ) {

@@ -1,6 +1,7 @@
 import { MinerLockedRewardEntity, MinerLockedRewardMapping } from '@dws/entity';
 import { Inject, Provide } from '@midwayjs/core';
 import * as dayjs from 'dayjs';
+import * as _ from 'lodash';
 import { Op, Transaction } from 'sequelize';
 import { BaseService } from '../../../core/baseService';
 import { MINER_RELEASE_TYPE } from '../../constant/miner';
@@ -11,8 +12,9 @@ export class MinerLockedRewardService extends BaseService<MinerLockedRewardEntit
   mapping: MinerLockedRewardMapping;
 
   public async addLockedReward(rewards: MinerRewardOptions[], t: Transaction) {
+    const newRewards = _.cloneDeep(rewards);
     return this.mapping.bulkCreateMinerLockedReward(
-      rewards.map(reward => {
+      newRewards.map(reward => {
         // 开始释放时间
         reward.time = dayjs(reward.time)
           .add(1, 'day')
