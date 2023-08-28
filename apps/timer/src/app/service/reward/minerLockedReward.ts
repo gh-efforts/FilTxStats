@@ -33,7 +33,7 @@ export class MinerLockedRewardService extends BaseService<MinerLockedRewardEntit
       attributes: ['miner', 'cid', 'dailyReward', 'time'],
       where: {
         hour,
-        isComplete: false,
+        isCompleted: false,
         time: {
           [Op.lte]: new Date(),
         },
@@ -56,10 +56,10 @@ export class MinerLockedRewardService extends BaseService<MinerLockedRewardEntit
     });
   }
 
-  public async completeRecord(height: number) {
+  public async completeRecord(height: number, t: Transaction) {
     return this.mapping.updateMinerLockedReward(
       {
-        isComplete: true,
+        isCompleted: true,
       },
       {
         where: {
@@ -68,6 +68,7 @@ export class MinerLockedRewardService extends BaseService<MinerLockedRewardEntit
             [Op.lt]: height - 518400,
           },
         },
+        transaction: t,
       }
     );
   }

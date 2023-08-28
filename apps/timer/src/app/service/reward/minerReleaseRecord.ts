@@ -75,4 +75,11 @@ export class MinerReleaseRecordService extends BaseService<MinerReleaseRecordEnt
       updateOnDuplicate: ['releaseFil', 'updatedAt'],
     });
   }
+
+  public async BulkReleaseLockedReward(records, t: Transaction) {
+    return this.mapping.bulkCreateMinerReleaseRecord(records, {
+      transaction: t,
+      updateOnDuplicate: ['releaseFil', 'updatedAt'],
+    });
+  }
 }

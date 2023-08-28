@@ -14,6 +14,7 @@ import { MinerRewardService } from './minerReward';
 
 import * as dayjs from 'dayjs';
 import * as _ from 'lodash';
+import { Transaction } from 'sequelize';
 import MyError from '../../comm/myError';
 
 @Provide()
@@ -50,17 +51,17 @@ export class RewardService {
   }
 
   // 释放锁仓奖励
-  public async releaseLockedReward() {
+  public async releaseLockedReward(t: Transaction) {
     // 获取上个时间点的小时
-    const hour = dayjs().add(-1, 'hour').hour();
+    const hour = dayjs().subtract(1, 'hour').hour();
     // 严格获取当前小时的高度
-    const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD [HH:00:00]'));
+    const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD HH:00:00'));
     // 获取释放记录
     const records = await this.mlrs.getLockedRewardByRelease(hour);
     // 保存释放记录
-    await this.mrrs.bulkCreate(records);
+    await this.mrrs.BulkReleaseLockedReward(records, t);
     // 将释放到180天的冻结奖励改为完成状态
-    await this.mlrs.completeRecord(nowHeight);
+    await this.mlrs.completeRecord(nowHeight, t);
     return true;
   }
 
@@ -116,6 +117,7 @@ export class RewardService {
           this.mrs.addMinerReward(reward.Rewards, t),
           this.mlrs.addLockedReward(reward.Rewards, t),
           this.mrrs.releasePercent25(reward.Rewards, t),
+          this.releaseLockedReward(t),
         ]);
 
         if (latestReward && latestReward.time) {

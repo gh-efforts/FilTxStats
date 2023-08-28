@@ -68,8 +68,8 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
 
   async syncMinerDailyStats() {
     const date = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
-    const startAt = dayjs().subtract(1, 'day').startOf('day').valueOf();
-    const endAt = dayjs().subtract(1, 'day').endOf('day').valueOf();
+    const startAt = dayjs().subtract(1, 'day').startOf('day').unix();
+    const endAt = dayjs().subtract(1, 'day').endOf('day').unix();
     const miners = (await this.minerMapping.getMinerList()).map(
       item => item.miner
     );
@@ -104,6 +104,7 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
         'windowPost',
         'pledgeConsume',
         'pledgeReturn',
+        'updatedAt',
       ],
     });
   }

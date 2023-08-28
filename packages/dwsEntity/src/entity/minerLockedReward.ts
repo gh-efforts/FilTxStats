@@ -1,4 +1,4 @@
-import { Column, DataType, Table, Model } from 'sequelize-typescript';
+import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
   tableName: 'miner_locked_reward',
@@ -81,11 +81,10 @@ export class MinerLockedRewardEntity extends Model {
   hour: number;
 
   @Column({
-    type: DataType.TINYINT,
+    type: DataType.BOOLEAN,
     allowNull: false,
-    defaultValue: 0,
-    comment: '0未完成，1完成',
+    defaultValue: false,
     field: 'is_completed',
   })
-  isCompleted: number;
+  isCompleted: boolean;
 }

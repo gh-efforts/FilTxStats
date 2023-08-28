@@ -21,4 +21,18 @@ export class MinerController {
   ) {
     return this.service.runJob('minerReward', param);
   }
+
+  @Post('/sync_miner_daily_stats', {
+    summary: '同步 miner 昨日统计收益',
+  })
+  async syncMinerDailyStats() {
+    return this.service.runJob('minerDailyStats');
+  }
+
+  @Post('/sync_miner_snapshot', {
+    summary: '同步 miner 快照数据',
+  })
+  async syncMinerSnapshot() {
+    return this.service.runJob('minerSnapshot');
+  }
 }
