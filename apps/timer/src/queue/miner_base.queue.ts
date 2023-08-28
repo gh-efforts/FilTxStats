@@ -1,13 +1,11 @@
 import { Context, IProcessor, Processor } from '@midwayjs/bull';
 import { Inject } from '@midwayjs/core';
 import MyError from '../app/comm/myError';
-import { MinerDailyService } from '../app/service/minerDailyStats';
+import { MinerService } from '../app/service/miner';
 
 import { LarkSdk } from '@lark/core';
-@Processor('minerDailyStats', {
-  repeat: {
-    cron: '0 35 2 * * *',
-  },
+
+@Processor('minerBaseInfo', {
   removeOnComplete: true,
   removeOnFail: true,
   attempts: 5,
@@ -16,7 +14,7 @@ import { LarkSdk } from '@lark/core';
     delay: 1000 * 60,
   },
 })
-export class MinerDailyStatsProcessor implements IProcessor {
+export class MinerBaseInfoProcessor implements IProcessor {
   @Inject()
   logger;
 
@@ -24,7 +22,7 @@ export class MinerDailyStatsProcessor implements IProcessor {
   ctx: Context;
 
   @Inject()
-  service: MinerDailyService;
+  service: MinerService;
 
   lark: LarkSdk;
 
@@ -34,9 +32,8 @@ export class MinerDailyStatsProcessor implements IProcessor {
 
   async execute() {
     const { job } = this.ctx;
-    console.log('job.opts===', job.opts);
     try {
-      await this.service.syncMinerDailyStats();
+      await this.service.syncMinerBaseInfo();
     } catch (error) {
       const attemptsMade = job.attemptsMade + 1;
 

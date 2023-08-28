@@ -1,7 +1,6 @@
 import { MinerEntity, MinerMapping, MinerSnapshotMapping } from '@dws/entity';
 import * as bull from '@midwayjs/bull';
-import { Config, Init, Inject, Provide } from '@midwayjs/core';
-import { PixiuSdk } from '@pixiu/http';
+import { Inject, Provide } from '@midwayjs/core';
 import { BaseService } from '../../core/baseService';
 
 import * as dayjs from 'dayjs';
@@ -17,11 +16,6 @@ export class MinerService extends BaseService<MinerEntity> {
   @Inject()
   minerSnapshotMapping: MinerSnapshotMapping;
 
-  @Config('pixiuConfig.url')
-  pixiuUrl;
-
-  private pixiu: PixiuSdk;
-
   bullOpts: {
     removeOnComplete: true;
     removeOnFail: true;
@@ -34,51 +28,42 @@ export class MinerService extends BaseService<MinerEntity> {
     };
   };
 
-  @Init()
-  async initMethod() {
-    this.pixiu = new PixiuSdk(this.pixiuUrl);
-  }
-
   async register(miners: string[]) {
-    const minerBases = await this.pixiu.getMinerStaticState(miners);
-
-    await this.runJob('minerDailyStats');
-    await this.runJob('minerSnapshot');
     for (let miner of miners) {
-      const minerBase = minerBases.find(item => item.minerId === miner);
-      if (!minerBase) {
-        this.ctx.logger.error('miner base not found', miner);
-        continue;
-      }
-
+      // 注册 miner 基础信息
+      await this.mapping.addMiner({
+        miner,
+        address: '',
+        sectoSize: 0,
+      });
       const startAt = dayjs()
         .subtract(180, 'day')
         .format('YYYY-MM-DD HH:mm:ss');
 
       const endAt = dayjs().format('YYYY-MM-DD HH:mm:ss');
 
-      await Promise.all([
-        // 新增 miner 基础信息
-        this.mapping.addMiner({
-          miner: minerBase.minerId,
-          address: minerBase.address,
-          sectoSize: minerBase.sector_size,
-        }),
-        this.runJob('minerReward', {
-          miner,
-          startAt,
-          endAt,
-          isHisiory: true,
-        }),
-      ]);
+      await this.runJob('minerReward', {
+        miner,
+        startAt,
+        endAt,
+        isHisiory: true,
+      });
     }
+    // 同步昨日 miner 的收益
+    await this.runJob('minerDailyStats');
+    // 同步 miner 的最新快照
+    await this.runJob('minerSnapshot');
+    // 当新增完 miner 后， 开始同步 miner 的基础信息
+    await this.runJob('minerBaseInfo');
 
     return true;
   }
 
   async runJob(queueName: string, param: any = {}) {
     // 获取 Processor 相关的队列
-    const bullQueue = this.bullFramework.ensureQueue(queueName);
+    const bullQueue = this.bullFramework.ensureQueue(queueName, {
+      defaultJobOptions: this.bullOpts,
+    });
     // 立即执行这个任务
     await bullQueue.add(param);
     return true;

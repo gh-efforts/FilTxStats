@@ -35,6 +35,7 @@ export class MinerSnapshotProcessor implements IProcessor {
 
   async execute() {
     const { job } = this.ctx;
+    console.log('job.opts', job.opts);
     try {
       await this.service.syncMinerSnapshot();
     } catch (error) {

@@ -69,7 +69,9 @@ export class RewardService {
 
     try {
       // 只找同步完历史的 miner
-      const miners = await this.minerService.getMinerList();
+      const miners = await this.minerService.getMinerList({
+        isSyncRewardHistory: true,
+      });
 
       const params = [];
 
