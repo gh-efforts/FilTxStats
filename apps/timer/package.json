@@ -5,6 +5,11 @@
   "private": true,
   "dependencies": {
     "@dws/entity": "*",
+    "@filfox/http": "*",
+    "@lark/core": "*",
+    "@lily/entity": "*",
+    "@pixiu/http": "*",
+    "@dws/utils": "*",
     "@midwayjs/bootstrap": "^3.10.10",
     "@midwayjs/bull": "^3.10.13",
     "@midwayjs/bull-board": "^3.12.3",
