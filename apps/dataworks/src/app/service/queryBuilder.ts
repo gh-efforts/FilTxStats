@@ -10,7 +10,7 @@ export class QueryBuilderService {
   @InjectDataSource('default')
   dwsSource: Sequelize;
 
-  async camelCase(result: object[] | object) {
+  camelCase(result: object[] | object) {
     if (result instanceof Array) {
       return result.map(item => {
         const obj = {};
@@ -28,17 +28,39 @@ export class QueryBuilderService {
     }
   }
 
-  async queryBuilder(params: QueryBuilderDTO) {
-    console.log(params);
-    const { SQL, replacements, plain, page, limit } = params;
+  getColumn(fields: string[]) {
+    // 没有传字段返回所有字段 *
+    if (!fields.length) {
+      return '*';
+    }
+    return fields
+      .map(field => {
+        return `${field}`;
+      })
+      .join(' , ');
+  }
 
-    console.log('page, limit', page, limit);
+  async getQueryCount(SQL: string): Promise<number> {
+    const result = (await this.dwsSource.query(
+      `SELECT COUNT(*) as count FROM (${SQL}) as query`,
+      {
+        type: QueryTypes.SELECT,
+        plain: true,
+      }
+    )) as any;
+    return Number(result.count);
+  }
+
+  async queryBuilder(params: QueryBuilderDTO) {
+    const { tableName, replacements, plain, fields, page, limit } = params;
+
+    const SQL = `SELECT ${this.getColumn(fields)} FROM ${tableName}`;
 
     const offset = (page - 1) * limit;
 
-    const result: object[] | object = await this.dwsSource.query(
-      `${SQL} LIMIT :limit OFFSET :offset`,
-      {
+    const [count, result] = await Promise.all([
+      this.getQueryCount(SQL),
+      this.dwsSource.query(`${SQL} LIMIT :limit OFFSET :offset`, {
         replacements: {
           ...replacements,
           limit,
@@ -46,18 +68,18 @@ export class QueryBuilderService {
         },
         plain,
         type: QueryTypes.SELECT,
-      }
-    );
+      }),
+    ]);
 
-    const count = await this.dwsSource.query(
-      `SELECT COUNT(*) FROM (${SQL}) as query`,
-      {
-        type: QueryTypes.SELECT,
-      }
-    );
-    console.log('count', count);
-    console.log('result', result);
+    const data = this.camelCase(result);
 
-    return this.camelCase(result);
+    if (!plain) {
+      return {
+        count,
+        list: data,
+      };
+    }
+
+    return data;
   }
 }

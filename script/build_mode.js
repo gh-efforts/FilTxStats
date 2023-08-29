@@ -30,7 +30,7 @@ async function changePackageJsonFileToBuildMode(packageName) {
 
 // 切换所有包的 package.json 文件为编译模式
 async function changeAllPackageJsonFileToBuildMode() {
-  const allPackages = fs.readdirSync('../packages');
+  const allPackages = fs.readdirSync(path.resolve(__dirname, `../packages`));
 
   for (const package of allPackages) {
     await changePackageJsonFileToBuildMode(package);
