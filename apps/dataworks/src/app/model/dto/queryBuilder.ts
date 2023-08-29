@@ -1,7 +1,8 @@
 import { ApiProperty } from '@midwayjs/swagger';
 import { Rule, RuleType } from '@midwayjs/validate';
+import { QueryParamDTO } from './base';
 
-export class QueryBuilderDTO {
+export class QueryBuilderDTO extends QueryParamDTO {
   @ApiProperty({
     type: 'string',
     example: `SELECT 1`,
@@ -19,5 +20,12 @@ export class QueryBuilderDTO {
     description: 'SQL',
   })
   @Rule(RuleType.object().required())
-  params: object;
+  replacements: { [key: string]: unknown } | unknown[];
+
+  @ApiProperty({
+    type: 'boolean',
+    description: '是否返回单条数据',
+  })
+  @Rule(RuleType.boolean().required())
+  plain: boolean;
 }

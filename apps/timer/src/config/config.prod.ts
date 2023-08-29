@@ -1,4 +1,4 @@
-import { MidwayConfig, MidwayAppInfo } from '@midwayjs/core';
+import { MidwayAppInfo, MidwayConfig } from '@midwayjs/core';
 
 export default (appInfo: MidwayAppInfo): MidwayConfig => {
   const config = {} as MidwayConfig;
@@ -22,7 +22,10 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
         db: +process.env.REDIS_CLIENT_DB,
         password: process.env.REDIS_CLIENT_PASSWORD,
       },
+      prefix: '{midway-bull}',
     },
+    clearRepeatJobWhenStart: false,
+    defaultConcurrency: 10,
   };
 
   config.sequelize = {
@@ -61,6 +64,10 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
 
   config.galaxyConfig = {
     url: process.env.GALAXY_URL,
+  };
+
+  config.filfoxConfig = {
+    url: process.env.FILFOX_URL,
   };
 
   config.midwayLogger = {

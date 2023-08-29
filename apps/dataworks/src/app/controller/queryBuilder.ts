@@ -8,5 +8,7 @@ export class QueryBuilderController {
   service: QueryBuilderService;
 
   @Post('/builder')
-  async queryBuilder(@Body(ALL) params: QueryBuilderDTO) {}
+  async queryBuilder(@Body(ALL) params: QueryBuilderDTO) {
+    return this.service.queryBuilder(params);
+  }
 }
