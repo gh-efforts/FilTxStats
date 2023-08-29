@@ -64,7 +64,7 @@ pipeline{
   }
       stage('Build images && Push Hw imgaed center Test') {
          when {
-           branch 'timer_test'
+           branch 'timer-test'
          }
           steps {
             container ('nodejs') {
@@ -85,7 +85,7 @@ pipeline{
 
        stage('Build images && Push Hw imgaed center master') {
          when {
-           branch 'timer_master'
+           branch 'timer-master'
          }
           steps {
             container ('nodejs') {
@@ -127,7 +127,7 @@ pipeline{
             }
       stage('Deploy to TEST') {
          when {
-           branch 'timer_test'
+           branch 'timer-test'
          }
           steps {
             container ('nodejs') {
@@ -147,7 +147,7 @@ pipeline{
             }
       stage('生产镜像发布审核') {
          when {
-           branch 'timer_master'
+           branch 'timer-master'
          }
          steps {
            container('nodejs') {
@@ -193,7 +193,7 @@ pipeline{
   }
       stage('lark通知 TEST') {
          when {
-           branch 'timer_test'
+           branch 'timer-test'
          }
           steps {
             container ('nodejs') {
@@ -209,7 +209,7 @@ pipeline{
 
       stage('lark通知 MASTER') {
          when {
-           branch 'timer_master'
+           branch 'timer-master'
          }
           steps {
             container ('nodejs') {
