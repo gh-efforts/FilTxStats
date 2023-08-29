@@ -161,7 +161,7 @@ export class RewardService {
         await t.commit();
         return null;
       }
-      const chunks = _.chunk(rewards, 1000);
+      const chunks = _.chunk(rewards, 500);
       for (const chunk of chunks) {
         // 插入数据
         await Promise.all([
