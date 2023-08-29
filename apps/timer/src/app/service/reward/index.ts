@@ -147,8 +147,6 @@ export class RewardService {
       getHeightByTime(endAt),
     ];
 
-    const t = await this.defaultDataSource.transaction();
-
     try {
       // 获取 filfox 历史数据
       const rewards = await this.filfox.getMinerReward(
@@ -158,27 +156,32 @@ export class RewardService {
       );
 
       if (rewards.length === 0) {
-        await t.commit();
         return null;
       }
+
       const chunks = _.chunk(rewards, 500);
       for (const chunk of chunks) {
-        // 插入数据
-        await Promise.all([
-          this.mrs.addMinerReward(chunk, t),
-          this.mlrs.addLockedReward(chunk, t),
-          this.mrrs.releasePercent25(chunk, t),
-          this.mrrs.releaseHisLockedReward(chunk, t),
-        ]);
+        const t = await this.defaultDataSource.transaction();
+        try {
+          // 插入数据
+          await Promise.all([
+            this.mrs.addMinerReward(chunk, t),
+            this.mlrs.addLockedReward(chunk, t),
+            this.mrrs.releasePercent25(chunk, t),
+            this.mrrs.releaseHisLockedReward(chunk, t),
+          ]);
+          await t.commit();
+        } catch (error) {
+          await t.rollback();
+          throw new MyError('同步历史奖励失败', 500, error.message);
+        }
       }
 
       // 保证一批数据是准确的
-      await t.commit();
       // 获取最新的一条的数据，流程同步之后的数据
       return _.maxBy(rewards, 'height');
     } catch (error) {
       console.log('error', error);
-      await t.rollback();
       throw new MyError('同步历史奖励失败', 500, error.message);
     }
   }
