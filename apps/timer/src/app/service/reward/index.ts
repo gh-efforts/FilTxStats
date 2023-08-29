@@ -161,14 +161,16 @@ export class RewardService {
         await t.commit();
         return null;
       }
-
-      // 插入数据
-      await Promise.all([
-        this.mrs.addMinerReward(rewards, t),
-        this.mlrs.addLockedReward(rewards, t),
-        this.mrrs.releasePercent25(rewards, t),
-        this.mrrs.releaseHisLockedReward(rewards, t),
-      ]);
+      const chunks = _.chunk(rewards, 1000);
+      for (const chunk of chunks) {
+        // 插入数据
+        await Promise.all([
+          this.mrs.addMinerReward(chunk, t),
+          this.mlrs.addLockedReward(chunk, t),
+          this.mrrs.releasePercent25(chunk, t),
+          this.mrrs.releaseHisLockedReward(chunk, t),
+        ]);
+      }
 
       // 保证一批数据是准确的
       await t.commit();
