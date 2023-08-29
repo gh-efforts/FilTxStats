@@ -69,15 +69,15 @@ export class RewardService {
     const t = await this.defaultDataSource.transaction();
 
     try {
-      // 只找同步完历史的 miner
-      const miners = await this.minerService.getMinerList({
-        isSyncRewardHistory: true,
-      });
+      const miners = await this.minerService.getMinerList();
 
       const params = [];
 
       miners.forEach(({ miner, rewardEndAt }) => {
-        const startAt = dayjs(rewardEndAt).unix();
+        const startAt = rewardEndAt
+          ? dayjs(rewardEndAt).unix()
+          : dayjs().subtract(2, 'hour').unix();
+
         const endAt = dayjs().subtract(1, 'hour').unix();
         // 只同步比当前时间早一个小时的交易数据（为了避免交易分叉，保证数据的准确性）
         if (startAt <= endAt) {

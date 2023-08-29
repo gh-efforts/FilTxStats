@@ -3,7 +3,7 @@ import * as bull from '@midwayjs/bull';
 import { Inject, Provide } from '@midwayjs/core';
 import { BaseService } from '../../core/baseService';
 
-import * as dayjs from 'dayjs';
+import { SyncMinerRewardHistoryDTO } from '../model/dto/miner';
 
 @Provide()
 export class MinerService extends BaseService<MinerEntity> {
@@ -29,26 +29,17 @@ export class MinerService extends BaseService<MinerEntity> {
   };
 
   async register(miners: string[]) {
-    for (let miner of miners) {
-      // 注册 miner 基础信息
-      await this.mapping.addMiner({
-        miner,
-        address: '',
-        sectoSize: 0,
-      });
-      const startAt = dayjs()
-        .subtract(180, 'day')
-        .format('YYYY-MM-DD HH:mm:ss');
+    // 注册 miner
+    await Promise.all(
+      miners.map(miner => {
+        this.mapping.addMiner({
+          miner,
+          address: '',
+          sectoSize: 0,
+        });
+      })
+    );
 
-      const endAt = dayjs().format('YYYY-MM-DD HH:mm:ss');
-
-      await this.runJob('minerReward', {
-        miner,
-        startAt,
-        endAt,
-        isHisiory: true,
-      });
-    }
     // 同步昨日 miner 的收益
     await this.runJob('minerDailyStats');
     // 同步 miner 的最新快照
@@ -56,6 +47,19 @@ export class MinerService extends BaseService<MinerEntity> {
     // 当新增完 miner 后， 开始同步 miner 的基础信息
     await this.runJob('minerBaseInfo');
 
+    return true;
+  }
+
+  async syncHisMinerReward(params: SyncMinerRewardHistoryDTO) {
+    const { miners, startAt, endAt } = params;
+    for (let miner of miners) {
+      await this.runJob('minerReward', {
+        miner,
+        startAt,
+        endAt,
+        isHisiory: true,
+      });
+    }
     return true;
   }
 

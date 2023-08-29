@@ -15,8 +15,8 @@ export class RegisterDTO {
 }
 
 export class SyncMinerRewardHistoryDTO {
-  @Rule(RuleType.string().optional())
-  miner: string;
+  @Rule(RuleType.array().items(RuleType.string().required()).optional())
+  miners: string[];
 
   @Rule(RuleType.string().optional())
   startAt: string;

@@ -19,7 +19,7 @@ export class MinerController {
   async getMinerHisRewardFromFilfox(
     @Body(ALL) param: MinerDTO.SyncMinerRewardHistoryDTO
   ) {
-    return this.service.runJob('minerReward', param);
+    return this.service.syncHisMinerReward(param);
   }
 
   @Post('/sync_miner_daily_stats', {
