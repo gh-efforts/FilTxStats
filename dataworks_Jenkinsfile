@@ -178,7 +178,7 @@ pipeline{
 
       stage('lark通知 DEV') {
          when {
-           branch 'interstellar_dev111
+           branch 'interstellar_dev111'
          }
           steps {
             container ('nodejs') {
