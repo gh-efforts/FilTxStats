@@ -1,21 +1,20 @@
 {
-  "compileOnSave": true,
   "compilerOptions": {
     "target": "es2018",
     "module": "commonjs",
+    // "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
     "moduleResolution": "node",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "inlineSourceMap": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": false,
-    "stripInternal": true,
+    "preserveWatchOutput": true,
     "skipLibCheck": true,
-    "pretty": true,
+    "strict": true,
+    "sourceMap": false,
     "declaration": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
     "outDir": "./dist"
   },
-  "include": ["./**/*.ts"],
+  "include": ["src"],
   "exclude": ["dist", "node_modules", "test"]
 }

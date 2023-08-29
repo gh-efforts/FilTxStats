@@ -203,7 +203,7 @@ export class PixiuSdk {
     startAt: number,
     endAt: number
   ): Promise<MinerRewardDetailRes[]> {
-    let result = await this.requestChunk(
+    let result = (await this.requestChunk(
       '/v2/miner/rewardDetail',
       minerIds,
       5,
@@ -211,7 +211,7 @@ export class PixiuSdk {
         startTime: startAt,
         endTime: endAt,
       }
-    );
+    )) as MinerRewardDetailRes[];
     return result.map(item => {
       item.Rewards =
         item.Rewards?.map(

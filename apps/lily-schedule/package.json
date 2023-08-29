@@ -4,7 +4,6 @@
   "description": "提供查询",
   "private": true,
   "dependencies": {
-    "@data-warehouse/filfox": "*",
     "@midwayjs/bootstrap": "^3.10.10",
     "@midwayjs/bull": "^3.10.13",
     "@midwayjs/core": "^3.10.10",

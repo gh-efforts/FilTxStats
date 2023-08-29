@@ -96,8 +96,9 @@ export type MinerRewardDetailRes = {
   miner_id: string;
 
   Rewards: {
+    miner_id?: string;
     // 节点名称
-    miner: string;
+    miner?: string;
     // 区块 id
     cid: string;
     // 锁仓奖励开始释放的时间

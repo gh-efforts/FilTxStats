@@ -1,6 +1,6 @@
 export interface MinerRewardOptions {
   // 节点名称
-  miner: string;
+  miner?: string;
   // 区块 id
   cid: string;
   // 锁仓奖励开始释放的时间

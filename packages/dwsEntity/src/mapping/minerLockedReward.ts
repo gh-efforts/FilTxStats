@@ -1,12 +1,7 @@
 import { Provide } from '@midwayjs/core';
 
 import { MinerLockedRewardEntity } from '@dws/entity';
-import {
-  BulkCreateOptions,
-  FindOptions,
-  Optional,
-  UpdateOptions,
-} from 'sequelize';
+import { BulkCreateOptions, FindOptions, Optional } from 'sequelize';
 
 @Provide()
 export class MinerLockedRewardMapping {
@@ -29,10 +24,7 @@ export class MinerLockedRewardMapping {
     return this.getModel().findAll(options);
   }
 
-  async updateMinerLockedReward(
-    values: { [x: string]: any },
-    options?: UpdateOptions
-  ) {
+  async updateMinerLockedReward(values: { [x: string]: any }, options?: any) {
     return this.getModel().update(values, options);
   }
 }

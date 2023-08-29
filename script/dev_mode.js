@@ -11,6 +11,7 @@ async function changePackageJsonFileToDevMode(packageName) {
     __dirname,
     `../packages/${packageName}/package.json`
   );
+  console.log(packageName);
   const packageFileContent = fs.readFileSync(packageFilePath).toString();
   const packageFileData = JSON.parse(packageFileContent);
 
@@ -30,7 +31,7 @@ async function changePackageJsonFileToDevMode(packageName) {
 
 // 切换所有包的 package.json 文件为开发状态
 async function changeAllPackageJsonFileToDevMode() {
-  const allPackages = fs.readdirSync(path.resolve(__dirname, '../packages'));
+  const allPackages = fs.readdirSync(path.resolve(__dirname, `../packages`));
 
   for (const package of allPackages) {
     await changePackageJsonFileToDevMode(package);
