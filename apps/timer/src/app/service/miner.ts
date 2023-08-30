@@ -39,7 +39,6 @@ export class MinerService extends BaseService<MinerEntity> {
         sectoSize: 0,
       })
     ).map(item => item.miner);
-    console.log('miners', miners);
     const minerBases = await this.pixiu.getMinerStaticState(miners);
 
     for (let miner of miners) {

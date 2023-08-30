@@ -7,7 +7,7 @@ export class MinerController {
   @Inject()
   service: MinerService;
 
-  @Post('/register')
+  @Post('/register', { summary: '注册 miner' })
   async register(@Body(ALL) params: MinerDTO.RegisterDTO) {
     const { miners } = params;
     return this.service.register(miners);
@@ -30,14 +30,14 @@ export class MinerController {
   }
 
   @Post('/sync_miner_snapshot', {
-    summary: '同步 miner 快照数据',
+    summary: '同步 miner 最新快照数据',
   })
   async syncMinerSnapshot() {
     return this.service.runJob('minerSnapshot');
   }
 
   @Post('/sync_miner_base_info', {
-    summary: '同步 miner 快照数据',
+    summary: '同步 miner 基础数据',
   })
   async syncMinerBase() {
     return this.service.runJob('minerBaseInfo');

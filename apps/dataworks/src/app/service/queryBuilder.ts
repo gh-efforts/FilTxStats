@@ -45,15 +45,42 @@ export class QueryBuilderService {
       .join(' , ');
   }
 
-  async getQueryCount(SQL: string): Promise<number> {
-    const result = (await this.dwsSource.query(
-      `SELECT COUNT(*) as count FROM (${SQL}) as query`,
-      {
-        type: QueryTypes.SELECT,
-        plain: true,
-      }
-    )) as any;
+  async getQueryCount(SQL: string, params: QueryBuilderDTO): Promise<number> {
+    const _SQL = `SELECT COUNT(*) as count FROM (${SQL}) as query`;
+    // param.SQL 是用户传进来的，优先搭配使用
+    const result = (await this.dwsSource.query(params.SQL ? params.SQL : _SQL, {
+      type: QueryTypes.SELECT,
+      plain: true,
+      replacements: params.replacements,
+    })) as any;
     return Number(result.count);
+  }
+
+  async getQuery(
+    SQL: string,
+    params: QueryBuilderDTO
+  ): Promise<object[] | object> {
+    const { group, order, replacements, limit, page, plain } = params;
+
+    const offset = (page - 1) * limit;
+
+    let _SQL = `${SQL} ${group ? `GROUP BY ${group}` : ''} ${this.getOrderBy(
+      order
+    )}`;
+
+    if (!plain) {
+      _SQL += ` LIMIT :limit OFFSET :offset`;
+    }
+
+    return this.dwsSource.query(params.SQL ? params.SQL : _SQL, {
+      replacements: {
+        ...replacements,
+        limit,
+        offset,
+      },
+      plain,
+      type: QueryTypes.SELECT,
+    });
   }
 
   getWhere(where: { [key: string]: any }) {
@@ -76,6 +103,22 @@ export class QueryBuilderService {
     return hash.digest('hex');
   }
 
+  getOrderBy(order: string | string[][]) {
+    if (_.isEmpty(order)) {
+      return '';
+    }
+
+    if (typeof order === 'string') {
+      return `ORDER BY ${order}`;
+    } else {
+      return `ORDER BY ${order
+        .map(item => {
+          return item.join(' ');
+        })
+        .join(', ')}`;
+    }
+  }
+
   async queryBuilder(params: QueryBuilderDTO) {
     const onlyKey = this.getOnlyKey(params);
 
@@ -84,35 +127,15 @@ export class QueryBuilderService {
       return JSON.parse(cache);
     }
 
-    const {
-      SQL,
-      tableName,
-      replacements,
-      plain,
-      fields,
-      where,
-      page,
-      limit,
-      group,
-    } = params;
+    const { tableName, plain, fields, where } = params;
 
     const _SQL = `SELECT ${this.getColumn(fields)} FROM ${tableName} ${
       Object.keys(where).length > 0 ? `WHERE ${this.getWhere(where)}` : ''
-    } ${group ? `GROUP BY ${group}` : ''}`;
-
-    const offset = (page - 1) * limit;
+    } `;
 
     const [count, result] = await Promise.all([
-      this.getQueryCount(SQL ? SQL : _SQL),
-      this.dwsSource.query(`${SQL ? SQL : _SQL} LIMIT :limit OFFSET :offset`, {
-        replacements: {
-          ...replacements,
-          limit,
-          offset,
-        },
-        plain,
-        type: QueryTypes.SELECT,
-      }),
+      this.getQueryCount(_SQL, params),
+      this.getQuery(_SQL, params),
     ]);
 
     const data = this.camelCase(result);
