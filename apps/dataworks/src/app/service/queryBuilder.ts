@@ -1,7 +1,9 @@
-import { Provide } from '@midwayjs/core';
+import { Inject, Provide } from '@midwayjs/core';
 import { InjectDataSource } from '@midwayjs/sequelize';
 import * as _ from 'lodash';
+import * as crypto from 'node:crypto';
 import { QueryTypes, Sequelize } from 'sequelize';
+import RedisUtils from '../comm/redis';
 import { QueryBuilderDTO } from '../model/dto/queryBuilder';
 
 @Provide()
@@ -10,7 +12,10 @@ export class QueryBuilderService {
   @InjectDataSource('default')
   dwsSource: Sequelize;
 
-  camelCase(result: object[] | object) {
+  @Inject()
+  redisUtils: RedisUtils;
+
+  camelCase(result: object[] | object): object[] | object {
     if (result instanceof Array) {
       return result.map(item => {
         const obj = {};
@@ -51,16 +56,55 @@ export class QueryBuilderService {
     return Number(result.count);
   }
 
-  async queryBuilder(params: QueryBuilderDTO) {
-    const { tableName, replacements, plain, fields, page, limit } = params;
+  getWhere(where: { [key: string]: any }) {
+    let arr = [];
+    for (const key in where) {
+      if (typeof where[key] === 'object') {
+        for (const operator in where[key]) {
+          arr.push(`${key} ${operator} '${where[key][operator]}'`);
+        }
+      } else {
+        arr.push(`${key} = '${where[key]}'`);
+      }
+    }
+    return arr.join(' AND ');
+  }
 
-    const SQL = `SELECT ${this.getColumn(fields)} FROM ${tableName}`;
+  getOnlyKey(params: QueryBuilderDTO) {
+    const str = JSON.stringify(params);
+    const hash = crypto.createHash('md5').update(str);
+    return hash.digest('hex');
+  }
+
+  async queryBuilder(params: QueryBuilderDTO) {
+    const onlyKey = this.getOnlyKey(params);
+
+    const cache = await this.redisUtils.getString(onlyKey);
+    if (cache) {
+      return JSON.parse(cache);
+    }
+
+    const {
+      SQL,
+      tableName,
+      replacements,
+      plain,
+      fields,
+      where,
+      page,
+      limit,
+      group,
+    } = params;
+
+    const _SQL = `SELECT ${this.getColumn(fields)} FROM ${tableName} ${
+      Object.keys(where).length > 0 ? `WHERE ${this.getWhere(where)}` : ''
+    } ${group ? `GROUP BY ${group}` : ''}`;
 
     const offset = (page - 1) * limit;
 
     const [count, result] = await Promise.all([
-      this.getQueryCount(SQL),
-      this.dwsSource.query(`${SQL} LIMIT :limit OFFSET :offset`, {
+      this.getQueryCount(SQL ? SQL : _SQL),
+      this.dwsSource.query(`${SQL ? SQL : _SQL} LIMIT :limit OFFSET :offset`, {
         replacements: {
           ...replacements,
           limit,
@@ -73,13 +117,20 @@ export class QueryBuilderService {
 
     const data = this.camelCase(result);
 
+    let _result = data;
+
     if (!plain) {
-      return {
+      _result = {
         count,
         list: data,
       };
     }
 
-    return data;
+    // 结果不为空，才缓存
+    if (!_.isEmpty(data)) {
+      await this.redisUtils.setValue(onlyKey, JSON.stringify(_result), 300);
+    }
+
+    return _result;
   }
 }

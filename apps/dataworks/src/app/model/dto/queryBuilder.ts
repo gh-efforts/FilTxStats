@@ -25,13 +25,15 @@ export class QueryBuilderDTO extends QueryParamDTO {
   @ApiProperty({
     type: 'object',
     example: {
-      tableName: 'miner',
       miner: 'f01155',
+      sector_size: {
+        '>': 34359738368,
+      },
     },
-    description: 'SQL',
+    description: '查询条件',
   })
   @Rule(RuleType.object().default({}))
-  where: {};
+  where: { [key: string]: unknown };
 
   @ApiProperty({
     type: 'boolean',
@@ -57,4 +59,12 @@ export class QueryBuilderDTO extends QueryParamDTO {
   })
   @Rule(RuleType.array().items(RuleType.string().required()).default([]))
   fields: string[];
+
+  @ApiProperty({
+    type: 'string',
+    example: 'miner',
+    description: '字段分组',
+  })
+  @Rule(RuleType.string().optional())
+  group: string;
 }
