@@ -47,7 +47,12 @@ export class QueryBuilderDTO extends QueryParamDTO {
     example: 'miner',
     description: '表名',
   })
-  @Rule(RuleType.string().required())
+  @Rule(
+    RuleType.string().when('SQL', {
+      is: RuleType.exist(),
+      otherwise: RuleType.string().required(),
+    })
+  )
   tableName: string;
 
   @ApiProperty({

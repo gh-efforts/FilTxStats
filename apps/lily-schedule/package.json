@@ -1,7 +1,7 @@
 {
   "name": "lily-schedule",
   "version": "1.0.0",
-  "description": "提供查询",
+  "description": "同步 lily 数据",
   "private": true,
   "dependencies": {
     "@midwayjs/bootstrap": "^3.10.10",

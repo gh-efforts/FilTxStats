@@ -22,9 +22,10 @@ export class MinerService extends BaseService<MinerEntity> {
     this.pixiu = new PixiuSdk(this.pixiuUrl);
   }
 
-  async modifyMiner(values: { [x: string]: any }, where?: any) {
+  async modifyMiner(values: { [x: string]: any }, where?: any, options?: any) {
     return this.mapping.modifyMiner(values, {
       where,
+      ...options,
     });
   }
 

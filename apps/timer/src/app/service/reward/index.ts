@@ -170,6 +170,19 @@ export class RewardService {
             this.mrrs.releasePercent25(chunk, t),
             this.mrrs.releaseHisLockedReward(chunk, t),
           ]);
+          const reward = _.maxBy(chunk, 'height');
+          // 更新奖励状态字段
+          await this.minerService.modifyMiner(
+            {
+              rewardEndAt: reward?.time || null,
+            },
+            {
+              miner,
+            },
+            {
+              transaction: t,
+            }
+          );
           await t.commit();
         } catch (error) {
           await t.rollback();
@@ -177,8 +190,6 @@ export class RewardService {
         }
       }
 
-      // 保证一批数据是准确的
-      // 获取最新的一条的数据，流程同步之后的数据
       return _.maxBy(rewards, 'height');
     } catch (error) {
       console.log('error', error);

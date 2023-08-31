@@ -5,6 +5,9 @@ import { MinerLockedRewardEntity } from './src/entity/minerLockedReward';
 import { MinerReleaseRecordEntity } from './src/entity/minerReleaseRecord';
 import { MinerRewardEntity } from './src/entity/minerReward';
 import { MinerSnapshotEntity } from './src/entity/minerSnapshot';
+import { VmMessagesEntity } from './src/entity/vmMessages';
+import { WalletAddressEntity } from './src/entity/walletAddress';
+import { WalletAddressSyncStatusEntity } from './src/entity/walletAddressSyncStatus';
 
 import { MinerMapping } from './src/mapping/miner';
 import { MinerDailyStatsMapping } from './src/mapping/minerDailyStats';
@@ -12,6 +15,9 @@ import { MinerLockedRewardMapping } from './src/mapping/minerLockedReward';
 import { MinerReleaseRecordMapping } from './src/mapping/minerReleaseRecord';
 import { MinerRewardMapping } from './src/mapping/minerReward';
 import { MinerSnapshotMapping } from './src/mapping/minerSnapshot';
+import { VmMessagesMapping } from './src/mapping/vmMessages';
+import { WalletAddressMapping } from './src/mapping/walletAddress';
+import { WalletAddressSyncStatusMapping } from './src/mapping/walletAddressSyncStatus';
 
 export {
   MinerDailyStatsEntity,
@@ -26,4 +32,10 @@ export {
   MinerRewardMapping,
   MinerSnapshotEntity,
   MinerSnapshotMapping,
+  VmMessagesEntity,
+  VmMessagesMapping,
+  WalletAddressEntity,
+  WalletAddressMapping,
+  WalletAddressSyncStatusEntity,
+  WalletAddressSyncStatusMapping,
 };

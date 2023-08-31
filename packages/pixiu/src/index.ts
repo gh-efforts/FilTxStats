@@ -68,7 +68,7 @@ export class PixiuSdk {
     } catch (e) {
       const message = (e as Error).message;
       console.log('error', `Pixiu GET ${url} 方法出错：${message}`);
-      errorMsg.push(message);
+      errorMsg.push(`Pixiu GET ${url} 方法出错：${message}`);
 
       if (errorCount >= 3) {
         await this.lark.larkNotify(errorMsg.join('\n'));

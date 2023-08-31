@@ -18,6 +18,9 @@ export class LarkSdk {
       },
     };
 
+    if (process.env.REAL_ENV === 'local') {
+      return;
+    }
     try {
       const res = await this._instance.request({
         method: 'POST',

@@ -54,11 +54,9 @@ export class MinerRewardProcessor implements IProcessor {
           startAt,
           endAt
         );
-        // 更新奖励状态字段
         await this.minerService.modifyMiner(
           {
             rewardEndAt: reward?.time || null,
-            isSyncRewardHistory: true,
           },
           {
             miner,

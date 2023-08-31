@@ -46,9 +46,11 @@ export class QueryBuilderService {
   }
 
   async getQueryCount(SQL: string, params: QueryBuilderDTO): Promise<number> {
-    const _SQL = `SELECT COUNT(*) as count FROM (${SQL}) as query`;
+    const _SQL = `SELECT COUNT(*) as count FROM (${
+      params.SQL ? params.SQL : SQL
+    }) as query`;
     // param.SQL 是用户传进来的，优先搭配使用
-    const result = (await this.dwsSource.query(params.SQL ? params.SQL : _SQL, {
+    const result = (await this.dwsSource.query(_SQL, {
       type: QueryTypes.SELECT,
       plain: true,
       replacements: params.replacements,
