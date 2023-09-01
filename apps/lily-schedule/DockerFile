@@ -6,7 +6,7 @@ RUN apk update
 WORKDIR /home
 COPY . .
 
-RUN npm install -g turbo@1.6.3
+RUN npm install --registry=https://registry.npmmirror.com/  -g turbo@1.6.3
 RUN npm run build_mode
 RUN turbo prune --scope=lily-schedule --docker
 
@@ -19,11 +19,11 @@ WORKDIR /home
 COPY --from=builder /home/out/json/ .
 COPY --from=builder /home/out/package-lock.json ./package-lock.json
 COPY .gitignore .gitignore
-RUN npm install
+RUN npm install --registry=https://registry.npmmirror.com/ 
 
 COPY turbo.json turbo.json
 COPY --from=builder /home/out/full/ .
-RUN npx turbo run build --filter=insight
+RUN npx turbo run build --filter=lily-schedule
 
 FROM node:16.14.2 AS runner
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
@@ -40,7 +40,7 @@ COPY --from=installer /home/apps/lily-schedule ./apps/lily-schedule
 
 ENV TZ="Asia/Shanghai"
 
-RUN npm install pm2 -g
+RUN npm install pm2 --registry=https://registry.npmmirror.com/  -g
 
 EXPOSE 7001
 

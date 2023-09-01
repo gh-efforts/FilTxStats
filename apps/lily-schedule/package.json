@@ -4,6 +4,13 @@
   "description": "同步 lily 数据",
   "private": true,
   "dependencies": {
+    "@dws/entity": "*",
+    "@filfox/http": "*",
+    "@lark/core": "*",
+    "@lily/entity": "*",
+    "@pixiu/http": "*",
+    "@dws/utils": "*",
+    "@filscan/http": "*",
     "@midwayjs/bootstrap": "^3.10.10",
     "@midwayjs/bull": "^3.10.13",
     "@midwayjs/core": "^3.10.10",
