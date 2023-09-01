@@ -157,7 +157,7 @@ pipeline{
           }
         stage('Deploy to MASTER') {
          when {
-           branch 'timer_master'
+           branch 'timer-master'
          }
           steps {
             container ('nodejs') {
