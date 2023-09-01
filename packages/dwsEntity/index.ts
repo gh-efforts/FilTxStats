@@ -1,4 +1,5 @@
 // 导出数据库所有表的 Entity 类
+import { DerivedGasOutputsEntity } from './src/entity/derivedGasOutputs';
 import { MinerEntity } from './src/entity/miner';
 import { MinerDailyStatsEntity } from './src/entity/minerDailyStats';
 import { MinerLockedRewardEntity } from './src/entity/minerLockedReward';
@@ -9,6 +10,7 @@ import { VmMessagesEntity } from './src/entity/vmMessages';
 import { WalletAddressEntity } from './src/entity/walletAddress';
 import { WalletAddressSyncStatusEntity } from './src/entity/walletAddressSyncStatus';
 
+import { DerivedGasOutputsMapping } from './src/mapping/derivedGasOutputs';
 import { MinerMapping } from './src/mapping/miner';
 import { MinerDailyStatsMapping } from './src/mapping/minerDailyStats';
 import { MinerLockedRewardMapping } from './src/mapping/minerLockedReward';
@@ -20,6 +22,8 @@ import { WalletAddressMapping } from './src/mapping/walletAddress';
 import { WalletAddressSyncStatusMapping } from './src/mapping/walletAddressSyncStatus';
 
 export {
+  DerivedGasOutputsEntity,
+  DerivedGasOutputsMapping,
   MinerDailyStatsEntity,
   MinerDailyStatsMapping,
   MinerEntity,

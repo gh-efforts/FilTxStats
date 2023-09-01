@@ -71,7 +71,9 @@ export class QueryBuilderService {
     )}`;
 
     if (!plain) {
-      _SQL += ` LIMIT :limit OFFSET :offset`;
+      const paging = ` LIMIT :limit OFFSET :offset`;
+      _SQL += paging;
+      params.SQL += paging;
     }
 
     return this.dwsSource.query(params.SQL ? params.SQL : _SQL, {
