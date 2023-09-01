@@ -1,5 +1,6 @@
 // 导出数据库所有表的 Entity 类
 import { DerivedGasOutputsEntity } from './src/entity/derivedGasOutputs';
+import { FilcoinNetworkDataEntity } from './src/entity/filcoinNetworkData';
 import { MinerEntity } from './src/entity/miner';
 import { MinerDailyStatsEntity } from './src/entity/minerDailyStats';
 import { MinerLockedRewardEntity } from './src/entity/minerLockedReward';
@@ -11,6 +12,7 @@ import { WalletAddressEntity } from './src/entity/walletAddress';
 import { WalletAddressSyncStatusEntity } from './src/entity/walletAddressSyncStatus';
 
 import { DerivedGasOutputsMapping } from './src/mapping/derivedGasOutputs';
+import { FilcoinNetworkDataMapping } from './src/mapping/filcoinNetworkData';
 import { MinerMapping } from './src/mapping/miner';
 import { MinerDailyStatsMapping } from './src/mapping/minerDailyStats';
 import { MinerLockedRewardMapping } from './src/mapping/minerLockedReward';
@@ -24,6 +26,8 @@ import { WalletAddressSyncStatusMapping } from './src/mapping/walletAddressSyncS
 export {
   DerivedGasOutputsEntity,
   DerivedGasOutputsMapping,
+  FilcoinNetworkDataEntity,
+  FilcoinNetworkDataMapping,
   MinerDailyStatsEntity,
   MinerDailyStatsMapping,
   MinerEntity,

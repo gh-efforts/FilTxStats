@@ -160,6 +160,10 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     url: 'https://filfox.info/api/v1',
   };
 
+  config.filscanConfig = {
+    url: 'https://api-v2.filscan.io/api',
+  };
+
   config.galaxyConfig = {
     url: 'https://pixiu-mainnet.filmeta.net',
   };

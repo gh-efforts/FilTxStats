@@ -70,6 +70,10 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     url: process.env.FILFOX_URL,
   };
 
+  config.filscanConfig = {
+    url: process.env.FILSCAN_URL,
+  };
+
   config.midwayLogger = {
     clients: {
       appLogger: {

@@ -170,6 +170,10 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     password: '6pyNH5R%%Paz',
   };
 
+  config.filscanConfig = {
+    url: 'https://api-v2.filscan.io/api',
+  };
+
   config.bull = {
     defaultQueueOptions: {
       redis: 'redis://127.0.0.1:6379',
