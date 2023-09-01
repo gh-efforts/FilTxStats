@@ -42,4 +42,11 @@ export class MinerController {
   async syncMinerBase() {
     return this.service.runJob('minerBaseInfo');
   }
+
+  @Post('/sync_miner_type', {
+    summary: '同步 miner 类型',
+  })
+  async syncMinerType(@Body(ALL) param: MinerDTO.SyncMinerTypeDTO) {
+    return this.service.runJob('minerType', param);
+  }
 }

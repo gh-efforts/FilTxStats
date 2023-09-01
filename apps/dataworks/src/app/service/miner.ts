@@ -46,7 +46,10 @@ export class MinerService extends BaseService<MinerEntity> {
     await this.runJob('minerSnapshot');
     // 当新增完 miner 后， 开始同步 miner 的基础信息
     await this.runJob('minerBaseInfo');
-
+    // 当新增完 miner 后, 同步 miner 的类型
+    await this.runJob('minerType', {
+      miners,
+    });
     return true;
   }
 

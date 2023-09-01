@@ -1,4 +1,4 @@
-import { MidwayConfig, MidwayAppInfo } from '@midwayjs/core';
+import { MidwayAppInfo, MidwayConfig } from '@midwayjs/core';
 
 export default (appInfo: MidwayAppInfo): MidwayConfig => {
   const config = {} as MidwayConfig;
@@ -95,6 +95,20 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
   config.qiNiuYunConfig = {
     email: process.env.QINIUYUN_EMAIL,
     password: process.env.QINIUYUN_PASSWORD,
+  };
+
+  config.bull = {
+    defaultQueueOptions: {
+      redis: {
+        port: +process.env.REDIS_CLIENT_PORT,
+        host: process.env.REDIS_CLIENT_HOST,
+        db: +process.env.REDIS_CLIENT_DB,
+        password: process.env.REDIS_CLIENT_PASSWORD,
+      },
+      prefix: '{midway-bull}',
+    },
+    clearRepeatJobWhenStart: false,
+    defaultConcurrency: 10,
   };
 
   return config;

@@ -44,6 +44,14 @@ export class MinerEntity extends Model {
   address: string;
 
   @Column({
+    type: DataType.STRING(255),
+    allowNull: false,
+    defaultValue: '',
+    comment: '节点类型',
+  })
+  type: string;
+
+  @Column({
     type: DataType.DECIMAL(32, 0),
     allowNull: true,
     defaultValue: 0,
