@@ -46,7 +46,6 @@ export class MinerRewardProcessor implements IProcessor {
   async execute(params: MinerRewardParams) {
     const { job } = this.ctx;
     const { miner, startAt, endAt, isHisiory = false } = params;
-
     try {
       if (isHisiory) {
         const reward = await this.rewardService.syncMinerRewardHistory(
@@ -54,9 +53,11 @@ export class MinerRewardProcessor implements IProcessor {
           startAt,
           endAt
         );
+        console.log('reward', reward);
         await this.minerService.modifyMiner(
           {
             rewardEndAt: reward?.time || null,
+            isSyncRewardHistory: true,
           },
           {
             miner,
