@@ -18,3 +18,63 @@ export interface IBlocksRes {
     reward: string;
   }[];
 }
+
+export interface IMinerInfo {
+  id: string;
+  robust: string;
+  actor: string;
+  createHeight: number;
+  createTimestamp: number;
+  lastSeenHeight: number;
+  lastSeenTimestamp: number;
+  balance: string;
+  messageCount: number;
+  timestamp: number;
+  tokens: number;
+  miner: {
+    owner: {
+      address: string;
+      balance: string;
+    };
+    worker: {
+      address: string;
+      balance: string;
+    };
+    beneficiary: {
+      address: string;
+      balance: string;
+    };
+    controlAddresses: {
+      address: string;
+      balance: string;
+    }[];
+    peerId: string;
+    multiAddresses: string[];
+    sectorSize: number;
+    rawBytePower: string;
+    qualityAdjPower: string;
+    networkRawBytePower: string;
+    networkQualityAdjPower: string;
+    blocksMined: number;
+    weightedBlocksMined: number;
+    totalRewards: string;
+    sectors: {
+      live: number;
+      active: number;
+      faulty: number;
+      recovering: number;
+    };
+    preCommitDeposits: string;
+    vestingFunds: string;
+    initialPledgeRequirement: string;
+    availableBalance: string;
+    sectorPledgeBalance: string;
+    pledgeBalance: string;
+    rawBytePowerRank: number;
+    qualityAdjPowerRank: number;
+  };
+  ownedMiners: any[];
+  workerMiners: any[];
+  benefitedMiners: any[];
+  address: string;
+}

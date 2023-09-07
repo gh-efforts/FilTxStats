@@ -2,7 +2,7 @@ import { bigDiv, bigMul, getTimeByHeight, transferFilValue } from '@dws/utils';
 import axios, { Axios } from 'axios';
 import * as dayjs from 'dayjs';
 import * as _ from 'lodash';
-import type { IBlocksRes, IGet } from './interface';
+import type { IBlocksRes, IGet, IMinerInfo } from './interface';
 
 export class FilfoxSdk {
   private _instance: Axios;
@@ -101,6 +101,13 @@ export class FilfoxSdk {
         page,
         pageSize,
       },
+    });
+  }
+
+  public getMinerDetail(minerId: string): Promise<IMinerInfo> {
+    return this._get({
+      url: `/address/${minerId}`,
+      query: {},
     });
   }
 
