@@ -86,6 +86,13 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
       },
       lily: {
         dialect: 'postgres',
+        dialectOptions: {
+          // 此处配置将直接传给数据库
+          connectTimeout: 30000, // 单次查询连接超时时间
+          dateStrings: true, // 不会返回UTC格式时间
+          typeCast: true, // 驼峰命名
+          bigNumberStrings: true, // bigInt和decimal 以字符串返回
+        },
         entities: Object.values(lilyEntity),
       },
     },
@@ -158,6 +165,16 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
 
   config.galaxyConfig = {
     url: 'https://pixiu-mainnet.filmeta.net',
+  };
+
+  config.filutilsConfig = {
+    url: 'https://api.filutils.com/api/v1',
+  };
+
+  config.lotusConfig = {
+    url: 'http://128.136.157.166:43234/rpc/v0',
+    token:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJyZWFkIiwid3JpdGUiLCJzaWduIiwiYWRtaW4iXX0.joDYscIU3BijQtHXWwIUwHhgVLLYvX-A_ij1Uq0wo3Q',
   };
 
   config.qiNiuYunConfig = {

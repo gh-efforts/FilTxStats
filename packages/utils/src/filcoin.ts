@@ -28,3 +28,20 @@ export function getHeightByTime(timeStr: string) {
     ) + 2473200;
   return height;
 }
+
+export function getYesterdayTime() {
+  const startAt = dayjs()
+    .subtract(1, 'day')
+    .startOf('day')
+    .format('YYYY-MM-DD HH:mm:ss');
+
+  const endAt = dayjs()
+    .subtract(1, 'day')
+    .endOf('day')
+    .format('YYYY-MM-DD HH:mm:ss');
+
+  return {
+    startAt,
+    endAt,
+  };
+}

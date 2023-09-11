@@ -4,6 +4,7 @@ import { Inject, Provide } from '@midwayjs/core';
 import { BaseService } from '../../core/baseService';
 
 import { SyncMinerRewardHistoryDTO } from '../model/dto/miner';
+import dayjs = require('dayjs');
 
 @Provide()
 export class MinerService extends BaseService<MinerEntity> {
@@ -49,6 +50,13 @@ export class MinerService extends BaseService<MinerEntity> {
     // 当新增完 miner 后, 同步 miner 的类型
     await this.runJob('minerType', {
       miners,
+    });
+    // 同步 miner 的历史奖励
+    await this.syncHisMinerReward({
+      miners,
+      startAt: '2022-12-20',
+      endAt: dayjs().format('YYYY-MM-DD'),
+      isHisiory: true,
     });
     return true;
   }
