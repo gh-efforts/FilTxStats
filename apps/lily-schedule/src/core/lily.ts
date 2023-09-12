@@ -9,7 +9,7 @@ export class LilyService {
   @InjectDataSource('lily')
   lilySource: Sequelize;
 
-  private lark: LarkSdk;
+  lark: LarkSdk;
 
   constructor() {
     this.lark = new LarkSdk();
@@ -27,6 +27,7 @@ export class LilyService {
         type: QueryTypes.SELECT,
         replacements,
         plain,
+        raw: true,
       })) as any;
     } catch (e) {
       const message = (e as Error).message;
@@ -34,7 +35,7 @@ export class LilyService {
       errorMsg.push(`Lily 查询 ${SQL} 出错：${message}`);
 
       if (errorCount >= 3) {
-        await this.lark.larkNotify(errorMsg.join('\n'));
+        // await this.lark.larkNotify(errorMsg.join('\n'));
         // TODO send to lark
         throw new Error(JSON.stringify(errorMsg));
       }

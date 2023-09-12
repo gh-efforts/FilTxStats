@@ -49,4 +49,11 @@ export class MinerController {
   async syncMinerType(@Body(ALL) param: MinerDTO.SyncMinerTypeDTO) {
     return this.service.runJob('minerType', param);
   }
+
+  @Post('/sync_miner_encapsulation', {
+    summary: '同步 miner 昨日封装数据',
+  })
+  async syncMinerEncapsulation() {
+    return this.service.runJob('minerEncapsulation');
+  }
 }

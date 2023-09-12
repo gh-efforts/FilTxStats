@@ -5,7 +5,7 @@ import { MinerService } from '../app/service/miner';
 
 import { LarkSdk } from '@lark/core';
 
-@Processor('minerType', {
+@Processor('minerEncapsulation', {
   removeOnComplete: true,
   removeOnFail: true,
   attempts: 5,
@@ -14,7 +14,7 @@ import { LarkSdk } from '@lark/core';
     delay: 1000 * 60,
   },
 })
-export class MinerTypeProcessor implements IProcessor {
+export class MinerEncapsulationProcessor implements IProcessor {
   @Inject()
   logger;
 
@@ -30,12 +30,12 @@ export class MinerTypeProcessor implements IProcessor {
     this.lark = new LarkSdk();
   }
 
-  async execute(params: { miners: string[] }) {
+  async execute() {
     const { job } = this.ctx;
-    const { miners } = params;
     try {
-      await this.service.syncMinersByType(miners);
+      await this.service.syncMinersByEncapsulation();
     } catch (error) {
+      console.log('error', error);
       const attemptsMade = job.attemptsMade + 1;
 
       // I/O 操作失败，记录日志并重试
