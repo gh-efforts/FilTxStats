@@ -218,4 +218,33 @@ export class LilyMapping extends LilyService {
       qualityadjpower: string;
     }>(SQL, [miner, endHeight], true);
   }
+
+  async getMinerSectorSealCount(miner: string, startAt: string, endAt: string) {
+    const [startHeight, endHeight] = [
+      getHeightByTime(startAt),
+      getHeightByTime(endAt),
+    ];
+
+    const SQL = `
+      SELECT
+        count(*) as count
+      FROM
+        miner_sector_infos_v7 
+      WHERE
+        miner_id = ? 
+        AND activation_epoch >= ? 
+        AND activation_epoch <= ? 
+        AND sector_key_cid IS NULL;
+    `;
+    const result = await this.query<{ count: string }>(
+      SQL,
+      [miner, startHeight - 1, endHeight - 1],
+      true
+    );
+
+    return {
+      miner,
+      count: result.count,
+    };
+  }
 }

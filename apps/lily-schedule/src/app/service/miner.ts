@@ -130,6 +130,14 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
       })
     );
 
+    const minersSectorSealCount = await Promise.all(
+      miners.map(miner => {
+        return limit(() =>
+          this.lilyMapping.getMinerSectorSealCount(miner, startAt, endAt)
+        );
+      })
+    );
+
     for (const miner of miners) {
       const minerPledgeIncr = minersPledgeIncr.find(
         item => item?.miner === miner
@@ -153,6 +161,10 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
 
       const minerPower = minersPower.find(item => item?.miner === miner);
 
+      const minerSectorSealCount = minersSectorSealCount.find(
+        item => item?.miner === miner
+      );
+
       const object = {
         miner,
         sectorSize: minerInfo?.sectorsize || 0,
@@ -164,6 +176,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         penalty: minerGas?.penalty || 0,
         blockLoss: minerLonelyblock?.lonelyblock.length || 0,
         faultedSector: minerFaultedSector?.count || 0,
+        sectorSealCount: minerSectorSealCount?.count || 0,
         dateAt: endAt,
       };
 
@@ -178,6 +191,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
           'penalty',
           'blockLoss',
           'faultedSector',
+          'sectorSealCount',
         ],
       });
     }

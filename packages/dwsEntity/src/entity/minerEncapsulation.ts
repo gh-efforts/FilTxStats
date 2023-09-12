@@ -109,6 +109,15 @@ export class MinerEncapsulationEntity extends Model {
   faultedSector: number;
 
   @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    comment: '新增扇区数',
+    field: 'sector_seal_count',
+  })
+  sectorSealCount: number;
+
+  @Column({
     type: DataType.DATEONLY,
     allowNull: false,
     comment: '天',

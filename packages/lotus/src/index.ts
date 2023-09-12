@@ -40,12 +40,11 @@ export class LotusSdk {
 
       return res.data;
     } catch (e) {
-      console.log('e', e);
       const message = (e as Error).message;
 
       errorMsg.push(`Lotus Post ${params.method} 方法出错：${message}`);
 
-      if (errorCount >= 3) {
+      if (errorCount >= 5) {
         throw new Error(JSON.stringify(errorMsg));
       }
       return this._post(params, errorMsg, errorCount + 1);
