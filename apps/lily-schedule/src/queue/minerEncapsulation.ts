@@ -6,6 +6,9 @@ import { MinerService } from '../app/service/miner';
 import { LarkSdk } from '@lark/core';
 
 @Processor('minerEncapsulation', {
+  repeat: {
+    cron: '0 40 2 * * *',
+  },
   removeOnComplete: true,
   removeOnFail: true,
   attempts: 5,
