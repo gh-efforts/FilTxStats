@@ -174,4 +174,48 @@ export class LilyMapping extends LilyService {
       count: result.count,
     };
   }
+
+  async getMinerInfo(miner: string) {
+    const SQL = `
+      SELECT
+        miner_id as miner,
+        state_root as stateRoot,
+        sector_size as sectorSize 
+      FROM
+        miner_infos 
+      WHERE
+        miner_id = ?
+      ORDER BY
+        height DESC 
+        LIMIT 1;
+    `;
+    return this.query<{ miner: string; stateroot: string; sectorsize: string }>(
+      SQL,
+      [miner],
+      true
+    );
+  }
+
+  async getMinerPower(miner: string, endAt: string) {
+    const endHeight = getHeightByTime(endAt);
+    const SQL = `
+      SELECT
+        miner_id as miner,
+        raw_byte_power as rawBytePower,
+        quality_adj_power  as qualityAdjPower
+      FROM
+        power_actor_claims 
+      WHERE
+        miner_id = ? 
+        AND height <= ? 
+      ORDER BY
+        height DESC 
+        LIMIT 1;
+    `;
+    return this.query<{
+      miner: string;
+      rawbytepower: string;
+      qualityadjpower: string;
+    }>(SQL, [miner, endHeight], true);
+  }
 }

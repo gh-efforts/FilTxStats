@@ -55,7 +55,7 @@ export class MinerEntity extends Model {
     type: DataType.DECIMAL(32, 0),
     allowNull: true,
     defaultValue: 0,
-    comment: '有效算力，单位byte',
+    comment: '扇区大小，单位byte',
     field: 'sector_size',
   })
   sectoSize: number;

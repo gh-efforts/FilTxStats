@@ -1,5 +1,4 @@
 import axios, { Axios } from 'axios';
-
 export class LotusSdk {
   private _instance: Axios;
 
@@ -67,5 +66,21 @@ export class LotusSdk {
         params,
       },
     });
+  }
+
+  async getStateMinerInfo(miner: string) {
+    const method = 'Filecoin.StateMinerInfo';
+    const params = [miner, null];
+
+    const res: any = await this._post({
+      data: {
+        method,
+        params,
+      },
+    });
+    return {
+      miner,
+      sectorsize: res.result.SectorSize,
+    };
   }
 }

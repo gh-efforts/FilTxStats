@@ -13,6 +13,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     },
     {
       name: 'idx_miner_date',
+      unique: true,
       using: 'BTREE',
       fields: [{ name: 'miner' }, { name: 'date_at' }],
     },
@@ -34,6 +35,15 @@ export class MinerEncapsulationEntity extends Model {
     comment: '节点',
   })
   miner: string;
+
+  @Column({
+    type: DataType.DECIMAL(32, 0),
+    allowNull: true,
+    defaultValue: 0,
+    comment: '扇区大小，单位byte',
+    field: 'sector_size',
+  })
+  sectorSize: number;
 
   @Column({
     type: DataType.DECIMAL(38, 0),
@@ -89,6 +99,14 @@ export class MinerEncapsulationEntity extends Model {
     comment: '惩罚/FiL',
   })
   penalty: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    comment: '错误扇区',
+    field: 'faulted_sector',
+  })
+  faultedSector: number;
 
   @Column({
     type: DataType.DATEONLY,

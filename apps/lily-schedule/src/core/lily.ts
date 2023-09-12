@@ -27,6 +27,7 @@ export class LilyService {
         type: QueryTypes.SELECT,
         replacements,
         plain,
+        raw: true,
       })) as any;
     } catch (e) {
       const message = (e as Error).message;

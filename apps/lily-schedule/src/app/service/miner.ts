@@ -117,30 +117,68 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         );
       })
     );
+    // 查询扇区大小
+    const minersInfo = await Promise.all(
+      miners.map(miner => {
+        return limit(() => this.lilyMapping.getMinerInfo(miner));
+      })
+    );
+    // 查询昨日算力
+    const minersPower = await Promise.all(
+      miners.map(miner => {
+        return limit(() => this.lilyMapping.getMinerPower(miner, endAt));
+      })
+    );
+
     for (const miner of miners) {
       const minerPledgeIncr = minersPledgeIncr.find(
         item => item?.miner === miner
       );
       const minerGas = getMinersGas.find(item => item?.miner === miner);
+
       const minerLonelyblock = minersLonelyblock.find(
         item => item?.miner === miner
       );
+
       const minerFaultedSector = minersFaultedSector.find(
         item => item?.miner === miner
       );
+
+      let minerInfo: any = minersInfo.find(item => item?.miner === miner);
+
+      if (!minerInfo) {
+        // 链上补充数据
+        minerInfo = await this.lotus.getStateMinerInfo(miner);
+      }
+
+      const minerPower = minersPower.find(item => item?.miner === miner);
+
       const object = {
         miner,
-        qualityAdjPower: 0,
-        rawBytePower: 0,
+        sectorSize: minerInfo?.sectorsize || 0,
+        qualityAdjPower: minerPower?.qualityadjpower || 0,
+        rawBytePower: minerPower?.rawbytepower || 0,
         increasePledge: minerPledgeIncr?.initiaPledge || 0,
         encapsulationGas: minerGas?.gas || 0,
         windowPost: minerGas?.windowPost || 0,
         penalty: minerGas?.penalty || 0,
         blockLoss: minerLonelyblock?.lonelyblock.length || 0,
         faultedSector: minerFaultedSector?.count || 0,
+        dateAt: endAt,
       };
+
       await this.minerEncapsulationMapping.upsertEncapsulation(object, {
-        fields: ['miner'],
+        fields: [
+          'sectorSize',
+          'qualityAdjPower',
+          'rawBytePower',
+          'increasePledge',
+          'encapsulationGas',
+          'windowPost',
+          'penalty',
+          'blockLoss',
+          'faultedSector',
+        ],
       });
     }
   }
