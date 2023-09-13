@@ -20,16 +20,17 @@ import * as validate from '@midwayjs/validate';
 import { join } from 'path';
 
 import * as dwsEntity from '@dws/entity';
+import * as lilyEntity from '@lily/entity';
 import { NotFoundFilter } from './filter/notfound';
 import { AccessLogMiddleware } from './middleware/accessLog';
 import { FormatMiddleware } from './middleware/format';
 import { JwtMiddleware } from './middleware/jwt';
 import { RequestIdMiddleware } from './middleware/requestId';
-const entity = () => {
+const entity = entity => {
   const arr = [];
-  Object.keys(dwsEntity).map(key => {
+  Object.keys(entity).map(key => {
     if (new RegExp('Mapping').test(key)) {
-      arr.push(dwsEntity[key]);
+      arr.push(entity[key]);
     }
   });
   return arr;
@@ -47,7 +48,8 @@ const entity = () => {
     validate,
     sequlize,
     jwt,
-    ...entity(),
+    ...entity(dwsEntity),
+    ...entity(lilyEntity),
   ],
 })
 export class ContainerLifeCycle implements ILifeCycle {

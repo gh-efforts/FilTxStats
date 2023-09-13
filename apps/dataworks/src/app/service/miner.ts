@@ -1,9 +1,10 @@
 import { MinerEntity, MinerMapping, MinerSnapshotMapping } from '@dws/entity';
+import { LilyMapping } from '@lily/entity';
+import { LotusSdk } from '@lotus/http';
 import * as bull from '@midwayjs/bull';
-import { Inject, Provide } from '@midwayjs/core';
+import { Config, Init, Inject, Provide } from '@midwayjs/core';
 import { BaseService } from '../../core/baseService';
-
-import { SyncMinerRewardHistoryDTO } from '../model/dto/miner';
+import { SectorSizeDTO, SyncMinerRewardHistoryDTO } from '../model/dto/miner';
 import dayjs = require('dayjs');
 
 @Provide()
@@ -13,6 +14,9 @@ export class MinerService extends BaseService<MinerEntity> {
 
   @Inject()
   mapping: MinerMapping;
+
+  @Inject()
+  lilyMapping: LilyMapping;
 
   @Inject()
   minerSnapshotMapping: MinerSnapshotMapping;
@@ -28,6 +32,18 @@ export class MinerService extends BaseService<MinerEntity> {
       delay: 5000;
     };
   };
+  @Config('lotusConfig')
+  lotusConfig: {
+    url: string;
+    token: string;
+  };
+
+  lotus: LotusSdk;
+
+  @Init()
+  async initMethod() {
+    this.lotus = new LotusSdk(this.lotusConfig.url, this.lotusConfig.token);
+  }
 
   async register(miners: string[]) {
     // 注册 miner
@@ -59,6 +75,21 @@ export class MinerService extends BaseService<MinerEntity> {
       isHisiory: true,
     });
     return true;
+  }
+
+  async getMinerSectorSize(params: SectorSizeDTO) {
+    const { miners } = params;
+    // 查询扇区大小
+    const sectorSizes = await Promise.all(
+      miners.split(',').map(miner => this.lotus.getStateMinerInfo(miner))
+    );
+
+    return sectorSizes.map(item => {
+      return {
+        miner: item.miner,
+        sectorSize: +item.sectorsize,
+      };
+    });
   }
 
   async syncHisMinerReward(params: SyncMinerRewardHistoryDTO) {
