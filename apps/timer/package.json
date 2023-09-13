@@ -11,6 +11,7 @@
     "@pixiu/http": "*",
     "@dws/utils": "*",
     "@filscan/http": "*",
+    "@lotus/http": "*",
     "@midwayjs/bootstrap": "^3.10.10",
     "@midwayjs/bull": "^3.10.13",
     "@midwayjs/bull-board": "^3.12.3",
