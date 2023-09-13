@@ -1,5 +1,6 @@
 import { getHeightByTime } from '@dws/utils';
 import { Provide } from '@midwayjs/core';
+import BigNumber from 'bignumber.js';
 import { LilyService } from '../../core/lily';
 import { gasMethod } from '../comm/gasMethod';
 import { MinerGas } from './interface';
@@ -238,13 +239,154 @@ export class LilyMapping extends LilyService {
     `;
     const result = await this.query<{ count: string }>(
       SQL,
-      [miner, startHeight - 1, endHeight - 1],
+      [miner, startHeight, endHeight],
       true
     );
 
     return {
       miner,
       count: result.count,
+    };
+  }
+
+  async getMinerSectorPledge(miner: string) {
+    const SQL = `
+      SELECT
+        miner_id as miner, 
+        locked_funds as lockedfunds,
+        initial_pledge as initialpledge,
+        pre_commit_deposits as precommitdeposits
+      FROM
+        miner_locked_funds 
+      WHERE
+        miner_id = ? 
+      ORDER BY
+        height DESC 
+        LIMIT 1;
+    `;
+    return this.query<{
+      miner: string;
+      lockedfunds: string;
+      initialpledge: string;
+      precommitdeposits: string;
+    }>(SQL, [miner], true);
+  }
+
+  // 获取 miner 实际区块出块
+  async getMinerActualBlockOut(miner: string, startAt: string, endAt: string) {
+    const [startHeight, endHeight] = [
+      getHeightByTime(startAt),
+      getHeightByTime(endAt),
+    ];
+
+    const SQL = `
+      SELECT
+        count(*) as count 
+      FROM
+        vm_messages 
+      WHERE
+        "from" = 'f02' 
+        AND "to" = ?
+        AND method = ?
+        AND height >= ?
+        AND height <= ?;
+    `;
+    const result = await this.query<{ count: string }>(SQL, [
+      miner,
+      gasMethod.BlockOut,
+      startHeight,
+      endHeight,
+    ]);
+    return {
+      miner,
+      count: result.count,
+    };
+  }
+  // 获取节点的过期扇区、续期扇区数量
+  // event: SECTOR_EXTENDED 续期、SECTOR_EXPIRED or SECTOR_TERMINATED 到期
+  async getMinerSectorEETTypeCount(
+    miner: string,
+    event: string[],
+    startAt: string,
+    endAt: string
+  ) {
+    const [startHeight, endHeight] = [
+      getHeightByTime(startAt),
+      getHeightByTime(endAt),
+    ];
+
+    const SQL = `
+      SELECT
+        count(*) as count
+      FROM
+        miner_sector_events 
+      WHERE
+        miner_id = ?
+        AND event in (?)
+        AND height >= ? 
+        AND height <= ?;
+    `;
+
+    const result = await this.query<{ count: string }>(
+      SQL,
+      [miner, event, startHeight, endHeight],
+      true
+    );
+    return {
+      miner,
+      count: result.count,
+    };
+  }
+
+  //  - 预计出快：（结束高度算力/结束高度全网算力）* (4.8 * 120) * （(结束高度-开始高度) * 30/3600）
+  async getMinerProdictBlockOut(miner: string, startAt: string, endAt: string) {
+    const [startHeight, endHeight] = [
+      getHeightByTime(startAt),
+      getHeightByTime(endAt),
+    ];
+
+    const ACTOR_SQL = `
+      SELECT
+        miner_id as miner,
+        quality_adj_power as qualityadjpower 
+      FROM
+        power_actor_claims 
+      WHERE
+        miner_id = ?
+        AND height <= ? 
+      ORDER BY
+        height DESC 
+        LIMIT 1;
+    `;
+    // 全网算力
+    const CHAIN_SQL = `
+      SELECT
+        total_qa_bytes_power as totalqabytespower
+      FROM
+        chain_powers 
+      WHERE
+        height = ? 
+        LIMIT 1;
+    `;
+    const actor = await this.query<{ miner: string; qualityadjpower: string }>(
+      ACTOR_SQL,
+      [miner, endHeight],
+      true
+    );
+
+    const chain = await this.query<{ totalqabytespower: string }>(
+      CHAIN_SQL,
+      [endHeight],
+      true
+    );
+
+    return {
+      miner,
+      num: BigNumber(actor.miner)
+        .div(chain.totalqabytespower)
+        .multipliedBy(4.8 * 120)
+        .multipliedBy(((endHeight - startHeight) * 30) / 3600)
+        .toFixed(0),
     };
   }
 }

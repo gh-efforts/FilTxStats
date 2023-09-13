@@ -36,6 +36,31 @@ export class MinerSectorEntity extends Model {
   miner: string;
 
   @Column({
+    type: DataType.DECIMAL(32, 0),
+    allowNull: true,
+    defaultValue: 0,
+    comment: '扇区大小，单位byte',
+    field: 'sector_size',
+  })
+  sectorSize: number;
+
+  @Column({
+    type: DataType.DECIMAL(38, 0),
+    allowNull: false,
+    comment: '有效算力',
+    field: 'quality_adj_power',
+  })
+  qualityAdjPower: number;
+
+  @Column({
+    type: DataType.DECIMAL(38, 0),
+    allowNull: false,
+    comment: '原值算力',
+    field: 'raw_byte_power',
+  })
+  rawBytePower: number;
+
+  @Column({
     type: DataType.INTEGER,
     allowNull: false,
     defaultValue: 0,

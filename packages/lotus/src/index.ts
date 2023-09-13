@@ -1,4 +1,8 @@
 import axios, { Axios } from 'axios';
+import {
+  ChainGetTipSetByHeightRes,
+  StateMinerSectorCountRes,
+} from './interface';
 export class LotusSdk {
   private _instance: Axios;
 
@@ -38,11 +42,11 @@ export class LotusSdk {
         throw new Error(JSON.stringify(res));
       }
 
-      return res.data;
+      return res.data.result;
     } catch (e) {
       const message = (e as Error).message;
 
-      errorMsg.push(`Lotus Post ${params.method} 方法出错：${message}`);
+      errorMsg.push(`Lotus Post ${data.method} 方法出错：${message}`);
 
       if (errorCount >= 5) {
         throw new Error(JSON.stringify(errorMsg));
@@ -80,6 +84,60 @@ export class LotusSdk {
     return {
       miner,
       sectorsize: res.result.SectorSize,
+    };
+  }
+
+  async getChainGetTipSetByHeight(height: number) {
+    const method = 'Filecoin.ChainGetTipSetByHeight';
+    const params = [height, []];
+
+    const res = await this._post<ChainGetTipSetByHeightRes>({
+      data: {
+        method,
+        params,
+      },
+    });
+    return res.Cids;
+  }
+
+  async getStateMinerSectorCount(
+    miner: string,
+    cids: { [key: string]: string }[]
+  ) {
+    const method = 'Filecoin.StateMinerSectorCount';
+    const params = [miner, cids];
+
+    const res = await this._post<StateMinerSectorCountRes>({
+      data: {
+        method,
+        params,
+      },
+    });
+
+    return {
+      miner,
+      live: res.Live,
+      active: res.Active,
+      faulty: res.Faulty,
+    };
+  }
+
+  async getStateMinerRecoveries(
+    miner: string,
+    cids: { [key: string]: string }[]
+  ) {
+    const method = 'Filecoin.StateMinerRecoveries';
+    const params = [miner, cids];
+    const res = await this._post<Array<number>>({
+      data: {
+        method,
+        params,
+      },
+    });
+
+    return {
+      miner,
+      count: res[res.length - 1],
     };
   }
 }
