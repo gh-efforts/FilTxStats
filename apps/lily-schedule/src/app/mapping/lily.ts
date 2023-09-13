@@ -291,12 +291,12 @@ export class LilyMapping extends LilyService {
         AND height >= ?
         AND height <= ?;
     `;
-    const result = await this.query<{ count: string }>(SQL, [
-      miner,
-      gasMethod.BlockOut,
-      startHeight,
-      endHeight,
-    ]);
+    const result = await this.query<{ count: string }>(
+      SQL,
+      [miner, gasMethod.BlockOut, startHeight, endHeight],
+      true
+    );
+
     return {
       miner,
       count: result.count,
@@ -379,14 +379,15 @@ export class LilyMapping extends LilyService {
       [endHeight],
       true
     );
-
     return {
       miner,
-      num: BigNumber(actor.miner)
-        .div(chain.totalqabytespower)
-        .multipliedBy(4.8 * 120)
-        .multipliedBy(((endHeight - startHeight) * 30) / 3600)
-        .toFixed(0),
+      num: actor
+        ? BigNumber(actor.qualityadjpower)
+            .div(chain.totalqabytespower)
+            .multipliedBy(4.8 * 120)
+            .multipliedBy(((endHeight - startHeight) * 30) / 3600)
+            .toFixed(0)
+        : 0,
     };
   }
 }

@@ -10,7 +10,6 @@ import { Config, Init, Inject, Provide } from '@midwayjs/core';
 import * as pLimit from 'p-limit';
 import { BaseService } from '../../core/baseService';
 import { LilyMapping } from '../mapping/lily';
-// import './global';
 
 Array.prototype.get = function <T>(key: string, value: any): T | undefined {
   return this.find(item => {

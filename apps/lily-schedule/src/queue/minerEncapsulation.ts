@@ -38,7 +38,8 @@ export class MinerEncapsulationProcessor implements IProcessor {
     try {
       await this.service.syncMinersByEncapsulation();
     } catch (error) {
-      console.log('error', error);
+      this.logger.error(error);
+
       const attemptsMade = job.attemptsMade + 1;
 
       // I/O 操作失败，记录日志并重试

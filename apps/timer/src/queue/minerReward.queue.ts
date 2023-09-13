@@ -72,7 +72,7 @@ export class MinerRewardProcessor implements IProcessor {
         '同步结束'
       );
     } catch (error) {
-      console.log('error', error);
+      this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
 
       // I/O 操作失败，记录日志并重试

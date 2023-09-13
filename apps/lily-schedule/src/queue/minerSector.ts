@@ -38,7 +38,7 @@ export class MinerSectorProcessor implements IProcessor {
     try {
       await this.service.syncMinersSector();
     } catch (error) {
-      console.log('error', error);
+      this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
 
       // I/O 操作失败，记录日志并重试
