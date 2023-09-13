@@ -36,6 +36,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
   };
 
   config.jwtWhitelist = [
+    '/bull-ui',
     '/swagger-ui',
     '/api/crontab',
     '/api/miner/page',
@@ -180,6 +181,10 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
       prefix: '{midway-bull}',
     },
     clearRepeatJobWhenStart: false,
+  };
+
+  config.bullBoard = {
+    basePath: '/bull-ui',
   };
 
   return config;

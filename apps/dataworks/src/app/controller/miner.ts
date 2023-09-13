@@ -56,4 +56,11 @@ export class MinerController {
   async syncMinerEncapsulation() {
     return this.service.runJob('minerEncapsulation');
   }
+
+  @Post('/sync_miner_sector', {
+    summary: '同步 miner 昨日扇区数据',
+  })
+  async syncMinerSector() {
+    return this.service.runJob('minerSector');
+  }
 }

@@ -26,6 +26,8 @@ import { RequestIdMiddleware } from './middleware/requestId';
 import * as dwsEntity from '@dws/entity';
 import { NotFoundFilter } from './filter/notfound';
 
+import * as bullBoard from '@midwayjs/bull-board';
+
 const entity = () => {
   const arr = [];
   Object.keys(dwsEntity).map(key => {
@@ -42,6 +44,7 @@ const entity = () => {
     crossDomain,
     koa,
     bull,
+    bullBoard,
     { component: swagger, enabledEnvironment: ['local'] },
     redis,
     validate,
