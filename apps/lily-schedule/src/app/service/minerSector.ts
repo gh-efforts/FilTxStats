@@ -68,7 +68,15 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
     // 查询扇区大小
     const minersInfo = await Promise.all(
       miners.map(miner => {
-        return limit(() => this.lilyMapping.getMinerInfo(miner));
+        return limit(() =>
+          this.lilyMapping.getMinerInfo(miner).then(res => {
+            if (!res) {
+              // 补充链上数据
+              return this.lotus.getStateMinerInfo(miner);
+            }
+            return res;
+          })
+        );
       })
     );
 
@@ -83,6 +91,7 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
         return limit(() => this.lotus.getStateMinerRecoveries(miner, cids));
       })
     );
+
     // 获取节点质押
     const minersSectorPledge = await Promise.all(
       miners.map(miner => {
@@ -164,6 +173,7 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
         'initialPledge',
         'renewSectorCount',
         'staleDatedSectorCount',
+        'updatedAt',
       ],
     });
     return true;
