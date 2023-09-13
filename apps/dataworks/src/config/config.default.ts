@@ -3,11 +3,11 @@ import * as lilyEntity from '@lily/entity';
 
 import { MidwayAppInfo, MidwayConfig } from '@midwayjs/core';
 
-const entity = () => {
+const entity = entity => {
   const arr = [];
-  Object.keys(dwsEntity).map(key => {
+  Object.keys(entity).map(key => {
     if (!new RegExp('Mapping').test(key)) {
-      arr.push(dwsEntity[key]);
+      arr.push(entity[key]);
     }
   });
   return arr;
@@ -84,11 +84,11 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
           bigNumberStrings: true, // bigInt和decimal 以字符串返回
         },
         sync: false, // 本地的时候，可以通过sync: true直接createTable
-        entities: entity(),
+        entities: entity(dwsEntity),
       },
       lily: {
         dialect: 'postgres',
-        entities: Object.values(lilyEntity),
+        entities: entity(lilyEntity),
       },
     },
     defaultDataSourceName: 'default',
@@ -173,6 +173,12 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
 
   config.filscanConfig = {
     url: 'https://api-v2.filscan.io/api',
+  };
+
+  config.lotusConfig = {
+    url: 'http://128.136.157.166:43234/rpc/v0',
+    token:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJyZWFkIiwid3JpdGUiLCJzaWduIiwiYWRtaW4iXX0.joDYscIU3BijQtHXWwIUwHhgVLLYvX-A_ij1Uq0wo3Q',
   };
 
   config.bull = {

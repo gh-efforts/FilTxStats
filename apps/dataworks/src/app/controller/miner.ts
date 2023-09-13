@@ -1,4 +1,12 @@
-import { ALL, Body, Controller, Inject, Post } from '@midwayjs/core';
+import {
+  ALL,
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Post,
+  Query,
+} from '@midwayjs/core';
 import * as MinerDTO from '../model/dto/miner';
 import { MinerService } from '../service/miner';
 
@@ -11,6 +19,11 @@ export class MinerController {
   async register(@Body(ALL) params: MinerDTO.RegisterDTO) {
     const { miners } = params;
     return this.service.register(miners);
+  }
+
+  @Get('/sector/size', { summary: '获取 miner 扇区大小' })
+  async getMinerSectorSize(@Query(ALL) params: MinerDTO.SectorSizeDTO) {
+    return this.service.getMinerSectorSize(params);
   }
 
   @Post('/sync_miner_reward', {

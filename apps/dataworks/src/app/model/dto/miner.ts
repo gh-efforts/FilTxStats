@@ -14,6 +14,16 @@ export class RegisterDTO {
   miners: string[];
 }
 
+export class SectorSizeDTO {
+  @ApiProperty({
+    type: 'string',
+    example: 'f01155,f01156',
+    description: '节点号',
+  })
+  @Rule(RuleType.string().required())
+  miners: string;
+}
+
 export class SyncMinerRewardHistoryDTO {
   @Rule(RuleType.array().items(RuleType.string().required()).optional())
   miners: string[];

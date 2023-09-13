@@ -5,11 +5,11 @@ import {
 } from '@dws/entity';
 import { getHeightByTime, getYesterdayTime } from '@dws/utils';
 import { FilutilsSdk } from '@filutils/http';
+import { LilyMapping } from '@lily/entity';
 import { LotusSdk } from '@lotus/http';
 import { Config, Init, Inject, Provide } from '@midwayjs/core';
 import * as pLimit from 'p-limit';
 import { BaseService } from '../../core/baseService';
-import { LilyMapping } from '../mapping/lily';
 
 Array.prototype.get = function <T>(key: string, value: any): T | undefined {
   return this.find(item => {
