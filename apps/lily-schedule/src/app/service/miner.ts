@@ -1,4 +1,5 @@
 import {
+  MinerDailyStatsMapping,
   MinerEncapsulationEntity,
   MinerEncapsulationMapping,
   MinerMapping,
@@ -13,6 +14,15 @@ import { BaseService } from '../../core/baseService';
 import { MinerGas } from '../mapping/interface';
 import { LilyMapping } from '../mapping/lily';
 
+Array.prototype.get = function <T>(key: string, value: any): T | undefined {
+  return this.find(item => {
+    if (!item) {
+      return false;
+    }
+    return item[key] === value;
+  });
+};
+
 @Provide()
 export class MinerService extends BaseService<MinerEncapsulationEntity> {
   @Inject()
@@ -20,6 +30,9 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
 
   @Inject()
   minerEncapsulationMapping: MinerEncapsulationMapping;
+
+  @Inject()
+  minerDailyStatsMapping: MinerDailyStatsMapping;
 
   @Inject()
   lilyMapping: LilyMapping;
@@ -85,6 +98,24 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
     const { startAt, endAt } = await getYesterdayTime();
 
     const limit = pLimit(5);
+    // 实际出快
+    const minersActualBlockOut = await Promise.all(
+      miners.map(miner => {
+        return limit(() =>
+          this.lilyMapping.getMinerActualBlockOut(miner, startAt, endAt)
+        );
+      })
+    );
+
+    // 预计出快
+    const minersProdictBlockOut = await Promise.all(
+      miners.map(miner => {
+        return limit(() =>
+          this.lilyMapping.getMinerProdictBlockOut(miner, startAt, endAt)
+        );
+      })
+    );
+
     // 质押量
     const minersPledgeIncr = await Promise.all(
       miners.map(miner =>
@@ -120,7 +151,15 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
     // 查询扇区大小
     const minersInfo = await Promise.all(
       miners.map(miner => {
-        return limit(() => this.lilyMapping.getMinerInfo(miner));
+        return limit(() =>
+          this.lilyMapping.getMinerInfo(miner).then(res => {
+            if (!res) {
+              // 补充链上数据
+              return this.lotus.getStateMinerInfo(miner);
+            }
+            return res;
+          })
+        );
       })
     );
     // 查询昨日算力
@@ -138,63 +177,61 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
       })
     );
 
-    for (const miner of miners) {
-      const minerPledgeIncr = minersPledgeIncr.find(
-        item => item?.miner === miner
-      );
-      const minerGas = getMinersGas.find(item => item?.miner === miner);
-
-      const minerLonelyblock = minersLonelyblock.find(
-        item => item?.miner === miner
-      );
-
-      const minerFaultedSector = minersFaultedSector.find(
-        item => item?.miner === miner
-      );
-
-      let minerInfo: any = minersInfo.find(item => item?.miner === miner);
-
-      if (!minerInfo) {
-        // 链上补充数据
-        minerInfo = await this.lotus.getStateMinerInfo(miner);
-      }
-
-      const minerPower = minersPower.find(item => item?.miner === miner);
-
-      const minerSectorSealCount = minersSectorSealCount.find(
-        item => item?.miner === miner
-      );
-
-      const object = {
+    const blocks = miners.map(miner => {
+      return {
         miner,
-        sectorSize: minerInfo?.sectorsize || 0,
-        qualityAdjPower: minerPower?.qualityadjpower || 0,
-        rawBytePower: minerPower?.rawbytepower || 0,
-        increasePledge: minerPledgeIncr?.initiaPledge || 0,
-        encapsulationGas: minerGas?.gas || 0,
-        windowPost: minerGas?.windowPost || 0,
-        penalty: minerGas?.penalty || 0,
-        blockLoss: minerLonelyblock?.lonelyblock.length || 0,
-        faultedSector: minerFaultedSector?.count || 0,
-        sectorSealCount: minerSectorSealCount?.count || 0,
+        actualBlockOut: minersActualBlockOut.get('miner', miner)?.count || 0,
+        prodictBlockOut: minersProdictBlockOut.get('miner', miner)?.num || 0,
+        blockLoss:
+          minersLonelyblock.get('miner', miner)?.lonelyblock.length || 0,
         dateAt: endAt,
       };
+    });
 
-      await this.minerEncapsulationMapping.upsertEncapsulation(object, {
-        fields: [
-          'sectorSize',
-          'qualityAdjPower',
-          'rawBytePower',
-          'increasePledge',
-          'encapsulationGas',
-          'windowPost',
-          'penalty',
-          'blockLoss',
-          'faultedSector',
-          'sectorSealCount',
-        ],
-      });
-    }
+    await this.minerDailyStatsMapping.bulkCreateMinerDailyStats(blocks, {
+      updateOnDuplicate: [
+        'actualBlockOut',
+        'prodictBlockOut',
+        'blockLoss',
+        'updatedAt',
+      ],
+    });
+
+    const datas = miners.map(miner => {
+      return {
+        miner,
+        sectorSize: minersInfo.get('miner', miner)?.sectorsize || 0,
+        qualityAdjPower: minersPower.get('miner', miner)?.qualityadjpower || 0,
+        rawBytePower: minersPower.get('miner', miner)?.rawbytepower || 0,
+        increasePledge: minersPledgeIncr.get('miner', miner)?.initiaPledge || 0,
+        encapsulationGas: getMinersGas.get('miner', miner)?.gas || 0,
+        windowPost: getMinersGas.get('miner', miner)?.windowPost || 0,
+        penalty: getMinersGas.get('miner', miner)?.penalty || 0,
+        blockLoss:
+          minersLonelyblock.get('miner', miner)?.lonelyblock.length || 0,
+        faultedSector: minersFaultedSector.get('miner', miner)?.count || 0,
+        sectorSealCount: minersSectorSealCount.get('miner', miner)?.count || 0,
+        dateAt: endAt,
+      };
+    });
+
+    await this.minerEncapsulationMapping.bulkCreateMinerEncapsulation(datas, {
+      updateOnDuplicate: [
+        'sectorSize',
+        'qualityAdjPower',
+        'rawBytePower',
+        'increasePledge',
+        'encapsulationGas',
+        'windowPost',
+        'penalty',
+        'blockLoss',
+        'faultedSector',
+        'sectorSealCount',
+        'updatedAt',
+      ],
+    });
+
+    return true;
   }
 
   _getEncapsulationGas(minersGas: MinerGas[]) {

@@ -89,6 +89,33 @@ export class MinerDailyStatsEntity extends Model {
   pledgeReturn: number;
 
   @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    comment: '实际出块',
+    field: 'actual_block_out',
+  })
+  actualBlockOut: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    comment: '预计出快',
+    field: 'prodict_block_out',
+  })
+  prodictBlockOut: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    comment: '丢块',
+    field: 'block_loss',
+  })
+  blockLoss: number;
+
+  @Column({
     type: DataType.DATEONLY,
     allowNull: false,
     comment: '日期',

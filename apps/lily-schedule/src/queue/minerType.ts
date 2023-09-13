@@ -36,6 +36,7 @@ export class MinerTypeProcessor implements IProcessor {
     try {
       await this.service.syncMinersByType(miners);
     } catch (error) {
+      this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
 
       // I/O 操作失败，记录日志并重试
