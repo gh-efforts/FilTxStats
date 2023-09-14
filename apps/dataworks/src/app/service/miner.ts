@@ -49,11 +49,16 @@ export class MinerService extends BaseService<MinerEntity> {
     // 注册 miner
     await Promise.all(
       miners.map(miner => {
-        return this.mapping.addMiner({
-          miner,
-          address: '',
-          sectoSize: 0,
-        });
+        return this.mapping.upsertMiner(
+          {
+            miner,
+            address: '',
+            sectorSize: 0,
+          },
+          {
+            fields: ['miner'],
+          }
+        );
       })
     );
 
