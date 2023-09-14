@@ -35,9 +35,10 @@ export class MinerSnapshotProcessor implements IProcessor {
 
   async execute() {
     const { job } = this.ctx;
-    console.log('job.opts', job.opts);
+
     try {
       await this.service.syncMinerSnapshot();
+      await this.lark.sendLarkByQueueStatus('节点快照', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
@@ -55,7 +56,7 @@ export class MinerSnapshotProcessor implements IProcessor {
         this.logger.error(`Job ${job.id} start retry`);
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
-        await this.lark.larkNotify(error.message);
+        await this.lark.sendLarkByQueueStatus('节点快照', false, error.message);
         throw new MyError('syncMinerSnapshot error', error.message);
       }
     }

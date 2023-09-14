@@ -1,12 +1,12 @@
 import { Context, IProcessor, Processor } from '@midwayjs/bull';
 import { Inject } from '@midwayjs/core';
 import MyError from '../app/comm/myError';
-import { MinerDailyService } from '../app/service/minerDailyStats';
+import { MinerSectorExpiredService } from '../app/service/minerSectorExpired';
 
 import { LarkSdk } from '@lark/core';
-@Processor('minerDailyStats', {
+@Processor('minerSectorExpired', {
   repeat: {
-    cron: '0 35 2 * * *',
+    cron: '0 00 1 * * *',
   },
   removeOnComplete: true,
   removeOnFail: true,
@@ -16,7 +16,7 @@ import { LarkSdk } from '@lark/core';
     delay: 1000 * 60,
   },
 })
-export class MinerDailyStatsProcessor implements IProcessor {
+export class MinerSectorExpiredProcessor implements IProcessor {
   @Inject()
   logger;
 
@@ -24,7 +24,7 @@ export class MinerDailyStatsProcessor implements IProcessor {
   ctx: Context;
 
   @Inject()
-  service: MinerDailyService;
+  service: MinerSectorExpiredService;
 
   lark: LarkSdk;
 
@@ -34,10 +34,9 @@ export class MinerDailyStatsProcessor implements IProcessor {
 
   async execute() {
     const { job } = this.ctx;
-    console.log('job.opts===', job.opts);
     try {
-      await this.service.syncMinerDailyStats();
-      await this.lark.sendLarkByQueueStatus('节点昨日统计', true);
+      await this.service.syncMinerSectorExpired();
+      await this.lark.sendLarkByQueueStatus('节点扇区到期', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
@@ -56,7 +55,7 @@ export class MinerDailyStatsProcessor implements IProcessor {
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
         await this.lark.sendLarkByQueueStatus(
-          '节点昨日统计',
+          '节点扇区到期',
           false,
           error.message
         );

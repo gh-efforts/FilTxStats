@@ -37,6 +37,7 @@ export class FilcoinNetworkProcessor implements IProcessor {
     const { job } = this.ctx;
     try {
       await this.service.syncFilcoinNetworkData();
+      await this.lark.sendLarkByQueueStatus('Filecoin 全网数据', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
@@ -54,7 +55,11 @@ export class FilcoinNetworkProcessor implements IProcessor {
         this.logger.error(`Job ${job.id} start retry`);
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
-        await this.lark.larkNotify(error.message);
+        await this.lark.sendLarkByQueueStatus(
+          'Filecoin 全网数据',
+          false,
+          error.message
+        );
         throw new MyError('syncMinerSnapshot error', error.message);
       }
     }

@@ -37,6 +37,7 @@ export class MinerSectorProcessor implements IProcessor {
     const { job } = this.ctx;
     try {
       await this.service.syncMinersSector();
+      await this.lark.sendLarkByQueueStatus('节点扇区', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
@@ -54,7 +55,7 @@ export class MinerSectorProcessor implements IProcessor {
         this.logger.error(`Job ${job.id} start retry`);
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
-        await this.lark.larkNotify(error.message);
+        await this.lark.sendLarkByQueueStatus('节点扇区', false, error.message);
         throw new MyError('syncMinerDailyStats error', error.message);
       }
     }

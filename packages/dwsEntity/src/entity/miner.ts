@@ -58,7 +58,7 @@ export class MinerEntity extends Model {
     comment: '扇区大小，单位byte',
     field: 'sector_size',
   })
-  sectoSize: number;
+  sectorSize: number;
 
   @Column({
     type: DataType.BOOLEAN,

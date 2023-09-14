@@ -91,6 +91,19 @@ export type MinerPledgeRes = {
   pledge_reduce: number;
 };
 
+export type MinerSectorStatsPledgeRes = {
+  minerid: string;
+  sectorSize: string;
+  stats:
+    | {
+        date: string;
+        num: number;
+        powerExpired: string;
+        initialPledge: string;
+      }[]
+    | null;
+};
+
 export type MinerRewardDetailRes = {
   // 节点名称
   miner_id: string;

@@ -37,7 +37,7 @@ export class MinerService extends BaseService<MinerEntity> {
     const miners = (
       await this.getMinerList({
         address: '',
-        sectoSize: 0,
+        sectorSize: 0,
       })
     ).map(item => item.miner);
     const minerBases = await this.pixiu.getMinerStaticState(miners);
@@ -52,7 +52,7 @@ export class MinerService extends BaseService<MinerEntity> {
       await this.mapping.modifyMiner(
         {
           address: minerBase.address,
-          sectoSize: minerBase.sector_size,
+          sectorSize: minerBase.sector_size,
         },
         {
           where: {

@@ -71,6 +71,7 @@ export class MinerRewardProcessor implements IProcessor {
         `Job ${job.id} success, ${JSON.stringify(params)}`,
         '同步结束'
       );
+      await this.lark.sendLarkByQueueStatus('节点奖励', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
@@ -88,7 +89,7 @@ export class MinerRewardProcessor implements IProcessor {
         this.logger.error(`Job ${job.id} start retry`);
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
-        await this.lark.larkNotify(error.message);
+        await this.lark.sendLarkByQueueStatus('节点奖励', false, error.message);
         throw new MyError('syncMinerRewardHistory error', error.message);
       }
     }

@@ -12,6 +12,7 @@ import type {
   MinerPledgeRes,
   MinerRewardDetailRes,
   MinerRewardRes,
+  MinerSectorStatsPledgeRes,
   MinerStaticRes,
 } from './interface';
 
@@ -71,7 +72,11 @@ export class PixiuSdk {
       errorMsg.push(`Pixiu GET ${url} 方法出错：${message}`);
 
       if (errorCount >= 3) {
-        await this.lark.larkNotify(errorMsg.join('\n'));
+        await this.lark.sendLarkByQueueStatus(
+          '查询 Pixiu ',
+          false,
+          errorMsg.join('\n')
+        );
         throw new Error(errorMsg.join('\n'));
       }
       return this._get(params, errorMsg, errorCount + 1);
@@ -190,6 +195,17 @@ export class PixiuSdk {
     return this.requestChunk('/v2/miner/minerPledge', minerIds, 5, {
       date,
     });
+  }
+
+  /**
+   * 获取 miner 扇区到期
+   * @param minerIds 节点列表
+   * @returns
+   */
+  public async getSectorStatsPledge(
+    minerIds: string[]
+  ): Promise<MinerSectorStatsPledgeRes[]> {
+    return this.requestChunk('/v2/miner/sectorStatsPledge', minerIds, 5);
   }
 
   /**
