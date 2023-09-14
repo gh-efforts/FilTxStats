@@ -37,6 +37,7 @@ export class MinerDailyStatsProcessor implements IProcessor {
     console.log('job.opts===', job.opts);
     try {
       await this.service.syncMinerDailyStats();
+      await this.lark.sendLarkByQueueStatus('节点昨日统计', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
@@ -54,7 +55,11 @@ export class MinerDailyStatsProcessor implements IProcessor {
         this.logger.error(`Job ${job.id} start retry`);
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
-        await this.lark.larkNotify(error.message);
+        await this.lark.sendLarkByQueueStatus(
+          '节点昨日统计',
+          false,
+          error.message
+        );
         throw new MyError('syncMinerDailyStats error', error.message);
       }
     }

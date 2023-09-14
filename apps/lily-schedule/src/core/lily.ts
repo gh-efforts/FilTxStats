@@ -35,9 +35,12 @@ export class LilyService {
       errorMsg.push(`Lily 查询 ${SQL} 出错：${message}`);
 
       if (errorCount >= 3) {
-        // await this.lark.larkNotify(errorMsg.join('\n'));
-        // TODO send to lark
-        throw new Error(JSON.stringify(errorMsg));
+        await this.lark.sendLarkByQueueStatus(
+          'lily 查询',
+          false,
+          errorMsg.join('\n')
+        );
+        return;
       }
       return this.query(SQL, replacements, plain, errorMsg, errorCount + 1);
     }

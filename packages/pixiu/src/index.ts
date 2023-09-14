@@ -72,7 +72,11 @@ export class PixiuSdk {
       errorMsg.push(`Pixiu GET ${url} 方法出错：${message}`);
 
       if (errorCount >= 3) {
-        await this.lark.larkNotify(errorMsg.join('\n'));
+        await this.lark.sendLarkByQueueStatus(
+          '查询 Pixiu ',
+          false,
+          errorMsg.join('\n')
+        );
         throw new Error(errorMsg.join('\n'));
       }
       return this._get(params, errorMsg, errorCount + 1);
