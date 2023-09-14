@@ -1,6 +1,7 @@
 import { Provide } from '@midwayjs/decorator';
 
 import { MinerNodeEntity } from '@dws/entity';
+import { FindOptions, UpdateOptions } from 'sequelize';
 
 @Provide()
 export class MinerNodeMapping {
@@ -21,5 +22,16 @@ export class MinerNodeMapping {
       res[robustAddress] = '节点';
     });
     return res;
+  }
+
+  public async findAllMinerNode(options?: FindOptions) {
+    return this.getModel().findAll(options);
+  }
+
+  public async modifyMinerNode(
+    values: { [x: string]: any },
+    options: UpdateOptions
+  ) {
+    return this.getModel().update(values, options);
   }
 }

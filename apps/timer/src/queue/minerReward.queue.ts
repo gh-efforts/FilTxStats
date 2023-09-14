@@ -12,10 +12,7 @@ type MinerRewardParams = {
   endAt: string;
   isHisiory?: boolean;
 };
-@Processor('minerReward', {
-  repeat: {
-    cron: '0 */1 * * *',
-  },
+@Processor('minerNode', {
   removeOnComplete: true,
   removeOnFail: true,
   attempts: 5,

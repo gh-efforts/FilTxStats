@@ -10,3 +10,8 @@ export enum gasMethod {
   PreCommitSectorBatch = 25,
   ProveCommitAggregate = 26,
 }
+
+export enum METHOD {
+  CHANGE_WORKER = 'ChangeWorkerAddress',
+  CHANGE_OWNER = 'ChangeOwnerAddress',
+}

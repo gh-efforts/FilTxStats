@@ -37,6 +37,21 @@ export class LarkSdk {
     status: boolean,
     message: string = ''
   ) {
+    const arr = [];
+    if (message) {
+      arr.push(
+        {
+          tag: 'div',
+          text: {
+            content: message,
+            tag: 'lark_md',
+          },
+        },
+        {
+          tag: 'hr',
+        }
+      );
+    }
     const templateLarkMessage = {
       msg_type: 'interactive',
       card: {
@@ -51,26 +66,13 @@ export class LarkSdk {
           },
         },
         elements: [
-          {
-            tag: 'div',
-            text: {
-              content: message,
-              tag: 'lark_md',
-            },
-          },
-          {
-            tag: 'hr',
-          },
+          ...arr,
           {
             elements: [
               {
-                content: `✅ 数据时间区间: ${dayjs()
-                  .subtract(1, 'day')
-                  .startOf('day')
-                  .format('YYYY-MM-DD HH:mm:dd')} - ${dayjs()
-                  .subtract(1, 'day')
-                  .endOf('day')
-                  .format('YYYY-MM-DD HH:mm:dd')}`,
+                content: `${status ? '✅' : '❌'}任务执行时间: ${dayjs().format(
+                  'YYYY-MM-DD HH:mm:ss'
+                )}`,
                 tag: 'plain_text',
               },
             ],

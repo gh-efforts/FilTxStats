@@ -2,7 +2,13 @@ import { bigDiv, bigMul, getTimeByHeight, transferFilValue } from '@dws/utils';
 import axios, { Axios } from 'axios';
 import * as dayjs from 'dayjs';
 import * as _ from 'lodash';
-import type { IBlocksRes, IGet, IMinerInfo } from './interface';
+import type {
+  IBlocksRes,
+  IChangeAddressRes,
+  IGet,
+  IMessageRes,
+  IMinerInfo,
+} from './interface';
 
 export class FilfoxSdk {
   private _instance: Axios;
@@ -102,6 +108,44 @@ export class FilfoxSdk {
         pageSize,
       },
     });
+  }
+
+  public async changeOwnerAddress(
+    minerName: string
+  ): Promise<IChangeAddressRes[]> {
+    const method = 'ChangeOwnerAddress';
+    const res = await this._get({
+      url: `/address/${minerName}/messages`,
+      query: {
+        page: 0,
+        pageSize: 50,
+        method,
+      },
+    });
+    return res.message;
+  }
+
+  public async changeWorkerAddress(
+    minerName: string
+  ): Promise<IChangeAddressRes[]> {
+    const method = 'ChangeWorkerAddress';
+    const res = await this._get({
+      url: `/address/${minerName}/messages`,
+      query: {
+        page: 0,
+        pageSize: 50,
+        method,
+      },
+    });
+    return res.message;
+  }
+
+  public async getMessage(cid: string): Promise<IMessageRes> {
+    const res = await this._get({
+      url: `/message/${cid}`,
+      query: {},
+    });
+    return res;
   }
 
   public getMinerDetail(minerId: string): Promise<IMinerInfo> {
