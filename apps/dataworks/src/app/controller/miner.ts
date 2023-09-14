@@ -76,4 +76,11 @@ export class MinerController {
   async syncMinerSector() {
     return this.service.runJob('minerSector');
   }
+
+  @Post('/sync_miner_sector_expired', {
+    summary: '同步 miner 昨日过期扇区数据',
+  })
+  async syncMinerSectorExpired() {
+    return this.service.runJob('minerSectorExpired');
+  }
 }

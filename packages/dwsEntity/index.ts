@@ -8,6 +8,7 @@ import { MinerLockedRewardEntity } from './src/entity/minerLockedReward';
 import { MinerReleaseRecordEntity } from './src/entity/minerReleaseRecord';
 import { MinerRewardEntity } from './src/entity/minerReward';
 import { MinerSectorEntity } from './src/entity/minerSector';
+import { MinerSectorExpiredEntity } from './src/entity/minerSectorExpired';
 import { MinerSnapshotEntity } from './src/entity/minerSnapshot';
 import { VmMessagesEntity } from './src/entity/vmMessages';
 import { WalletAddressEntity } from './src/entity/walletAddress';
@@ -22,6 +23,7 @@ import { MinerLockedRewardMapping } from './src/mapping/minerLockedReward';
 import { MinerReleaseRecordMapping } from './src/mapping/minerReleaseRecord';
 import { MinerRewardMapping } from './src/mapping/minerReward';
 import { MinerSectorMapping } from './src/mapping/minerSector';
+import { MinerSectorExpiredMapping } from './src/mapping/minerSectorExpired';
 import { MinerSnapshotMapping } from './src/mapping/minerSnapshot';
 import { VmMessagesMapping } from './src/mapping/vmMessages';
 import { WalletAddressMapping } from './src/mapping/walletAddress';
@@ -45,6 +47,8 @@ export {
   MinerRewardEntity,
   MinerRewardMapping,
   MinerSectorEntity,
+  MinerSectorExpiredEntity,
+  MinerSectorExpiredMapping,
   MinerSectorMapping,
   MinerSnapshotEntity,
   MinerSnapshotMapping,

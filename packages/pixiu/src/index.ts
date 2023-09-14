@@ -12,6 +12,7 @@ import type {
   MinerPledgeRes,
   MinerRewardDetailRes,
   MinerRewardRes,
+  MinerSectorStatsPledgeRes,
   MinerStaticRes,
 } from './interface';
 
@@ -190,6 +191,17 @@ export class PixiuSdk {
     return this.requestChunk('/v2/miner/minerPledge', minerIds, 5, {
       date,
     });
+  }
+
+  /**
+   * 获取 miner 扇区到期
+   * @param minerIds 节点列表
+   * @returns
+   */
+  public async getSectorStatsPledge(
+    minerIds: string[]
+  ): Promise<MinerSectorStatsPledgeRes[]> {
+    return this.requestChunk('/v2/miner/sectorStatsPledge', minerIds, 5);
   }
 
   /**
