@@ -1,6 +1,12 @@
 import axios, { Axios } from 'axios';
 import {
   ChainGetTipSetByHeightRes,
+  IChainGetMessageRes,
+  IStateDecodeParamsRes,
+  IStateGetActorRes,
+  IStateMinerInfoRes,
+  IStateMinerPowerRes,
+  IStateReadStateRes,
   StateMinerSectorCountRes,
 } from './interface';
 export class LotusSdk {
@@ -11,6 +17,8 @@ export class LotusSdk {
    * @param url pixiu访问地址
    */
   constructor(url: string, token: string) {
+    console.log('url', url);
+    console.log('token', token);
     this._instance = axios.create({
       baseURL: url,
       timeout: 1000 * 60 * 2,
@@ -28,22 +36,23 @@ export class LotusSdk {
     const { data } = params;
 
     try {
-      const res = await this._instance.post(
-        '',
-        Object.assign(
+      const res = await this._instance.request({
+        method: 'POST',
+        data: Object.assign(
           {
             jsonrpc: '2.0',
             id: 0,
           },
           data
-        )
-      );
+        ),
+      });
       if (res.status < 200 || res.status >= 300) {
         throw new Error(JSON.stringify(res));
       }
 
       return res.data.result;
-    } catch (e) {
+    } catch (e: any) {
+      console.log('e', e.response.data);
       const message = (e as Error).message;
 
       errorMsg.push(`Lotus Post ${data.method} 方法出错：${message}`);
@@ -139,5 +148,131 @@ export class LotusSdk {
       miner,
       count: res[res.length - 1],
     };
+  }
+
+  /**
+   * stateMinerAvailableBalance
+   */
+  public async stateMinerAvailableBalance(minerName: string) {
+    const res = await this._post<string>({
+      data: {
+        method: 'Filecoin.StateMinerAvailableBalance',
+        params: [minerName, null],
+      },
+    });
+    return res;
+  }
+
+  /**
+   * StateReadState
+   */
+  public async stateReadState(minerName: string): Promise<IStateReadStateRes> {
+    const res = await this._post<IStateReadStateRes>({
+      data: {
+        method: 'Filecoin.StateReadState',
+        params: [minerName, null],
+      },
+    });
+    return res;
+  }
+
+  /**
+   * StateMinerPower
+   */
+  public async stateMinerPower(minerName: string, cids: Object[] | null) {
+    const res = await this._post<IStateMinerPowerRes>({
+      data: {
+        method: 'Filecoin.StateMinerPower',
+        params: [minerName, cids],
+      },
+    });
+    return res;
+  }
+  /**
+   * StateGetActor
+   */
+  public async stateGetActor(minerName: string) {
+    const res = await this._post<IStateGetActorRes>({
+      data: {
+        method: 'Filecoin.StateGetActor',
+        params: [minerName, null],
+      },
+    });
+    return res;
+  }
+
+  /**
+   * StateMinerInfo
+   */
+  public async stateMinerInfo(minerName: string) {
+    const res = await this._post<IStateMinerInfoRes>({
+      data: {
+        method: 'Filecoin.StateMinerInfo',
+        params: [minerName, null],
+      },
+    });
+    return res;
+  }
+
+  /**
+   * StateLookupRobustAddress
+   */
+  public async stateLookupRobustAddress(id: string) {
+    const res = await this._post<string>({
+      data: {
+        method: 'Filecoin.StateLookupRobustAddress',
+        params: [id, null],
+      },
+    });
+
+    return {
+      name: id,
+      robustAddress: res,
+    };
+  }
+
+  /**
+   * stateLookupID
+   */
+  public async stateLookupID(robustAddress: string) {
+    const res = await this._post<string>({
+      data: {
+        method: 'Filecoin.StateLookupID',
+        params: [robustAddress, null],
+      },
+    });
+    return {
+      name: res || 'f0',
+      robustAddress,
+    };
+  }
+
+  /**
+   * StateDecodeParams
+   */
+  public async stateDecodeParams(minerName: string, params: string) {
+    const res = await this._post<IStateDecodeParamsRes>({
+      data: {
+        method: 'Filecoin.StateDecodeParams',
+        params: [minerName, 3, params, null],
+      },
+    });
+    return {
+      controlAddrs: res.NewControlAddrs,
+      worker: res.NewWorker,
+    };
+  }
+
+  /**
+   * StateDecodeParams
+   */
+  public async chainGetMessage(cid: string): Promise<IChainGetMessageRes> {
+    const res = await this._post<IChainGetMessageRes>({
+      data: {
+        method: 'Filecoin.ChainGetMessage',
+        params: [{ '/': cid }],
+      },
+    });
+    return res;
   }
 }

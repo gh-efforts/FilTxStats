@@ -1,3 +1,19 @@
+type TMethod =
+  | 'ChangeMultiaddrs'
+  | 'ChangeOwnerAddress'
+  | 'ChangePeerID'
+  | 'ChangeWorkerAddress'
+  | 'CreateMiner'
+  | 'DeclareFaults'
+  | 'DeclareFaultsRecovered'
+  | 'ExtendSectorExpiration'
+  | 'PreCommitSector'
+  | 'ProveCommitSector'
+  | 'ReportConsensusFault'
+  | 'Send'
+  | 'SubmitWindowedPoSt'
+  | 'WithdrawBalance (miner)';
+
 export interface IGet {
   url: string;
   query: Record<string, any>;
@@ -77,4 +93,24 @@ export interface IMinerInfo {
   workerMiners: any[];
   benefitedMiners: any[];
   address: string;
+}
+
+export interface IChangeAddressRes {
+  cid: string;
+  height: number;
+  timestamp: number;
+  from: string;
+  to: string;
+  nonce: number;
+  value: string;
+  method: TMethod;
+  receipt: {
+    exitCode: number;
+  };
+}
+
+export interface IMessageRes {
+  cid: string;
+  params: string;
+  decodedParams: string;
 }

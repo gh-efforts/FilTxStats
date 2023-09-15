@@ -37,7 +37,6 @@ export class MinerSectorProcessor implements IProcessor {
     const { job } = this.ctx;
     try {
       await this.service.syncMinersSector();
-      await this.lark.sendLarkByQueueStatus('节点扇区', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;

@@ -5,7 +5,7 @@ import { MidwayAppInfo, MidwayConfig } from '@midwayjs/core';
 const entity = entity => {
   const arr = [];
   Object.keys(entity).map(key => {
-    if (!new RegExp('Mapping').test(key)) {
+    if (new RegExp('Entity').test(key)) {
       arr.push(entity[key]);
     }
   });
@@ -149,7 +149,8 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
 
   config.logaConfig = {
     url: 'https://rpc-mainnet-filecoin.pandarua.dev/rpc/v0',
-    token: '',
+    token:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6InFpYW5saXlhbjIiLCJMZXZlbCI6IjcifQ.Y6c7S6oz4ECxifCKXt1b662NIhIm0XwmHw5JoZfYRLM',
   };
 
   config.pixiuConfig = {
@@ -180,6 +181,12 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     },
     clearRepeatJobWhenStart: false,
     defaultConcurrency: 10,
+  };
+
+  config.lotusConfig = {
+    url: 'http://128.136.157.166:43234/rpc/v1',
+    token:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJyZWFkIiwid3JpdGUiLCJzaWduIiwiYWRtaW4iXX0.joDYscIU3BijQtHXWwIUwHhgVLLYvX-A_ij1Uq0wo3Q',
   };
 
   config.bullBoard = {

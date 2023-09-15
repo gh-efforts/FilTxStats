@@ -42,3 +42,8 @@ export class SyncMinerTypeDTO {
   @Rule(RuleType.array().items(RuleType.string().required()).optional())
   miners: string[];
 }
+
+export class SyncMinerNodeDTO {
+  @Rule(RuleType.string().required())
+  miner: string;
+}

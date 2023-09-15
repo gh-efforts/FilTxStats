@@ -27,6 +27,12 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
     this.pixiu = new PixiuSdk(this.pixiuUrl);
   }
 
+  async getMinerIds() {
+    return this.minerMapping.getMinerList().then(res => {
+      return res.map(item => item.miner);
+    });
+  }
+
   private _getMinerGas(minerGas: IGasFeeByDateRes[], method?: number) {
     return minerGas.map(item => {
       const {
@@ -70,9 +76,7 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
     const date = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
     const startAt = dayjs().subtract(1, 'day').startOf('day').unix();
     const endAt = dayjs().subtract(1, 'day').endOf('day').unix();
-    const miners = (await this.minerMapping.getMinerList()).map(
-      item => item.miner
-    );
+    const miners = await this.getMinerIds();
 
     const [gasFee, reward, dcSealed, pledge] = await Promise.all([
       this.pixiu.gasMinerGasFee(miners, date),

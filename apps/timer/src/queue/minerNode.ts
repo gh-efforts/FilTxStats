@@ -1,14 +1,10 @@
-import { LarkSdk } from '@lark/core';
-
 import { Context, IProcessor, Processor } from '@midwayjs/bull';
 import { Inject } from '@midwayjs/core';
 import MyError from '../app/comm/myError';
-import { FilScanService } from '../app/service/filscan';
+import { MinerNodeService } from '../app/service/minerNode';
 
-@Processor('filcoinNetwork', {
-  repeat: {
-    cron: '*/30 * * * *',
-  },
+import { LarkSdk } from '@lark/core';
+@Processor('minerNode', {
   removeOnComplete: true,
   removeOnFail: true,
   attempts: 5,
@@ -17,15 +13,15 @@ import { FilScanService } from '../app/service/filscan';
     delay: 1000 * 60,
   },
 })
-export class FilcoinNetworkProcessor implements IProcessor {
+export class MinerNodeProcessor implements IProcessor {
   @Inject()
   logger;
 
   @Inject()
-  service: FilScanService;
+  ctx: Context;
 
   @Inject()
-  ctx: Context;
+  service: MinerNodeService;
 
   lark: LarkSdk;
 
@@ -33,10 +29,10 @@ export class FilcoinNetworkProcessor implements IProcessor {
     this.lark = new LarkSdk();
   }
 
-  async execute() {
+  async execute(params: { miner: string }) {
     const { job } = this.ctx;
     try {
-      await this.service.syncFilcoinNetworkData();
+      await this.service.saveNodes(params.miner);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
@@ -55,11 +51,11 @@ export class FilcoinNetworkProcessor implements IProcessor {
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
         await this.lark.sendLarkByQueueStatus(
-          'Filecoin 全网数据',
+          '节点昨日统计',
           false,
           error.message
         );
-        throw new MyError('syncMinerSnapshot error', error.message);
+        throw new MyError('syncMinerDailyStats error', error.message);
       }
     }
   }

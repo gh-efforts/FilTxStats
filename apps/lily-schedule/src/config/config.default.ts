@@ -6,7 +6,7 @@ import { MidwayAppInfo, MidwayConfig } from '@midwayjs/core';
 const entity = entity => {
   const arr = [];
   Object.keys(entity).map(key => {
-    if (!new RegExp('Mapping').test(key)) {
+    if (new RegExp('Entity').test(key)) {
       arr.push(entity[key]);
     }
   });
