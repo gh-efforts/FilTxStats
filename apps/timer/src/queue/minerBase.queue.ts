@@ -34,7 +34,6 @@ export class MinerBaseInfoProcessor implements IProcessor {
     const { job } = this.ctx;
     try {
       await this.service.syncMinerBaseInfo();
-      await this.lark.sendLarkByQueueStatus('节点基础信息', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;

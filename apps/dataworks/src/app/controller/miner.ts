@@ -83,4 +83,13 @@ export class MinerController {
   async syncMinerSectorExpired() {
     return this.service.runJob('minerSectorExpired');
   }
+
+  @Post('/sync_miner_node', {
+    summary: '同步 miner 相关节点地址',
+  })
+  async syncMinerNode(@Body(ALL) param: MinerDTO.SyncMinerNodeDTO) {
+    return this.service.runJob('minerNode', {
+      miner: param.miner,
+    });
+  }
 }

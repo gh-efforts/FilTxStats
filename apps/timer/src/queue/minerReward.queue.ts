@@ -50,7 +50,6 @@ export class MinerRewardProcessor implements IProcessor {
           startAt,
           endAt
         );
-        console.log('reward', reward);
         await this.minerService.modifyMiner(
           {
             rewardEndAt: reward?.time || null,
@@ -68,7 +67,6 @@ export class MinerRewardProcessor implements IProcessor {
         `Job ${job.id} success, ${JSON.stringify(params)}`,
         '同步结束'
       );
-      await this.lark.sendLarkByQueueStatus('节点奖励', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;

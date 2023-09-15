@@ -37,7 +37,6 @@ export class MinerDailyStatsProcessor implements IProcessor {
     console.log('job.opts===', job.opts);
     try {
       await this.service.syncMinerDailyStats();
-      await this.lark.sendLarkByQueueStatus('节点昨日统计', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;

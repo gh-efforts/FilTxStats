@@ -37,7 +37,6 @@ export class MinerEncapsulationProcessor implements IProcessor {
     const { job } = this.ctx;
     try {
       await this.service.syncMinersByEncapsulation();
-      await this.lark.sendLarkByQueueStatus('节点封装', true);
     } catch (error) {
       this.logger.error(error);
 

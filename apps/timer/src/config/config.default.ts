@@ -149,7 +149,8 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
 
   config.logaConfig = {
     url: 'https://rpc-mainnet-filecoin.pandarua.dev/rpc/v0',
-    token: '',
+    token:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6InFpYW5saXlhbjIiLCJMZXZlbCI6IjcifQ.Y6c7S6oz4ECxifCKXt1b662NIhIm0XwmHw5JoZfYRLM',
   };
 
   config.pixiuConfig = {
@@ -183,7 +184,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
   };
 
   config.lotusConfig = {
-    url: 'http://128.136.157.166:43234/rpc/v0',
+    url: 'http://128.136.157.166:43234/rpc/v1',
     token:
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJyZWFkIiwid3JpdGUiLCJzaWduIiwiYWRtaW4iXX0.joDYscIU3BijQtHXWwIUwHhgVLLYvX-A_ij1Uq0wo3Q',
   };

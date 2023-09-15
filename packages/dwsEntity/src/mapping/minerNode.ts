@@ -1,7 +1,7 @@
 import { Provide } from '@midwayjs/decorator';
 
 import { MinerNodeEntity } from '@dws/entity';
-import { FindOptions, UpdateOptions } from 'sequelize';
+import { BulkCreateOptions, FindOptions, UpdateOptions } from 'sequelize';
 
 @Provide()
 export class MinerNodeMapping {
@@ -33,5 +33,9 @@ export class MinerNodeMapping {
     options: UpdateOptions
   ) {
     return this.getModel().update(values, options);
+  }
+
+  public async bulkCreateMinerNode(values: any[], options?: BulkCreateOptions) {
+    return this.getModel().bulkCreate(values, options);
   }
 }

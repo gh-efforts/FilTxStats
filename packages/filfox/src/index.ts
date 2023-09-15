@@ -122,7 +122,7 @@ export class FilfoxSdk {
         method,
       },
     });
-    return res.message;
+    return res.messages;
   }
 
   public async changeWorkerAddress(
@@ -137,7 +137,8 @@ export class FilfoxSdk {
         method,
       },
     });
-    return res.message;
+    console.log('res', res);
+    return res.messages;
   }
 
   public async getMessage(cid: string): Promise<IMessageRes> {

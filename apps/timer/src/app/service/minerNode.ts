@@ -100,7 +100,7 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
         height,
       };
     });
-    await this.bulkCreate(owners);
+    await this.mapping.bulkCreateMinerNode(owners);
   }
 
   /**
@@ -140,7 +140,7 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
 
   private async _saveWorkerAndControl(miner: string) {
     const changes = await this.filfox.changeWorkerAddress(miner);
-
+    console.log('changes', changes);
     if (changes.length === 0) return;
     // 获取cid，根据cid获取message信息，从信息中获取参数params，然后通过loga接口转换成具体的worker、control地址
     const addrs = await Promise.all(
@@ -172,7 +172,7 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
         });
       });
     });
-    await this.bulkCreate(workersAndControls);
+    await this.mapping.bulkCreateMinerNode(workersAndControls);
   }
 
   private async _getWorkerAndControlByCid(
@@ -335,7 +335,7 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
     // 将change事件更新到表中
     await Promise.all([
       this._updateStatusToOffByChangeMessage(dataForOff),
-      this.bulkCreate(dataForInsert),
+      this.mapping.bulkCreateMinerNode(dataForInsert),
     ]);
     // 补全所有长短地址
     await this.syncNameAndRobustAddress();

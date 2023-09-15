@@ -37,7 +37,6 @@ export class FilcoinNetworkProcessor implements IProcessor {
     const { job } = this.ctx;
     try {
       await this.service.syncFilcoinNetworkData();
-      await this.lark.sendLarkByQueueStatus('Filecoin 全网数据', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;

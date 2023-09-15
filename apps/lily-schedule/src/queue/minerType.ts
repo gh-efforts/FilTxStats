@@ -35,7 +35,6 @@ export class MinerTypeProcessor implements IProcessor {
     const { miners } = params;
     try {
       await this.service.syncMinersByType(miners);
-      await this.lark.sendLarkByQueueStatus('节点类型', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;

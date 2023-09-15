@@ -38,7 +38,6 @@ export class MinerSnapshotProcessor implements IProcessor {
 
     try {
       await this.service.syncMinerSnapshot();
-      await this.lark.sendLarkByQueueStatus('节点快照', true);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;

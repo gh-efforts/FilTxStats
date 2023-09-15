@@ -17,6 +17,8 @@ export class LotusSdk {
    * @param url pixiu访问地址
    */
   constructor(url: string, token: string) {
+    console.log('url', url);
+    console.log('token', token);
     this._instance = axios.create({
       baseURL: url,
       timeout: 1000 * 60 * 2,
@@ -49,7 +51,8 @@ export class LotusSdk {
       }
 
       return res.data.result;
-    } catch (e) {
+    } catch (e: any) {
+      console.log('e', e.response.data);
       const message = (e as Error).message;
 
       errorMsg.push(`Lotus Post ${data.method} 方法出错：${message}`);
@@ -152,8 +155,10 @@ export class LotusSdk {
    */
   public async stateMinerAvailableBalance(minerName: string) {
     const res = await this._post<string>({
-      method: 'Filecoin.StateMinerAvailableBalance',
-      params: [minerName, null],
+      data: {
+        method: 'Filecoin.StateMinerAvailableBalance',
+        params: [minerName, null],
+      },
     });
     return res;
   }
@@ -163,8 +168,10 @@ export class LotusSdk {
    */
   public async stateReadState(minerName: string): Promise<IStateReadStateRes> {
     const res = await this._post<IStateReadStateRes>({
-      method: 'Filecoin.StateReadState',
-      params: [minerName, null],
+      data: {
+        method: 'Filecoin.StateReadState',
+        params: [minerName, null],
+      },
     });
     return res;
   }
@@ -174,8 +181,10 @@ export class LotusSdk {
    */
   public async stateMinerPower(minerName: string, cids: Object[] | null) {
     const res = await this._post<IStateMinerPowerRes>({
-      method: 'Filecoin.StateMinerPower',
-      params: [minerName, cids],
+      data: {
+        method: 'Filecoin.StateMinerPower',
+        params: [minerName, cids],
+      },
     });
     return res;
   }
@@ -184,8 +193,10 @@ export class LotusSdk {
    */
   public async stateGetActor(minerName: string) {
     const res = await this._post<IStateGetActorRes>({
-      method: 'Filecoin.StateGetActor',
-      params: [minerName, null],
+      data: {
+        method: 'Filecoin.StateGetActor',
+        params: [minerName, null],
+      },
     });
     return res;
   }
@@ -195,8 +206,10 @@ export class LotusSdk {
    */
   public async stateMinerInfo(minerName: string) {
     const res = await this._post<IStateMinerInfoRes>({
-      method: 'Filecoin.StateMinerInfo',
-      params: [minerName, null],
+      data: {
+        method: 'Filecoin.StateMinerInfo',
+        params: [minerName, null],
+      },
     });
     return res;
   }
@@ -206,8 +219,10 @@ export class LotusSdk {
    */
   public async stateLookupRobustAddress(id: string) {
     const res = await this._post<string>({
-      method: 'Filecoin.StateLookupRobustAddress',
-      params: [id, null],
+      data: {
+        method: 'Filecoin.StateLookupRobustAddress',
+        params: [id, null],
+      },
     });
 
     return {
@@ -221,8 +236,10 @@ export class LotusSdk {
    */
   public async stateLookupID(robustAddress: string) {
     const res = await this._post<string>({
-      method: 'Filecoin.StateLookupID',
-      params: [robustAddress, null],
+      data: {
+        method: 'Filecoin.StateLookupID',
+        params: [robustAddress, null],
+      },
     });
     return {
       name: res || 'f0',
@@ -235,8 +252,10 @@ export class LotusSdk {
    */
   public async stateDecodeParams(minerName: string, params: string) {
     const res = await this._post<IStateDecodeParamsRes>({
-      method: 'Filecoin.StateDecodeParams',
-      params: [minerName, 3, params, null],
+      data: {
+        method: 'Filecoin.StateDecodeParams',
+        params: [minerName, 3, params, null],
+      },
     });
     return {
       controlAddrs: res.NewControlAddrs,
@@ -249,8 +268,10 @@ export class LotusSdk {
    */
   public async chainGetMessage(cid: string): Promise<IChainGetMessageRes> {
     const res = await this._post<IChainGetMessageRes>({
-      method: 'Filecoin.ChainGetMessage',
-      params: [{ '/': cid }],
+      data: {
+        method: 'Filecoin.ChainGetMessage',
+        params: [{ '/': cid }],
+      },
     });
     return res;
   }
