@@ -70,6 +70,7 @@ export class VmMessagesEntity extends Model {
   @Column({
     type: DataType.STRING(255),
     allowNull: false,
+    unique: true,
   })
   cid: string;
 
@@ -92,7 +93,7 @@ export class VmMessagesEntity extends Model {
   to: string;
 
   @Column({
-    type: DataType.DECIMAL(10, 2),
+    type: DataType.DECIMAL(38, 2),
     allowNull: false,
   })
   value: number;

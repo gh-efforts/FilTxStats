@@ -1,5 +1,5 @@
 import { Provide } from '@midwayjs/decorator';
-import { Op } from 'sequelize';
+import { FindOptions, Op } from 'sequelize';
 
 import { WalletEntity, WalletTypeEntity } from '@dws/entity';
 
@@ -7,6 +7,10 @@ import { WalletEntity, WalletTypeEntity } from '@dws/entity';
 export class WalletMapping {
   getModel() {
     return WalletEntity;
+  }
+
+  public async findAllWallet(options?: FindOptions) {
+    return this.getModel().findAll(options);
   }
 
   public async getAllForCache() {

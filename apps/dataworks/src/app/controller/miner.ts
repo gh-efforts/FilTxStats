@@ -88,8 +88,20 @@ export class MinerController {
     summary: '同步 miner 相关节点地址',
   })
   async syncMinerNode(@Body(ALL) param: MinerDTO.SyncMinerNodeDTO) {
-    return this.service.runJob('minerNode', {
-      miner: param.miner,
+    param.miners.map(miner => {
+      this.service.runJob('minerNode', {
+        miner,
+      });
+    });
+    return true;
+  }
+
+  @Post('/sync_node_address', {
+    summary: '同步 相关节点地址',
+  })
+  async syncNodeAddress(@Body(ALL) param: MinerDTO.SyncTransactionDTO) {
+    return this.service.runJob('transaction', {
+      miners: param.miners,
     });
   }
 }
