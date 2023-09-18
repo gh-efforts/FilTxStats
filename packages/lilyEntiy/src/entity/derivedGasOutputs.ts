@@ -1,14 +1,16 @@
-import { Column, DataType, Table, Model } from 'sequelize-typescript';
+import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
   tableName: 'derived_gas_outputs',
   timestamps: false,
+  schema: 'public',
 })
-export class DerivedGasOutputs extends Model {
+export class DerivedGasOutputsEntity extends Model {
   @Column({
     type: DataType.TEXT,
     allowNull: false,
     field: 'cid',
+    primaryKey: true,
   })
   cid: string;
 

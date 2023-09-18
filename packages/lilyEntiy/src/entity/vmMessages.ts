@@ -3,9 +3,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
 @Table({
   tableName: 'vm_messages',
   schema: 'public',
-  hasTrigger: true,
-  timestamps: true,
-  paranoid: true,
+  timestamps: false,
   indexes: [
     {
       name: 'vm_messages_actor_code_method_idx',

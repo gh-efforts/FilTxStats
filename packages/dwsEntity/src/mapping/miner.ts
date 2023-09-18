@@ -1,7 +1,7 @@
 import { Provide } from '@midwayjs/core';
 
 import { MinerEntity } from '@dws/entity';
-import { Optional, UpsertOptions, WhereOptions } from 'sequelize';
+import { FindOptions, Optional, UpsertOptions, WhereOptions } from 'sequelize';
 
 @Provide()
 export class MinerMapping {
@@ -21,6 +21,10 @@ export class MinerMapping {
     return this.getModel().findAll({
       where,
     });
+  }
+
+  async findAllMiner(options?: FindOptions) {
+    return this.getModel().findAll(options);
   }
 
   async modifyMiner(values: { [x: string]: any }, options?: any) {

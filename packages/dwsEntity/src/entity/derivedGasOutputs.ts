@@ -78,20 +78,20 @@ export class DerivedGasOutputsEntity extends Model {
   to: string;
 
   @Column({
-    type: DataType.DECIMAL(10, 0),
+    type: DataType.DECIMAL(38, 0),
     allowNull: false,
   })
   value: number;
 
   @Column({
-    type: DataType.DECIMAL(10, 0),
+    type: DataType.DECIMAL(38, 0),
     allowNull: false,
     field: 'gas_fee_cap',
   })
   gasFeeCap: number;
 
   @Column({
-    type: DataType.DECIMAL(10, 0),
+    type: DataType.DECIMAL(38, 0),
     allowNull: false,
     field: 'gas_premium',
   })
@@ -145,42 +145,42 @@ export class DerivedGasOutputsEntity extends Model {
   gasUsed: number;
 
   @Column({
-    type: DataType.DECIMAL(10, 0),
+    type: DataType.DECIMAL(38, 0),
     allowNull: false,
     field: 'parent_base_fee',
   })
   parentBaseFee: number;
 
   @Column({
-    type: DataType.DECIMAL(10, 0),
+    type: DataType.DECIMAL(38, 0),
     allowNull: false,
     field: 'base_fee_burn',
   })
   baseFeeBurn: number;
 
   @Column({
-    type: DataType.DECIMAL(10, 0),
+    type: DataType.DECIMAL(38, 0),
     allowNull: false,
     field: 'over_estimation_burn',
   })
   overEstimationBurn: number;
 
   @Column({
-    type: DataType.DECIMAL(10, 0),
+    type: DataType.DECIMAL(38, 0),
     allowNull: false,
     field: 'miner_penalty',
   })
   minerPenalty: number;
 
   @Column({
-    type: DataType.DECIMAL(10, 0),
+    type: DataType.DECIMAL(38, 0),
     allowNull: false,
     field: 'miner_tip',
   })
   minerTip: number;
 
   @Column({
-    type: DataType.DECIMAL(10, 0),
+    type: DataType.DECIMAL(38, 0),
     allowNull: false,
   })
   refund: number;
