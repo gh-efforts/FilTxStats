@@ -170,14 +170,14 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     let startDerivedGasHeight =
       await this.derivedGasOutputsMapping.getMaxHeight();
 
-    if (startDerivedGasHeight === 0) {
+    if (!startDerivedGasHeight) {
       startDerivedGasHeight =
         await this.lilyDerivedGasOutputsMapping.getMinHeight();
     }
 
     let startVmMessagesHeight = await this.vmMessagesMapping.getMaxHeight();
 
-    if (startVmMessagesHeight === 0) {
+    if (!startVmMessagesHeight) {
       startVmMessagesHeight = await this.lilyVmMessagesMapping.getMinHeight();
     }
 
