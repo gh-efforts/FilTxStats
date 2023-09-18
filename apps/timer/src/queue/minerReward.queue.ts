@@ -12,7 +12,7 @@ type MinerRewardParams = {
   endAt: string;
   isHisiory?: boolean;
 };
-@Processor('minerNode', {
+@Processor('minerReward', {
   removeOnComplete: true,
   removeOnFail: true,
   attempts: 5,

@@ -79,6 +79,11 @@ export class MinerService extends BaseService<MinerEntity> {
       endAt: dayjs().format('YYYY-MM-DD'),
       isHisiory: true,
     });
+    miners.map(miner => {
+      this.runJob('minerNode', {
+        miner,
+      });
+    });
     return true;
   }
 
