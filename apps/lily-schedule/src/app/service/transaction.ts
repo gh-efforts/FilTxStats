@@ -292,10 +292,11 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
         startHeight += 500;
         await t.commit();
       } catch (error) {
+        console.log('error', error);
         status = -1;
         await t.rollback();
       } finally {
-        await this.modifySyncStatus(params.id, startHeight, status);
+        await this.modifySyncStatus(params.id, height, status);
         if (status === -1) {
           break;
         }
@@ -303,7 +304,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     }
 
     if (status === 1) {
-      await this.modifySyncStatus(params.id, startHeight, 2);
+      await this.modifySyncStatus(params.id, endHeight, 2);
     }
 
     return true;
@@ -363,17 +364,18 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
         startHeight += 500;
         await t.commit();
       } catch (error) {
+        console.log('error', error);
         status = -1;
         await t.rollback();
       } finally {
-        await this.modifySyncStatus(params.id, startHeight, status);
+        await this.modifySyncStatus(params.id, height, status);
         if (status === -1) {
           break;
         }
       }
     }
     if (status === 1) {
-      await this.modifySyncStatus(params.id, startHeight, 2);
+      await this.modifySyncStatus(params.id, endHeight, 2);
     }
     return true;
   }
