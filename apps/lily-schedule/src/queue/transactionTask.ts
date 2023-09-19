@@ -3,10 +3,9 @@ import { Inject } from '@midwayjs/core';
 import MyError from '../app/comm/myError';
 import { TransactionService } from '../app/service/transaction';
 
-import { TransactionSyncStatusEntity } from '@dws/entity';
 import { LarkSdk } from '@lark/core';
 
-@Processor('transaction', {
+@Processor('transactionTask', {
   removeOnComplete: true,
   removeOnFail: true,
   attempts: 5,
@@ -15,7 +14,7 @@ import { LarkSdk } from '@lark/core';
     delay: 1000 * 60,
   },
 })
-export class TransactionProcessor implements IProcessor {
+export class TransactionTaskProcessor implements IProcessor {
   @Inject()
   logger;
 
@@ -31,15 +30,14 @@ export class TransactionProcessor implements IProcessor {
     this.lark = new LarkSdk();
   }
 
-  async execute(params: TransactionSyncStatusEntity) {
+  async execute(params: { miners: string[] }) {
     const { job } = this.ctx;
-    const { type } = params;
+    const { miners } = params;
     try {
-      if (type === 1) {
-        await this.service._getDerivedGasTransactionsAndSave(params);
-      } else {
-        await this.service._getVmMessagesTransactionsAndSave(params);
-      }
+      await this.service.syncTransaction({
+        names: miners,
+      });
+      this.logger.info('========== Transaction success ===========');
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;

@@ -15,6 +15,7 @@ import { VmMessagesEntity } from './src/entity/vmMessages';
 import { WalletEntity } from './src/entity/wallet';
 import { WalletTypeEntity } from './src/entity/walletType';
 
+import { TransactionSyncStatusEntity } from './src/entity/transactionSyncStatus';
 import { DerivedGasOutputsMapping } from './src/mapping/derivedGasOutputs';
 import { FilcoinNetworkDataMapping } from './src/mapping/filcoinNetworkData';
 import { MinerMapping } from './src/mapping/miner';
@@ -27,6 +28,7 @@ import { MinerRewardMapping } from './src/mapping/minerReward';
 import { MinerSectorMapping } from './src/mapping/minerSector';
 import { MinerSectorExpiredMapping } from './src/mapping/minerSectorExpired';
 import { MinerSnapshotMapping } from './src/mapping/minerSnapshot';
+import { TransactionSyncStatusMapping } from './src/mapping/transactionSyncStatus';
 import { VmMessagesMapping } from './src/mapping/vmMessages';
 import { WalletMapping } from './src/mapping/wallet';
 import { WalletTypeMapping } from './src/mapping/walletType';
@@ -56,6 +58,8 @@ export {
   MinerSectorMapping,
   MinerSnapshotEntity,
   MinerSnapshotMapping,
+  TransactionSyncStatusEntity,
+  TransactionSyncStatusMapping,
   VmMessagesEntity,
   VmMessagesMapping,
   WalletEntity,

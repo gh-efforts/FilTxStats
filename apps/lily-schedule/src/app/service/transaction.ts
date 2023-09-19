@@ -4,6 +4,8 @@ import {
   MinerEncapsulationMapping,
   MinerMapping,
   MinerNodeMapping,
+  TransactionSyncStatusEntity,
+  TransactionSyncStatusMapping,
   VmMessagesMapping,
   WalletMapping,
 } from '@dws/entity';
@@ -20,6 +22,7 @@ import { Op } from 'sequelize';
 import { BaseService } from '../../core/baseService';
 
 import { getHeightByTime } from '@dws/utils';
+import * as bull from '@midwayjs/bull';
 import { InjectDataSource } from '@midwayjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { SyncBaseDTO } from '../model/dto/transaction';
@@ -53,8 +56,14 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
   @Inject()
   lilyVmMessagesMapping: LilyVmMessagesMapping;
 
+  @Inject()
+  transactionSyncStatusMapping: TransactionSyncStatusMapping;
+
   @InjectDataSource()
   defaultDataSource: Sequelize;
+
+  @Inject()
+  bullFramework: bull.Framework;
 
   @Config('filutilsConfig.url')
   filutilsUrl: string;
@@ -187,36 +196,65 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     const endHeight = nowHeight - 120;
 
     for (const item of addressesGroup) {
-      console.log('startDerivedGasHeight', startDerivedGasHeight);
-      console.log('startVmMessagesHeight', startVmMessagesHeight);
-      console.log('endHeight', endHeight);
-      if (item.length > 0) {
-        await Promise.all([
-          this._getDerivedGasTransactionsAndSave(
-            item,
-            startDerivedGasHeight,
-            endHeight
-          ),
-          this._getVmMessagesTransactionsAndSave(
-            item,
-            startVmMessagesHeight,
-            endHeight
-          ),
-        ]);
-      }
+      const taskDerivedGas = {
+        type: 1,
+        status: 0,
+        startHeight: startDerivedGasHeight,
+        endHeight: endHeight,
+        runingHeight: startDerivedGasHeight,
+        address: JSON.stringify(item),
+      };
+
+      const taskVm = {
+        type: 2,
+        status: 0,
+        startHeight: startVmMessagesHeight,
+        endHeight: endHeight,
+        runingHeight: startVmMessagesHeight,
+        address: JSON.stringify(item),
+      };
+
+      const [derivceGas, vm] =
+        await this.transactionSyncStatusMapping.bulkCreateTransactionSyncStatus(
+          [taskDerivedGas, taskVm]
+        );
+      await this.runJob('transaction', derivceGas.toJSON());
+      await this.runJob('transaction', vm.toJSON());
     }
     return true;
   }
 
-  private async _getDerivedGasTransactionsAndSave(
-    item: string[],
-    startHeight: number,
-    endHeight: number
-  ) {
+  async runJob(queueName: string, param: any = {}) {
+    // 获取 Processor 相关的队列
+    const bullQueue = this.bullFramework.ensureQueue(queueName);
+    // 立即执行这个任务
+    await bullQueue.add(param);
+    return true;
+  }
+
+  async _getDerivedGasTransactionsAndSave(params: TransactionSyncStatusEntity) {
+    let { startHeight, endHeight, address } = params;
+    console.log('params', params);
+
+    const lastDerivedGasTask =
+      await this.transactionSyncStatusMapping.findOneTransactionSyncStatus({
+        where: {
+          id: params.id,
+        },
+      });
+
+    if (startHeight !== lastDerivedGasTask.runingHeight) {
+      startHeight = lastDerivedGasTask.runingHeight;
+    }
+
+    const item = JSON.parse(address);
+
     const len = Math.floor((endHeight - startHeight) / 500);
+
     for (let i = 0; i < len; i++) {
       const t = await this.defaultDataSource.transaction();
       const height = i === len - 1 ? endHeight : startHeight + 500;
+      let status = 1;
       // 从lily表查询大于指定高度的数据
       try {
         const [fromTransactions, toTransactions] = await Promise.all([
@@ -250,10 +288,11 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
             ignoreDuplicates: true,
           }
         );
-        await t.commit();
         // 500 区块跑一次
         startHeight += 500;
+        await t.commit();
       } catch (error) {
+        status = -1;
         console.log('object error', error);
         await t.rollback();
         throw new Error(
@@ -261,20 +300,34 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
         ${error}`
         );
       }
+      await this.modifySyncStatus(params.id, startHeight, status);
     }
+
+    await this.modifySyncStatus(params.id, startHeight, 2);
 
     return true;
   }
 
-  private async _getVmMessagesTransactionsAndSave(
-    item: string[],
-    startHeight: number,
-    endHeight: number
-  ) {
+  async _getVmMessagesTransactionsAndSave(params: TransactionSyncStatusEntity) {
+    let { startHeight, endHeight, address } = params;
+    console.log('params', params);
+    const item = JSON.parse(address);
+
+    const lastDerivedGasTask =
+      await this.transactionSyncStatusMapping.findOneTransactionSyncStatus({
+        where: {
+          id: params.id,
+        },
+      });
+
+    if (startHeight !== lastDerivedGasTask.runingHeight) {
+      startHeight = lastDerivedGasTask.runingHeight;
+    }
     const len = Math.floor((endHeight - startHeight) / 500);
     for (let i = 0; i < len; i++) {
       const t = await this.defaultDataSource.transaction();
       const height = i === len - 1 ? endHeight : startHeight + 500;
+      let status = 1;
       // 从lily表查询大于指定高度的数据
       try {
         const [fromTransactions, toTransactions] = await Promise.all([
@@ -302,10 +355,12 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
           transaction: t,
           ignoreDuplicates: true,
         });
-        await t.commit();
+
         // 500 区块跑一次
         startHeight += 500;
+        await t.commit();
       } catch (error) {
+        status = -1;
         console.log('object error', error);
         await t.rollback();
         throw new Error(
@@ -313,8 +368,24 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
         ${error}`
         );
       }
+      await this.modifySyncStatus(params.id, startHeight, status);
     }
+    await this.modifySyncStatus(params.id, startHeight, 2);
+    return true;
+  }
 
+  async modifySyncStatus(id: number, height: number, status: number) {
+    await this.transactionSyncStatusMapping.modifyTransactionSyncStatus(
+      {
+        status: 1,
+        runingHeight: height,
+      },
+      {
+        where: {
+          id,
+        },
+      }
+    );
     return true;
   }
 }

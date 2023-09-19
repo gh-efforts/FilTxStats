@@ -97,10 +97,10 @@ export class MinerController {
   }
 
   @Post('/sync_node_address', {
-    summary: '同步 相关节点地址',
+    summary: '同步 相关节点交易记录，任务阶段',
   })
   async syncNodeAddress(@Body(ALL) param: MinerDTO.SyncTransactionDTO) {
-    return this.service.runJob('transaction', {
+    return this.service.runJob('transactionTask', {
       miners: param.miners,
     });
   }
