@@ -67,6 +67,7 @@ export class PixiuSdk {
 
       return res.data;
     } catch (e) {
+      console.log('e', e);
       const message = (e as Error).message;
       console.log('error', `Pixiu GET ${url} 方法出错：${message}`);
       errorMsg.push(`Pixiu GET ${url} 方法出错：${message}`);

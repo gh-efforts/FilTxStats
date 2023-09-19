@@ -5,13 +5,12 @@
   "private": true,
   "dependencies": {
     "@dws/entity": "*",
-    "@filfox/http": "*",
-    "@lark/core": "*",
-    "@lily/entity": "*",
-    "@pixiu/http": "*",
     "@dws/utils": "*",
+    "@filfox/http": "*",
     "@filscan/http": "*",
     "@filutils/http": "*",
+    "@lark/core": "*",
+    "@lily/entity": "*",
     "@lotus/http": "*",
     "@midwayjs/bootstrap": "^3.10.10",
     "@midwayjs/bull": "^3.10.13",
@@ -25,6 +24,7 @@
     "@midwayjs/sequelize": "^3.10.13",
     "@midwayjs/swagger": "^3.10.13",
     "@midwayjs/validate": "^3.10.13",
+    "@pixiu/http": "*",
     "@waiting/shared-core": "^20.5.0",
     "@waiting/shared-types": "^20.5.0",
     "bcryptjs": "^2.4.3",
@@ -40,7 +40,8 @@
     "pg": "^8.8.0",
     "randomstring": "^1.2.2",
     "sequelize": "^6.21.4",
-    "sequelize-typescript": "^2.1.5"
+    "sequelize-typescript": "^2.1.5",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@midwayjs/cli": "^2.0.11",

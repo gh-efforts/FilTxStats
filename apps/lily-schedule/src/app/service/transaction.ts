@@ -18,13 +18,12 @@ import {
 import { LotusSdk } from '@lotus/http';
 import { Config, Init, Inject, Provide } from '@midwayjs/core';
 import * as dayjs from 'dayjs';
-import { Op } from 'sequelize';
+import { Op, col, fn } from 'sequelize';
 import { BaseService } from '../../core/baseService';
 
 import { getHeightByTime } from '@dws/utils';
 import * as bull from '@midwayjs/bull';
-import { InjectDataSource } from '@midwayjs/sequelize';
-import { Sequelize } from 'sequelize-typescript';
+import { v4 as uuidv4 } from 'uuid';
 import _ = require('lodash');
 
 @Provide()
@@ -58,9 +57,6 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
   @Inject()
   transactionSyncStatusMapping: TransactionSyncStatusMapping;
-
-  @InjectDataSource()
-  defaultDataSource: Sequelize;
 
   @Inject()
   bullFramework: bull.Framework;
@@ -194,6 +190,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
     for (const item of addressesGroup) {
       const taskDerivedGas = {
+        syncId: uuidv4(),
         type: 1,
         status: 0,
         startHeight: startDerivedGasHeight,
@@ -203,6 +200,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
       };
 
       const taskVm = {
+        syncId: uuidv4(),
         type: 2,
         status: 0,
         startHeight: startVmMessagesHeight,
@@ -228,6 +226,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     const endHeight = nowHeight;
     const newTasks = transactionTasks.map(task => {
       return {
+        syncId: task.syncId,
         type: task.type,
         status: 0,
         startHeight: task.endHeight,
@@ -296,43 +295,24 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
         const fromChunks = _.chunk(fromTransactions, 500) as any;
         for (let fromTransaction of fromChunks) {
-          const t = await this.defaultDataSource.transaction();
-          try {
-            await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
-              fromTransaction,
-              {
-                updateOnDuplicate: this.updateOnDuplicateKey,
-                transaction: t,
-                ignoreDuplicates: true,
-              }
-            );
-            await t.commit();
-          } catch (error) {
-            console.log('error 1', error);
-            await t.rollback();
-            throw error;
-          }
+          await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
+            fromTransaction,
+            {
+              updateOnDuplicate: this.updateOnDuplicateKey,
+              ignoreDuplicates: true,
+            }
+          );
         }
 
         const toChunks = _.chunk(toTransactions, 500) as any;
-        // 拆分事务， 数据量太大
         for (let toTransaction of toChunks) {
-          const t = await this.defaultDataSource.transaction();
-          try {
-            await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
-              toTransaction,
-              {
-                updateOnDuplicate: this.updateOnDuplicateKey,
-                transaction: t,
-                ignoreDuplicates: true,
-              }
-            );
-            await t.commit();
-          } catch (err) {
-            console.log('err', err);
-            await t.rollback();
-            throw err;
-          }
+          await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
+            toTransaction,
+            {
+              updateOnDuplicate: this.updateOnDuplicateKey,
+              ignoreDuplicates: true,
+            }
+          );
         }
 
         // 500 区块跑一次
@@ -395,38 +375,19 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
         const fromChunks = _.chunk(fromTransactions, 500) as any;
         for (let fromTransaction of fromChunks) {
-          const t = await this.defaultDataSource.transaction();
-          try {
-            await this.vmMessagesMapping.bulkCreateVmMessages(fromTransaction, {
-              updateOnDuplicate: this.updateOnDuplicateKey,
-              transaction: t,
-              ignoreDuplicates: true,
-            });
-            await t.commit();
-          } catch (error) {
-            console.log('error 1', error);
-            await t.rollback();
-            throw error;
-          }
+          await this.vmMessagesMapping.bulkCreateVmMessages(fromTransaction, {
+            updateOnDuplicate: this.updateOnDuplicateKey,
+            ignoreDuplicates: true,
+          });
         }
 
         const toChunks = _.chunk(toTransactions, 500) as any;
         // 拆分事务， 数据量太大
         for (let toTransaction of toChunks) {
-          const t = await this.defaultDataSource.transaction();
-
-          try {
-            await this.vmMessagesMapping.bulkCreateVmMessages(toTransaction, {
-              updateOnDuplicate: this.updateOnDuplicateKey,
-              transaction: t,
-              ignoreDuplicates: true,
-            });
-            await t.commit();
-          } catch (err) {
-            console.log('err', err);
-            await t.rollback();
-            throw err;
-          }
+          await this.vmMessagesMapping.bulkCreateVmMessages(toTransaction, {
+            updateOnDuplicate: this.updateOnDuplicateKey,
+            ignoreDuplicates: true,
+          });
         }
         // 500 区块跑一次
         startHeight += 500;
@@ -463,7 +424,18 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
   async getTransactionSyncStatus() {
     return this.transactionSyncStatusMapping.findAllTransactionSyncStatus({
+      attributes: [
+        'id',
+        'syncId',
+        [fn('max', col('type')), 'type'],
+        [fn('max', col('status')), 'status'],
+        [fn('max', col('start_height')), 'startHeight'],
+        [fn('max', col('end_height')), 'endHeight'],
+        [fn('max', col('runing_height')), 'runingHeight'],
+        'address',
+      ],
       raw: true,
+      group: 'syncId',
     });
   }
 }

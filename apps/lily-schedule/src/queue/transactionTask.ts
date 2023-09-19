@@ -40,6 +40,7 @@ export class TransactionTaskProcessor implements IProcessor {
         await this.service.syncTransaction();
       } else {
         const transactionTask = await this.service.getTransactionSyncStatus();
+        console.log('transactionTask', transactionTask);
         const unfinishedTask = transactionTask.filter(
           item => item.status === -1
         );
@@ -48,6 +49,7 @@ export class TransactionTaskProcessor implements IProcessor {
         });
 
         const finishedTasks = transactionTask.filter(item => item.status === 2);
+
         // 同步最新交易
         await this.service.syncLastTransaction(finishedTasks);
       }
