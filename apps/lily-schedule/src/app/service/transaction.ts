@@ -381,7 +381,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
   async modifySyncStatus(id: number, height: number, status: number) {
     await this.transactionSyncStatusMapping.modifyTransactionSyncStatus(
       {
-        status: 1,
+        status,
         runingHeight: height,
       },
       {
