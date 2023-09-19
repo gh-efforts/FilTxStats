@@ -250,11 +250,11 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     const item = JSON.parse(address);
 
     const len = Math.floor((endHeight - startHeight) / 500);
+    let status = 1;
 
     for (let i = 0; i < len; i++) {
       const t = await this.defaultDataSource.transaction();
       const height = i === len - 1 ? endHeight : startHeight + 500;
-      let status = 1;
       // 从lily表查询大于指定高度的数据
       try {
         const [fromTransactions, toTransactions] = await Promise.all([
@@ -293,17 +293,18 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
         await t.commit();
       } catch (error) {
         status = -1;
-        console.log('object error', error);
         await t.rollback();
-        throw new Error(
-          `定时任务报错（同步交易数据）：高度：${startHeight} -> ${endHeight} 地址数组：${item}
-        ${error}`
-        );
+      } finally {
+        await this.modifySyncStatus(params.id, startHeight, status);
+        if (status === -1) {
+          break;
+        }
       }
-      await this.modifySyncStatus(params.id, startHeight, status);
     }
 
-    await this.modifySyncStatus(params.id, startHeight, 2);
+    if (status === 1) {
+      await this.modifySyncStatus(params.id, startHeight, 2);
+    }
 
     return true;
   }
@@ -323,11 +324,13 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     if (startHeight !== lastDerivedGasTask.runingHeight) {
       startHeight = lastDerivedGasTask.runingHeight;
     }
+
     const len = Math.floor((endHeight - startHeight) / 500);
+    let status = 1;
+
     for (let i = 0; i < len; i++) {
       const t = await this.defaultDataSource.transaction();
       const height = i === len - 1 ? endHeight : startHeight + 500;
-      let status = 1;
       // 从lily表查询大于指定高度的数据
       try {
         const [fromTransactions, toTransactions] = await Promise.all([
@@ -361,16 +364,17 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
         await t.commit();
       } catch (error) {
         status = -1;
-        console.log('object error', error);
         await t.rollback();
-        throw new Error(
-          `定时任务报错（同步交易数据）：高度：${startHeight} -> ${endHeight} 地址数组：${item}
-        ${error}`
-        );
+      } finally {
+        await this.modifySyncStatus(params.id, startHeight, status);
+        if (status === -1) {
+          break;
+        }
       }
-      await this.modifySyncStatus(params.id, startHeight, status);
     }
-    await this.modifySyncStatus(params.id, startHeight, 2);
+    if (status === 1) {
+      await this.modifySyncStatus(params.id, startHeight, 2);
+    }
     return true;
   }
 
