@@ -24,6 +24,13 @@ export class TransactionSyncStatusEntity extends Model {
   id: number;
 
   @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    comment: '同步 id',
+  })
+  syncId: string;
+
+  @Column({
     type: DataType.TINYINT,
     allowNull: false,
     comment: '同步类型: 1: derived_gas_outputs 2: vm_messages',
