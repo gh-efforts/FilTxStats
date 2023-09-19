@@ -21,6 +21,13 @@ export class TransactionSyncStatusMapping {
     return this.getModel().bulkCreate(values, options);
   }
 
+  async creadteTransactionSyncStatus(
+    values: Optional<any, string>,
+    options?: BulkCreateOptions
+  ) {
+    return this.getModel().create(values, options);
+  }
+
   public async modifyTransactionSyncStatus(
     values: { [x: string]: any },
     options: UpdateOptions
@@ -30,5 +37,9 @@ export class TransactionSyncStatusMapping {
 
   public async findOneTransactionSyncStatus(options?: FindOptions) {
     return this.getModel().findOne(options);
+  }
+
+  public async findAllTransactionSyncStatus(options?: FindOptions) {
+    return this.getModel().findAll(options);
   }
 }
