@@ -25,7 +25,7 @@ import { getHeightByTime } from '@dws/utils';
 import * as bull from '@midwayjs/bull';
 import { InjectDataSource } from '@midwayjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
-import { SyncBaseDTO } from '../model/dto/transaction';
+import _ = require('lodash');
 
 @Provide()
 export class TransactionService extends BaseService<MinerEncapsulationEntity> {
@@ -155,19 +155,16 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
       });
   }
 
-  public async syncTransaction(params: SyncBaseDTO) {
-    let { names } = params;
+  public async syncTransaction() {
     // 获取起始高度
     // 获取miner、minerNode、wallet表所有地址
-    let addresses = names; // 默认为指定地址
-    if (names.length === 0) {
-      const res = await Promise.all([
-        this.getMinerAddress(),
-        this.getMinerNodeAddress(),
-        this.getWalletAddress(),
-      ]);
-      addresses = [].concat(...res.map(item => item));
-    }
+    let addresses = [];
+    const res = await Promise.all([
+      this.getMinerAddress(),
+      this.getMinerNodeAddress(),
+      this.getWalletAddress(),
+    ]);
+    addresses = [].concat(...res.map(item => item));
     const EACH_GROUP_LENGTH = 100; // 每个数组内的数量
 
     // 将查询数据分为几组查询
@@ -224,6 +221,32 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     return true;
   }
 
+  async syncLastTransaction(transactionTasks: TransactionSyncStatusEntity[]) {
+    // 以当前时间，推算出当前高度
+    const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss'));
+
+    const endHeight = nowHeight;
+    const newTasks = transactionTasks.map(task => {
+      return {
+        type: task.type,
+        status: 0,
+        startHeight: task.endHeight,
+        endHeight: endHeight,
+        runingHeight: task.endHeight,
+        address: task.address,
+      };
+    });
+    const result =
+      await this.transactionSyncStatusMapping.bulkCreateTransactionSyncStatus(
+        newTasks
+      );
+
+    for (let newTask of result) {
+      await this.runJob('transaction', newTask.toJSON());
+    }
+    return true;
+  }
+
   async runJob(queueName: string, param: any = {}) {
     // 获取 Processor 相关的队列
     const bullQueue = this.bullFramework.ensureQueue(queueName);
@@ -253,7 +276,6 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     let status = 1;
 
     for (let i = 0; i < len; i++) {
-      const t = await this.defaultDataSource.transaction();
       const height = i === len - 1 ? endHeight : startHeight + 500;
       // 从lily表查询大于指定高度的数据
       try {
@@ -271,30 +293,53 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
             'to'
           ) as any,
         ]);
-        await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
-          fromTransactions,
-          {
-            updateOnDuplicate: this.updateOnDuplicateKey,
-            transaction: t,
-            ignoreDuplicates: true,
-          }
-        );
 
-        await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
-          toTransactions,
-          {
-            updateOnDuplicate: this.updateOnDuplicateKey,
-            transaction: t,
-            ignoreDuplicates: true,
+        const fromChunks = _.chunk(fromTransactions, 500) as any;
+        for (let fromTransaction of fromChunks) {
+          const t = await this.defaultDataSource.transaction();
+          try {
+            await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
+              fromTransaction,
+              {
+                updateOnDuplicate: this.updateOnDuplicateKey,
+                transaction: t,
+                ignoreDuplicates: true,
+              }
+            );
+            await t.commit();
+          } catch (error) {
+            console.log('error 1', error);
+            await t.rollback();
+            throw error;
           }
-        );
+        }
+
+        const toChunks = _.chunk(toTransactions, 500) as any;
+        // 拆分事务， 数据量太大
+        for (let toTransaction of toChunks) {
+          const t = await this.defaultDataSource.transaction();
+          try {
+            await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
+              toTransaction,
+              {
+                updateOnDuplicate: this.updateOnDuplicateKey,
+                transaction: t,
+                ignoreDuplicates: true,
+              }
+            );
+            await t.commit();
+          } catch (err) {
+            console.log('err', err);
+            await t.rollback();
+            throw err;
+          }
+        }
+
         // 500 区块跑一次
         startHeight += 500;
-        await t.commit();
       } catch (error) {
         console.log('error', error);
         status = -1;
-        await t.rollback();
       } finally {
         await this.modifySyncStatus(params.id, height, status);
         if (status === -1) {
@@ -330,7 +375,6 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     let status = 1;
 
     for (let i = 0; i < len; i++) {
-      const t = await this.defaultDataSource.transaction();
       const height = i === len - 1 ? endHeight : startHeight + 500;
       // 从lily表查询大于指定高度的数据
       try {
@@ -348,25 +392,47 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
             'to'
           ) as any,
         ]);
-        await this.vmMessagesMapping.bulkCreateVmMessages(fromTransactions, {
-          updateOnDuplicate: this.updateOnDuplicateKey,
-          transaction: t,
-          ignoreDuplicates: true,
-        });
 
-        await this.vmMessagesMapping.bulkCreateVmMessages(toTransactions, {
-          updateOnDuplicate: this.updateOnDuplicateKey,
-          transaction: t,
-          ignoreDuplicates: true,
-        });
+        const fromChunks = _.chunk(fromTransactions, 500) as any;
+        for (let fromTransaction of fromChunks) {
+          const t = await this.defaultDataSource.transaction();
+          try {
+            await this.vmMessagesMapping.bulkCreateVmMessages(fromTransaction, {
+              updateOnDuplicate: this.updateOnDuplicateKey,
+              transaction: t,
+              ignoreDuplicates: true,
+            });
+            await t.commit();
+          } catch (error) {
+            console.log('error 1', error);
+            await t.rollback();
+            throw error;
+          }
+        }
 
+        const toChunks = _.chunk(toTransactions, 500) as any;
+        // 拆分事务， 数据量太大
+        for (let toTransaction of toChunks) {
+          const t = await this.defaultDataSource.transaction();
+
+          try {
+            await this.vmMessagesMapping.bulkCreateVmMessages(toTransaction, {
+              updateOnDuplicate: this.updateOnDuplicateKey,
+              transaction: t,
+              ignoreDuplicates: true,
+            });
+            await t.commit();
+          } catch (err) {
+            console.log('err', err);
+            await t.rollback();
+            throw err;
+          }
+        }
         // 500 区块跑一次
         startHeight += 500;
-        await t.commit();
       } catch (error) {
         console.log('error', error);
         status = -1;
-        await t.rollback();
       } finally {
         await this.modifySyncStatus(params.id, height, status);
         if (status === -1) {
@@ -393,5 +459,11 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
       }
     );
     return true;
+  }
+
+  async getTransactionSyncStatus() {
+    return this.transactionSyncStatusMapping.findAllTransactionSyncStatus({
+      raw: true,
+    });
   }
 }
