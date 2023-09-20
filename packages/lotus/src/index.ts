@@ -92,6 +92,7 @@ export class LotusSdk {
     });
     return {
       miner,
+      beneficiary: res.Beneficiary,
       sectorsize: res.SectorSize,
     };
   }

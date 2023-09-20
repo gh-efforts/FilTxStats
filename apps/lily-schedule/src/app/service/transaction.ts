@@ -339,7 +339,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     let { startHeight, endHeight, address } = params;
     console.log('params', params);
     const item = JSON.parse(address);
-
+    // 任务可能是队列异常重跑， 需要从库里最新高度查询
     const lastDerivedGasTask =
       await this.transactionSyncStatusMapping.findOneTransactionSyncStatus({
         where: {
