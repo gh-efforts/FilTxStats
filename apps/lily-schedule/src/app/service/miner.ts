@@ -155,7 +155,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
           this.lilyMapping.getMinerInfo(miner).then(res => {
             if (!res) {
               // 补充链上数据
-              return this.lotus.getStateMinerInfo(miner);
+              return this.lotus.getStateMinerInfo(miner) as any;
             }
             return res;
           })

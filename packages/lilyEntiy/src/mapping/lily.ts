@@ -388,4 +388,25 @@ export class LilyMapping extends LilyService {
         : 0,
     };
   }
+
+  async getMinerBalance(miner: string) {
+    const SQL = `
+      SELECT 
+        id as miner,
+        balance 
+      FROM
+        actors 
+      WHERE
+        id = ? 
+      ORDER BY
+        height DESC 
+        LIMIT 1
+  `;
+    const result = await this.query<{ miner: string; balance: string }>(
+      SQL,
+      [miner],
+      true
+    );
+    return result;
+  }
 }

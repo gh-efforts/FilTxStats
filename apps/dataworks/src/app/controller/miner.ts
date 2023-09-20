@@ -104,4 +104,11 @@ export class MinerController {
       miners: param.miners,
     });
   }
+
+  @Post('/sync_miner_balance', {
+    summary: '同步 miner 质押数据',
+  })
+  async syncMinerBalance() {
+    return this.service.runJob('minerBalance');
+  }
 }
