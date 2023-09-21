@@ -84,6 +84,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     'sizeBytes',
     'nonce',
     'method',
+    'stateRoot',
     'exitCode',
     'gasUsed',
     'parentBaseFee',
@@ -94,6 +95,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     'refund',
     'gasRefund',
     'gasBurned',
+    'height',
     'actorName',
     'actorFamily'
   ];
@@ -223,14 +225,13 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     // 以当前时间，推算出当前高度
     const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss'));
 
-    const endHeight = nowHeight;
     const newTasks = transactionTasks.map(task => {
       return {
         syncId: task.syncId,
         type: task.type,
         status: 0,
         startHeight: task.endHeight,
-        endHeight: endHeight,
+        endHeight: nowHeight,
         runingHeight: task.endHeight,
         address: task.address,
       };
@@ -279,38 +280,28 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
       // 从lily表查询大于指定高度的数据
       try {
         const [fromTransactions, toTransactions] = await Promise.all([
-          this.lilyVmMessagesMapping.getTransactions(
+          this.lilyDerivedGasOutputsMapping.getTransactions(
             item,
             startHeight,
             height,
             'from'
           ) as any,
-          this.lilyVmMessagesMapping.getTransactions(
+          this.lilyDerivedGasOutputsMapping.getTransactions(
             item,
             startHeight,
             height,
             'to'
           ) as any,
         ]);
+        const transactions = fromTransactions.concat(toTransactions);
+        console.log('transactions', transactions.length);
 
-        const fromChunks = _.chunk(fromTransactions, 500) as any;
-        for (let fromTransaction of fromChunks) {
+        const chunks = _.chunk(transactions, 500) as any;
+        for (let transaction of chunks) {
           await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
-            fromTransaction,
+            transaction,
             {
               updateOnDuplicate: this.updateOnDuplicateKey,
-              ignoreDuplicates: true,
-            }
-          );
-        }
-
-        const toChunks = _.chunk(toTransactions, 500) as any;
-        for (let toTransaction of toChunks) {
-          await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
-            toTransaction,
-            {
-              updateOnDuplicate: this.updateOnDuplicateKey,
-              ignoreDuplicates: true,
             }
           );
         }
@@ -372,23 +363,15 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
             'to'
           ) as any,
         ]);
+        const transactions = fromTransactions.concat(toTransactions);
 
-        const fromChunks = _.chunk(fromTransactions, 500) as any;
-        for (let fromTransaction of fromChunks) {
-          await this.vmMessagesMapping.bulkCreateVmMessages(fromTransaction, {
+        const chunks = _.chunk(transactions, 500) as any;
+        for (let transaction of chunks) {
+          await this.vmMessagesMapping.bulkCreateVmMessages(transaction, {
             updateOnDuplicate: this.updateOnDuplicateKey,
-            ignoreDuplicates: true,
           });
         }
 
-        const toChunks = _.chunk(toTransactions, 500) as any;
-        // 拆分事务， 数据量太大
-        for (let toTransaction of toChunks) {
-          await this.vmMessagesMapping.bulkCreateVmMessages(toTransaction, {
-            updateOnDuplicate: this.updateOnDuplicateKey,
-            ignoreDuplicates: true,
-          });
-        }
         // 500 区块跑一次
         startHeight += 500;
       } catch (error) {

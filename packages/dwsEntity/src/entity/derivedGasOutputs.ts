@@ -13,7 +13,6 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     },
     {
       name: 'idx_unique',
-      unique: true,
       using: 'BTREE',
       fields: [{ name: 'cid' }, { name: 'state_root' }, { name: 'height' }],
     },
@@ -62,6 +61,7 @@ export class DerivedGasOutputsEntity extends Model {
   @Column({
     type: DataType.STRING(255),
     allowNull: false,
+    unique: true,
   })
   cid: string;
 
