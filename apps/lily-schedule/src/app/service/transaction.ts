@@ -74,7 +74,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
   lotus: LotusSdk;
 
-  updateOnDuplicateKey: [
+  derivedUpdateOnDuplicateKey: [
     'from',
     'to',
     'value',
@@ -98,6 +98,21 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     'height',
     'actorName',
     'actorFamily'
+  ];
+  vmUpdateOnDuplicateKey: [
+    'height',
+    'stateRoot',
+    'source',
+    'from',
+    'to',
+    'value',
+    'method',
+    'actorCode',
+    'exitCode',
+    'gasUsed',
+    'params',
+    'returns',
+    'index'
   ];
 
   @Init()
@@ -301,7 +316,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
           await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
             transaction,
             {
-              updateOnDuplicate: this.updateOnDuplicateKey,
+              updateOnDuplicate: this.derivedUpdateOnDuplicateKey,
             }
           );
         }
@@ -364,11 +379,12 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
           ) as any,
         ]);
         const transactions = fromTransactions.concat(toTransactions);
+        console.log('transactions', transactions.length);
 
         const chunks = _.chunk(transactions, 500) as any;
         for (let transaction of chunks) {
           await this.vmMessagesMapping.bulkCreateVmMessages(transaction, {
-            updateOnDuplicate: this.updateOnDuplicateKey,
+            updateOnDuplicate: this.vmUpdateOnDuplicateKey,
           });
         }
 
