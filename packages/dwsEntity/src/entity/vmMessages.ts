@@ -13,7 +13,6 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
     },
     {
       name: 'vm_messages_pkey',
-      unique: true,
       using: 'BTREE',
       fields: [
         { name: 'height' },
