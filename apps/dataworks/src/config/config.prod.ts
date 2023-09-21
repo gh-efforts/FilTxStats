@@ -108,5 +108,13 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     password: process.env.QINIUYUN_PASSWORD,
   };
 
+  config.lanjingConfig = {
+    url: process.env.LANJING_URL,
+    bk_app_code: process.env.LANJING_BK_APP_CODE,
+    bk_app_secret: process.env.LANJING_BK_APP_SECRET,
+    bk_username: process.env.LANJING_BK_USERNAME,
+    bk_obj_id: process.env.LANJING_BK_OBJ_ID,
+  };
+
   return config;
 };

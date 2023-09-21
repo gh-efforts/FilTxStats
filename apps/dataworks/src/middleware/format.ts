@@ -60,6 +60,6 @@ export class FormatMiddleware implements IMiddleware<Context, NextFunction> {
   }
 
   public match(ctx: Context): boolean {
-    return ctx.path.startsWith('/api');
+    return ctx.path.startsWith('/api') && !ctx.path.startsWith('/api/lanjing');
   }
 }
