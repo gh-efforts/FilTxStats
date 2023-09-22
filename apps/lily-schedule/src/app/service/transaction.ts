@@ -239,6 +239,8 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
   async syncLastTransaction(transactionTasks: TransactionSyncStatusEntity[]) {
     // 以当前时间，推算出当前高度
     const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss'));
+    // lily 数据库中数据有延迟
+    const endHeight = nowHeight - 120;
 
     const newTasks = transactionTasks.map(task => {
       return {
@@ -246,7 +248,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
         type: task.type,
         status: 0,
         startHeight: task.endHeight,
-        endHeight: nowHeight,
+        endHeight,
         runingHeight: task.endHeight,
         address: task.address,
       };

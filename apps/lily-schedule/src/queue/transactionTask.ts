@@ -7,7 +7,7 @@ import { LarkSdk } from '@lark/core';
 
 @Processor('transactionTask', {
   repeat: {
-    cron: '*/30 * * * *',
+    cron: '0 */2 * * *',
   },
   removeOnComplete: true,
   removeOnFail: true,
