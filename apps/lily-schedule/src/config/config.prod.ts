@@ -72,6 +72,11 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     },
   };
 
+  config.lotusConfig = {
+    url: process.env.LOGA_URL,
+    token: process.env.LOGA_TOEKN,
+  };
+
   config.koa = {
     contextLoggerFormat: info => {
       const { ctx, timestamp, LEVEL: level, pid, message } = info;

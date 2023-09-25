@@ -57,6 +57,10 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     url: process.env.LOGA_URL,
     token: process.env.LOGA_TOEKN,
   };
+  config.lotusConfig = {
+    url: process.env.LOGA_URL,
+    token: process.env.LOGA_TOEKN,
+  };
 
   config.pixiuConfig = {
     url: process.env.PIXIU_URL,
