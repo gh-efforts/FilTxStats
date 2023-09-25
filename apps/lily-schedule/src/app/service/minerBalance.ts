@@ -97,11 +97,19 @@ export class MinerBalanceService extends BaseService<MinerBalanceEntity> {
       const result = await Promise.all(
         nodes.map(node => {
           return limit(() =>
-            this.lilyMapping.getMinerBalance(node.name).then(res => {
+            this.lilyMapping.getMinerBalance(node.name).then(async res => {
+              let balance: string;
+              if (!res) {
+                //lily没查到，有可能矿工数据比较老旧;
+                let chainRet = await this.lotus.stateGetActor(node.name);
+                balance = chainRet.Balance;
+              } else {
+                balance = (res?.balance || 0).toString();
+              }
               return {
                 miner: node.name,
                 type: node.type,
-                balance: res?.balance || 0,
+                balance,
               };
             })
           );
