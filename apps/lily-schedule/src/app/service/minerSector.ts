@@ -44,6 +44,8 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
 
   lotus: LotusSdk;
 
+  logger = console;
+
   @Init()
   async initMethod() {
     this.filutils = new FilutilsSdk(this.filutilsUrl);
@@ -64,6 +66,8 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
     const limit = pLimit(5);
     const cids = await this.lotus.getChainGetTipSetByHeight(endHeight);
 
+    this.logger.info('syncMinersSector start');
+
     // 查询扇区大小
     const minersInfo = await Promise.all(
       miners.map(miner => {
@@ -78,18 +82,22 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
         );
       })
     );
+    this.logger.info('syncMinersSector step1');
 
     const minersStateSector = await Promise.all(
       miners.map(miner => {
         return limit(() => this.lotus.getStateMinerSectorCount(miner, cids));
       })
     );
+    this.logger.info('syncMinersSector step2');
+
     // 查询链上恢复中的扇区
     const minersStateRecoveries = await Promise.all(
       miners.map(miner => {
         return limit(() => this.lotus.getStateMinerRecoveries(miner, cids));
       })
     );
+    this.logger.info('syncMinersSector step3');
 
     // 获取节点质押
     const minersSectorPledge = await Promise.all(
@@ -97,6 +105,7 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
         return limit(() => this.lilyMapping.getMinerSectorPledge(miner));
       })
     );
+    this.logger.info('syncMinersSector step4');
 
     const minersExtended = await Promise.all(
       miners.map(miner => {
@@ -110,6 +119,7 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
         );
       })
     );
+    this.logger.info('syncMinersSector step5');
 
     const minersExpiredOrTerminated = await Promise.all(
       miners.map(miner => {
@@ -123,6 +133,7 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
         );
       })
     );
+    this.logger.info('syncMinersSector step6');
 
     // 新增扇区数
     const minersSectorSealCount = await Promise.all(
@@ -132,6 +143,7 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
         );
       })
     );
+    this.logger.info('syncMinersSector step7');
 
     // 查询昨日算力
     const minersPower = await Promise.all(
@@ -139,6 +151,7 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
         return limit(() => this.lilyMapping.getMinerPower(miner, endAt));
       })
     );
+    this.logger.info('syncMinersSector step8');
 
     const data = miners.map(miner => {
       return {
@@ -159,6 +172,7 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
         dateAt: endAt,
       };
     });
+    this.logger.info('syncMinersSector step9');
 
     await this.minerSectorMapping.bulkCreateMinerSector(data, {
       updateOnDuplicate: [
@@ -175,6 +189,8 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
         'updatedAt',
       ],
     });
+    this.logger.info('syncMinersSector step10');
+
     return true;
   }
 }

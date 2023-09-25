@@ -5,16 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "node",
+            "name": "lily-dev1",
             "request": "launch",
-            "name": "Launch Program",
+            "runtimeArgs": [
+                "run-script",
+                "dev"
+            ],
+            "cwd": "${workspaceFolder}/apps/lily-schedule",
+            "runtimeExecutable": "npm",
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/apps/dataworks/src/configuration.ts",
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ]
+            "type": "node"
         }
+        
     ]
 }
