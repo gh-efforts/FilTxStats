@@ -239,7 +239,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
   async syncLastTransaction(transactionTasks: TransactionSyncStatusEntity[]) {
     // 以当前时间，推算出当前高度
     const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss'));
-    // lily 数据库中数据有延迟
+    // lily 数据库中数据有延迟,特地跑lily前两个小时的数据
     const endHeight = nowHeight - 120;
 
     const newTasks = transactionTasks.map(task => {
@@ -283,6 +283,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
         },
       });
 
+    //如果任务挂了，mq 启动参数还是旧的
     if (startHeight !== lastDerivedGasTask.runingHeight) {
       startHeight = lastDerivedGasTask.runingHeight;
     }
@@ -291,8 +292,15 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
     const len = Math.floor((endHeight - startHeight) / 500);
     let status = 1;
+    console.log(
+      `derivedgas startHeight=%s, endHeight=%s, ilen=%s`,
+      startHeight,
+      endHeight,
+      len
+    );
 
     for (let i = 0; i < len; i++) {
+      //分页，到最后一页不一定满一页
       const height = i === len - 1 ? endHeight : startHeight + 500;
       // 从lily表查询大于指定高度的数据
       try {
@@ -361,10 +369,17 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
     const len = Math.floor((endHeight - startHeight) / 500);
     let status = 1;
+    console.log(
+      `vmmsg startHeight=%s, endHeight=%s, ilen=%s`,
+      startHeight,
+      endHeight,
+      len
+    );
 
     for (let i = 0; i < len; i++) {
       const height = i === len - 1 ? endHeight : startHeight + 500;
       // 从lily表查询大于指定高度的数据
+      console.log('sync lily param', item, startHeight, height);
       try {
         const [fromTransactions, toTransactions] = await Promise.all([
           this.lilyVmMessagesMapping.getTransactions(
