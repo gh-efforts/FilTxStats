@@ -126,16 +126,7 @@ pipeline{
                            }
                     }
             }
-      stage('生产镜像发布审核') {
-         when {
-           branch 'lily-schedule-master'
-         }
-         steps {
-           container('nodejs') {
-             input(message: '@admin @hanley @black @brandon' , submitter: 'admin, hanley, black, brandon')
-            }
-            }
-          }
+
         stage('Deploy to MASTER') {
          when {
            branch 'lily-schedule-master'
