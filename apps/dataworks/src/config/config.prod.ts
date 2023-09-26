@@ -24,7 +24,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
       },
       prefix: '{midway-bull}',
     },
-    clearRepeatJobWhenStart: false,
+    clearRepeatJobWhenStart: true,
     defaultConcurrency: 10,
   };
 

@@ -186,7 +186,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
       redis: 'redis://127.0.0.1:6379',
       prefix: '{midway-bull}',
     },
-    clearRepeatJobWhenStart: false,
+    clearRepeatJobWhenStart: true,
   };
 
   config.bullBoard = {
