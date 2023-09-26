@@ -73,7 +73,7 @@ pipeline{
                   sh 'ls -la'
                   sh 'cat tag_name.txt'
                //构建docker镜像
-                  sh 'docker build -t $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$APP_NAME-prod:`cat tag_name.txt` -f apps/dataworks/DockerFile .'
+                  sh 'docker build -t $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$APP_NAME-prod:`cat tag_name.txt` -f apps/lily-schedule/DockerFile .'
                //登录Docker并推送镜像到远程Docker仓库
                   withCredentials([usernamePassword(passwordVariable : 'DOCKER_PASSWORD' ,usernameVariable : 'DOCKER_USERNAME' ,credentialsId : "$DOCKER_CREDENTIAL_ID" ,)]) {
                   sh 'echo "$DOCKER_PASSWORD" | docker login $DOCKER_REGISTRY -u "$DOCKER_USERNAME" --password-stdin'
