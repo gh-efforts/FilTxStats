@@ -101,7 +101,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
 
   config.koa = {
     contextLoggerFormat: info => {
-      const ctx = info.ctx;
+      const ctx = info.ctx || {};
       return `${info.timestamp} ${info.LEVEL} ${info.pid} [${ctx.reqId} - ${
         Date.now() - ctx.startTime
       }ms ${ctx.method} ${ctx.url}] ${info.message}`;
