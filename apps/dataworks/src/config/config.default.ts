@@ -96,7 +96,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
 
   config.koa = {
     contextLoggerFormat: info => {
-      const ctx = info.ctx;
+      const ctx = info.ctx || {};
       return `${info.timestamp} ${info.LEVEL} ${info.pid} [${ctx.reqId} - ${
         Date.now() - ctx.startTime
       }ms ${ctx.method} ${ctx.url}] ${info.message}`;
@@ -118,17 +118,12 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
         enableFile: true,
         jsonFormat: (info, meta) => {
           const { timestamp, message } = info;
-          const { ctx, pid, level } = meta;
-          const { reqId, startTime, method, url } = ctx;
+          const { pid, level } = meta;
           const obj = {
             timestamp,
             level,
             pid,
             message,
-            reqId,
-            startTime,
-            method,
-            url,
           };
           return obj;
         },

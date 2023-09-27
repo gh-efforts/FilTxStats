@@ -101,6 +101,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
 
   config.koa = {
     contextLoggerFormat: info => {
+      //上下文日志配置，有ctx
       const ctx = info.ctx || {};
       return `${info.timestamp} ${info.LEVEL} ${info.pid} [${ctx.reqId} - ${
         Date.now() - ctx.startTime
@@ -119,22 +120,18 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
         consoleLevel: 'info',
       },
       appLogger: {
+        //应用日志没有 ctx，只有上下文日志才有
         enableJSON: true,
         enableFile: true,
         enableConsole: true,
         jsonFormat: (info, meta) => {
           const { timestamp, message } = info;
-          const { ctx, pid, level } = meta;
-          const { reqId, startTime, method, url } = ctx;
+          const { pid, level } = meta;
           const obj = {
             timestamp,
             level,
             pid,
             message,
-            reqId,
-            startTime,
-            method,
-            url,
           };
           return obj;
         },
