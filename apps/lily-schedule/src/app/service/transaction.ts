@@ -74,46 +74,8 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
   lotus: LotusSdk;
 
-  derivedUpdateOnDuplicateKey: [
-    'from',
-    'to',
-    'value',
-    'gasFeeCap',
-    'gasPremium',
-    'gasLimit',
-    'sizeBytes',
-    'nonce',
-    'method',
-    'stateRoot',
-    'exitCode',
-    'gasUsed',
-    'parentBaseFee',
-    'baseFeeBurn',
-    'overEstimationBurn',
-    'minerPenalty',
-    'minerTip',
-    'refund',
-    'gasRefund',
-    'gasBurned',
-    'height',
-    'actorName',
-    'actorFamily'
-  ];
-  vmUpdateOnDuplicateKey: [
-    'height',
-    'stateRoot',
-    'source',
-    'from',
-    'to',
-    'value',
-    'method',
-    'actorCode',
-    'exitCode',
-    'gasUsed',
-    'params',
-    'returns',
-    'index'
-  ];
+  derivedUpdateOnDuplicateKey: ['height', 'cid', 'state_root'];
+  vmUpdateOnDuplicateKey: ['height', 'state_root', 'cid', 'source'];
 
   @Init()
   async initMethod() {
