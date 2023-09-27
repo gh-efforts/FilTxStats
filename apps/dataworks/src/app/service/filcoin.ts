@@ -11,11 +11,19 @@ import { Config, Init, Inject, Provide } from '@midwayjs/core';
 import { BaseService } from '../../core/baseService';
 import { FILCACHEKEY } from '../comm/filcoin';
 import RedisUtils from '../comm/redis';
+import { INetworkByHeightVO, NetworkByHeightDTO } from '../model/dto/filcoin';
+import { NetworkMapping } from '@lily/entity';
+import { bigSub } from 'happy-node-utils';
+import { convertPowerToPiB, convertToFil } from '@dws/utils';
+import BigNumber from 'bignumber.js';
 
 @Provide()
 export class FilcoinNetworkService extends BaseService<FilcoinNetworkDataEntity> {
   @Inject()
   mapping: FilcoinNetworkDataMapping;
+
+  @Inject()
+  networkMapping: NetworkMapping;
 
   @Inject()
   redisUtils: RedisUtils;
@@ -89,5 +97,92 @@ export class FilcoinNetworkService extends BaseService<FilcoinNetworkDataEntity>
 
     await this.redisUtils.setValue(key, JSON.stringify(data), 60);
     return data;
+  }
+
+  /**
+   * 根据高度区间范围额查询网络数据
+   * 全网新增有效算力
+   * 全网新增原值算力
+   * 全网产出奖励
+   * 全网惩罚
+   * @param dto
+   * @returns
+   */
+  async getNetworkDataByHeight(dto: NetworkByHeightDTO) {
+    let { minHeight, maxHeight } = dto;
+    if (minHeight > maxHeight) {
+      throw new Error('minHeight 大于 maxHeight');
+    }
+    let { growTotalRawBytesPower, growTotalQaBytesPower } =
+      await this.getPowerByHeight(dto);
+    let { totalMinedReward } = await this.getRewardByHeight(dto);
+    let { totalvalue } = await this.networkMapping.getPenaltyByHeight(
+      minHeight,
+      maxHeight
+    );
+    let ret: INetworkByHeightVO = {
+      growTotalRawBytesPower,
+      growTotalQaBytesPower,
+      totalMinedReward,
+      totalPenalty: new BigNumber(totalvalue),
+    };
+    ret.format = {
+      growTotalRawBytesPower: `${convertPowerToPiB(
+        ret.growTotalRawBytesPower
+      )} PiB`,
+      growTotalQaBytesPower: `${convertPowerToPiB(
+        ret.growTotalQaBytesPower
+      )} PiB`,
+      totalMinedReward: `${convertToFil(ret.totalMinedReward)} FIL`,
+      totalPenalty: `${convertToFil(ret.totalPenalty)} FIL`,
+    };
+    return ret;
+  }
+
+  /**
+   * 取范围区间内，height 最高，最低一条相减
+   * @param param
+   * @returns
+   */
+  private async getPowerByHeight(param: NetworkByHeightDTO) {
+    let { minHeight, maxHeight } = param;
+    let maxPower = await this.networkMapping.getPowerByMaxH(maxHeight);
+    let minPower = await this.networkMapping.getPowerByMinH(minHeight);
+    if (!maxPower) {
+      throw new Error('maxPower null');
+    }
+    if (!minPower) {
+      throw new Error('minPower null');
+    }
+    return {
+      growTotalRawBytesPower: bigSub(
+        maxPower.total_raw_bytes_power,
+        minPower.total_raw_bytes_power
+      ),
+      growTotalQaBytesPower: bigSub(
+        maxPower.total_qa_bytes_power,
+        minPower.total_qa_bytes_power
+      ),
+    };
+  }
+
+  /**
+   * 取范围区间内，height 最高，最低一条相减
+   * @param param
+   * @returns
+   */
+  private async getRewardByHeight(param: NetworkByHeightDTO) {
+    let { minHeight, maxHeight } = param;
+    let max = await this.networkMapping.getRewardByMaxH(maxHeight);
+    let min = await this.networkMapping.getRewardByMinH(minHeight);
+    if (!max) {
+      throw new Error('maxReward null');
+    }
+    if (!min) {
+      throw new Error('minReward null');
+    }
+    return {
+      totalMinedReward: bigSub(max.total_mined_reward, min.total_mined_reward),
+    };
   }
 }
