@@ -121,6 +121,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
       appLogger: {
         enableJSON: true,
         enableFile: true,
+        enableConsole: true,
         jsonFormat: (info, meta) => {
           const { timestamp, message } = info;
           const { ctx, pid, level } = meta;

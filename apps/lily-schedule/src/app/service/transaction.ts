@@ -16,11 +16,11 @@ import {
   LilyVmMessagesMapping,
 } from '@lily/entity';
 import { LotusSdk } from '@lotus/http';
-import { Config, Init, Inject, Provide } from '@midwayjs/core';
+import { Config, Init, Inject, Provide, Logger } from '@midwayjs/core';
 import * as dayjs from 'dayjs';
 import { Op, col, fn } from 'sequelize';
 import { BaseService } from '../../core/baseService';
-
+import { ILogger } from '@midwayjs/logger';
 import { getHeightByTime } from '@dws/utils';
 import * as bull from '@midwayjs/bull';
 import { v4 as uuidv4 } from 'uuid';
@@ -69,6 +69,9 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     url: string;
     token: string;
   };
+
+  @Logger()
+  logger: ILogger;
 
   filutils: FilutilsSdk;
 
@@ -236,7 +239,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
   async _getDerivedGasTransactionsAndSave(params: TransactionSyncStatusEntity) {
     let { startHeight, endHeight, address } = params;
-    console.log('params', params);
+    this.logger.info('params', params);
 
     const lastDerivedGasTask =
       await this.transactionSyncStatusMapping.findOneTransactionSyncStatus({
@@ -254,7 +257,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
     const len = Math.floor((endHeight - startHeight) / 500);
     let status = 1;
-    console.log(
+    this.logger.info(
       `derivedgas startHeight=%s, endHeight=%s, ilen=%s`,
       startHeight,
       endHeight,
@@ -265,6 +268,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
       //分页，到最后一页不一定满一页
       const height = i === len - 1 ? endHeight : startHeight + 500;
       // 从lily表查询大于指定高度的数据
+      this.logger.info('derivedgas sql param', startHeight, height);
       try {
         const [fromTransactions, toTransactions] = await Promise.all([
           this.lilyDerivedGasOutputsMapping.getTransactions(
@@ -281,22 +285,27 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
           ) as any,
         ]);
         const transactions = fromTransactions.concat(toTransactions);
-        console.log('transactions', transactions.length);
+        this.logger.info('derivedgas transactions', transactions.length);
 
         const chunks = _.chunk(transactions, 500) as any;
         for (let transaction of chunks) {
-          await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
-            transaction,
-            {
-              updateOnDuplicate: this.derivedUpdateOnDuplicateKey,
-            }
+          let affects =
+            await this.derivedGasOutputsMapping.bulkCreateDerivedGasOutputs(
+              transaction,
+              {
+                ignoreDuplicates: true,
+              }
+            );
+          this.logger.info(
+            'derivedgas affects.length=',
+            affects && affects.length
           );
         }
 
         // 500 区块跑一次
         startHeight += 500;
       } catch (error) {
-        console.log('error', error);
+        this.logger.error('error', error);
         status = -1;
       } finally {
         await this.modifySyncStatus(params.id, height, status);
@@ -315,7 +324,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
   async _getVmMessagesTransactionsAndSave(params: TransactionSyncStatusEntity) {
     let { startHeight, endHeight, address } = params;
-    console.log('params', params);
+    this.logger.info('params', params);
     const item = JSON.parse(address);
     // 任务可能是队列异常重跑， 需要从库里最新高度查询
     const lastDerivedGasTask =
@@ -331,7 +340,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
     const len = Math.floor((endHeight - startHeight) / 500);
     let status = 1;
-    console.log(
+    this.logger.info(
       `vmmsg startHeight=%s, endHeight=%s, ilen=%s`,
       startHeight,
       endHeight,
@@ -341,7 +350,7 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     for (let i = 0; i < len; i++) {
       const height = i === len - 1 ? endHeight : startHeight + 500;
       // 从lily表查询大于指定高度的数据
-      console.log('sync lily param', item, startHeight, height);
+      this.logger.info('vmmsg sql param', startHeight, height);
       try {
         const [fromTransactions, toTransactions] = await Promise.all([
           this.lilyVmMessagesMapping.getTransactions(
@@ -358,19 +367,26 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
           ) as any,
         ]);
         const transactions = fromTransactions.concat(toTransactions);
-        console.log('transactions', transactions.length);
+        this.logger.info('vmmsg transactions', transactions.length);
 
         const chunks = _.chunk(transactions, 500) as any;
         for (let transaction of chunks) {
-          await this.vmMessagesMapping.bulkCreateVmMessages(transaction, {
-            updateOnDuplicate: this.vmUpdateOnDuplicateKey,
-          });
+          let affects = await this.vmMessagesMapping.bulkCreateVmMessages(
+            transaction,
+            {
+              ignoreDuplicates: true,
+            }
+          );
+          this.logger.info(
+            'derivedgas affects.length=',
+            affects && affects.length
+          );
         }
 
         // 500 区块跑一次
         startHeight += 500;
       } catch (error) {
-        console.log('error', error);
+        this.logger.error('error', error);
         status = -1;
       } finally {
         await this.modifySyncStatus(params.id, height, status);
