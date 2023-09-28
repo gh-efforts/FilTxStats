@@ -1,4 +1,4 @@
-import { Config, Init, Inject, Provide } from '@midwayjs/core';
+import { Config, Init, Inject, Provide, Logger } from '@midwayjs/core';
 
 import { MinerMapping, MinerNodeEntity, MinerNodeMapping } from '@dws/entity';
 import { FilfoxSdk } from '@filfox/http';
@@ -8,6 +8,7 @@ import { isEmpty } from 'lodash';
 import { Op } from 'sequelize';
 import { BaseService } from '../../core/baseService';
 import { MINER_NODE_STATUS, MINER_NODE_TYPE } from '../comm/miner';
+import { ILogger } from '@midwayjs/logger';
 
 type TDataForOff = Record<string, Set<number>>;
 @Provide()
@@ -32,6 +33,9 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
 
   @Config('filfoxConfig.url')
   filfoxUrl;
+
+  @Logger()
+  logger: ILogger;
 
   filfox: FilfoxSdk;
 
@@ -100,7 +104,10 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
         height,
       };
     });
-    await this.mapping.bulkCreateMinerNode(owners);
+    this.logger.info('saveOwner.length=', owners && owners.length);
+    await this.mapping.bulkCreateMinerNode(owners, {
+      ignoreDuplicates: true,
+    });
   }
 
   /**
@@ -172,7 +179,13 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
         });
       });
     });
-    await this.mapping.bulkCreateMinerNode(workersAndControls);
+    this.logger.info(
+      '_saveWorkerAndControl.length=',
+      workersAndControls && workersAndControls.length
+    );
+    await this.mapping.bulkCreateMinerNode(workersAndControls, {
+      ignoreDuplicates: true,
+    });
   }
 
   private async _getWorkerAndControlByCid(
@@ -214,12 +227,18 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
       })
     );
     await Promise.all(
-      IDRes.map(item => {
+      IDRes.map(async item => {
         const { name, robustAddress } = item;
-        return this.mapping.modifyMinerNode(
-          { name },
-          { where: { robustAddress } }
-        );
+        //加了唯一键之后，有可能update重复, 直接不处理即可
+        try {
+          await this.mapping.modifyMinerNode(
+            { name },
+            { where: { robustAddress } }
+          );
+        } catch (e) {
+          this.logger.info(`error:%s,%s`, name, robustAddress);
+        }
+        return true;
       })
     );
   }
@@ -241,12 +260,18 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
       })
     );
     await Promise.all(
-      robustAddressRes.map(item => {
+      robustAddressRes.map(async item => {
         const { name, robustAddress } = item;
-        return this.mapping.modifyMinerNode(
-          { robustAddress },
-          { where: { name } }
-        );
+        //加了唯一键之后，有可能update重复, 直接不处理即可
+        try {
+          await this.mapping.modifyMinerNode(
+            { robustAddress },
+            { where: { name } }
+          );
+        } catch (e) {
+          this.logger.info(`error:%s,%s`, name, robustAddress);
+        }
+        return true;
       })
     );
   }

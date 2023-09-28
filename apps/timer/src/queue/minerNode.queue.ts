@@ -32,6 +32,7 @@ export class MinerNodeProcessor implements IProcessor {
   async execute(params: { miner: string }) {
     const { job } = this.ctx;
     try {
+      this.logger.info('minerNode param', params);
       await this.service.saveNodes(params.miner);
     } catch (error) {
       this.logger.error(error);
