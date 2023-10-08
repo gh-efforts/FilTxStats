@@ -7,7 +7,7 @@ import {
 import { LilyMapping } from '@lily/entity';
 import { LotusSdk } from '@lotus/http';
 import * as bull from '@midwayjs/bull';
-import { Config, Init, Inject, Provide } from '@midwayjs/core';
+import { Config, ILogger, Init, Inject, Logger, Provide } from '@midwayjs/core';
 import * as _ from 'lodash';
 import * as pLimit from 'p-limit';
 import { BaseService } from '../../core/baseService';
@@ -45,6 +45,9 @@ export class MinerBalanceService extends BaseService<MinerBalanceEntity> {
 
   @Inject()
   lilyMapping: LilyMapping;
+
+  @Logger()
+  logger: ILogger;
 
   @Init()
   async initMethod() {
@@ -102,9 +105,19 @@ export class MinerBalanceService extends BaseService<MinerBalanceEntity> {
               if (!res) {
                 //lily没查到，有可能矿工数据比较老旧;
                 let chainRet = await this.lotus.stateGetActor(node.name);
-                balance = chainRet.Balance;
+                balance = (chainRet && chainRet.Balance) || '0';
+                this.logger.info(
+                  'lotus补齐balance,name=%s,balace=%s',
+                  node.name,
+                  balance
+                );
               } else {
                 balance = (res?.balance || 0).toString();
+                this.logger.info(
+                  'lily查出balance,name=%s,balace=%s',
+                  node.name,
+                  balance
+                );
               }
               return {
                 miner: node.name,

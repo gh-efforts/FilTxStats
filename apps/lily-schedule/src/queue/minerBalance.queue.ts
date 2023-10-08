@@ -11,7 +11,7 @@ import { LarkSdk } from '@lark/core';
   },
   removeOnComplete: true,
   removeOnFail: true,
-  attempts: 5,
+  attempts: 1,
   backoff: {
     type: 'fixed',
     delay: 1000 * 60,
@@ -38,6 +38,8 @@ export class MinerBalanceProcessor implements IProcessor {
     try {
       await this.service.syncMinerBalance();
     } catch (error) {
+      //此任务每5分钟执行一次，时间很短；且配置有 clearRepeatJobWhenStart: true； 会导致重试错误永远报不出来
+
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
 
