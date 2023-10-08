@@ -4,6 +4,7 @@ import MyError from '../app/comm/myError';
 import { MinerService } from '../app/service/miner';
 
 import { LarkSdk } from '@lark/core';
+import { IMinerEncapsulationParam } from '@dws/utils';
 
 @Processor('minerEncapsulation', {
   repeat: {
@@ -11,7 +12,7 @@ import { LarkSdk } from '@lark/core';
   },
   removeOnComplete: true,
   removeOnFail: true,
-  attempts: 5,
+  attempts: 2,
   backoff: {
     type: 'fixed',
     delay: 1000 * 60,
@@ -33,10 +34,10 @@ export class MinerEncapsulationProcessor implements IProcessor {
     this.lark = new LarkSdk();
   }
 
-  async execute() {
+  async execute(params?: IMinerEncapsulationParam) {
     const { job } = this.ctx;
     try {
-      await this.service.syncMinersByEncapsulation();
+      await this.service.syncMinersByEncapsulation(params);
     } catch (error) {
       this.logger.error(error);
 
@@ -55,7 +56,7 @@ export class MinerEncapsulationProcessor implements IProcessor {
         this.logger.error(`Job ${job.id} start retry`);
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
-        await this.lark.sendLarkByQueueStatus('节点封装', false, error.message);
+        await this.lark.sendLarkByQueueStatus(`节点封装`, false, error.message);
         throw new MyError('syncMinerDailyStats error', error.message);
       }
     }

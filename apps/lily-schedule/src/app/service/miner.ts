@@ -4,7 +4,7 @@ import {
   MinerEncapsulationMapping,
   MinerMapping,
 } from '@dws/entity';
-import { getYesterdayTime } from '@dws/utils';
+import { IMinerEncapsulationParam, getYesterdayTime } from '@dws/utils';
 import { FilutilsSdk } from '@filutils/http';
 import { LilyMapping } from '@lily/entity';
 import { LotusSdk } from '@lotus/http';
@@ -52,6 +52,9 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
 
   filutils: FilutilsSdk;
   lotus: LotusSdk;
+
+  @Logger()
+  logger: ILogger;
 
   @Init()
   async initMethod() {
@@ -125,9 +128,19 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
   }
 
   // 同步 miner 质押
-  async syncMinersByEncapsulation() {
+  async syncMinersByEncapsulation(params?: IMinerEncapsulationParam) {
     const miners = await this.getMinerIds();
-    const { startAt, endAt } = await getYesterdayTime();
+    let { startAt, endAt } = await getYesterdayTime();
+    if (params && (params.startAt || params.endAt)) {
+      startAt = params.startAt;
+      endAt = params.endAt;
+    }
+    this.logger.info(
+      'syncMinersByEncapsulation 开始, miners=%s, startAt=%s, endAt=%s',
+      miners,
+      startAt,
+      endAt
+    );
 
     const limit = pLimit(5);
     // 实际出快
@@ -138,6 +151,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         );
       })
     );
+    this.logger.info('syncMinersByEncapsulation step1');
 
     // 预计出快
     const minersProdictBlockOut = await Promise.all(
@@ -147,6 +161,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         );
       })
     );
+    this.logger.info('syncMinersByEncapsulation step2');
 
     // 质押量
     const minersPledgeIncr = await Promise.all(
@@ -161,8 +176,12 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         return limit(() => this.lilyMapping.getMinerGas(miner, startAt, endAt));
       })
     );
+    this.logger.info('syncMinersByEncapsulation step3');
+
     // 封装 gas、windowsPost、惩罚 gas
     const getMinersGas = this._getEncapsulationGas(gas);
+    this.logger.info('syncMinersByEncapsulation step4');
+
     // 丢块
     const minersLonelyblock = await Promise.all(
       miners.map(miner => {
@@ -171,6 +190,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         );
       })
     );
+    this.logger.info('syncMinersByEncapsulation step5');
 
     // 错误扇区数
     const minersFaultedSector = await Promise.all(
@@ -180,6 +200,8 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         );
       })
     );
+    this.logger.info('syncMinersByEncapsulation step6');
+
     // 查询扇区大小
     const minersInfo = await Promise.all(
       miners.map(miner => {
@@ -194,12 +216,15 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         );
       })
     );
+    this.logger.info('syncMinersByEncapsulation step7');
+
     // 查询昨日算力
     const minersPower = await Promise.all(
       miners.map(miner => {
         return limit(() => this.getMinerPower(miner, endAt));
       })
     );
+    this.logger.info('syncMinersByEncapsulation step8');
 
     const minersSectorSealCount = await Promise.all(
       miners.map(miner => {
@@ -208,6 +233,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         );
       })
     );
+    this.logger.info('syncMinersByEncapsulation step9');
 
     const blocks = miners.map(miner => {
       return {
@@ -246,6 +272,8 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         dateAt: endAt,
       };
     });
+
+    this.logger.info('syncMinersByEncapsulation 结果', datas && datas.length);
 
     await this.minerEncapsulationMapping.bulkCreateMinerEncapsulation(datas, {
       updateOnDuplicate: [

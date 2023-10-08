@@ -9,7 +9,7 @@ export interface Ilonelyblock {
   pageIndex: number;
   pageSize: number;
 }
-export type Lonelyblock = {
+export type LonelyblockV1 = {
   blocks: {
     cid: string;
     height: number;
@@ -21,6 +21,14 @@ export type Lonelyblock = {
   height: number;
   time: string;
   timeAgo: number;
+};
+export type Lonelyblock = {
+  //v2格式
+  cid: string;
+  height: number;
+  miner: string;
+  mineTime: string;
+  minerTag: string;
 };
 export interface LonelyblockRes {
   data: Lonelyblock[];

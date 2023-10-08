@@ -166,7 +166,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
   };
 
   config.filutilsConfig = {
-    url: 'https://api.filutils.com/api/v1',
+    url: 'https://api.filutils.com/api/v2',
   };
 
   config.lotusConfig = {

@@ -9,6 +9,7 @@ import {
 } from '@midwayjs/core';
 import * as MinerDTO from '../model/dto/miner';
 import { MinerService } from '../service/miner';
+import { IMinerEncapsulationParam } from '@dws/utils';
 
 @Controller('/miner')
 export class MinerController {
@@ -66,8 +67,8 @@ export class MinerController {
   @Post('/sync_miner_encapsulation', {
     summary: '同步 miner 昨日封装数据',
   })
-  async syncMinerEncapsulation() {
-    return this.service.runJob('minerEncapsulation');
+  async syncMinerEncapsulation(@Body(ALL) param: IMinerEncapsulationParam) {
+    return this.service.runJob('minerEncapsulation', param);
   }
 
   @Post('/sync_miner_sector', {

@@ -123,11 +123,15 @@ export class FilutilsSdk {
     return arr;
   }
 
-  async lonelyblock(param: Ilonelyblock) {
+  private async lonelyblockV2(param: Ilonelyblock) {
     return this._post<LonelyblockRes>({
-      url: '/lonelyblock',
+      url: '/orphanblock',
       data: param,
     });
+  }
+
+  async lonelyblock(param: Ilonelyblock) {
+    return await this.lonelyblockV2(param);
   }
 
   async getMinerLonelyblock(
@@ -148,23 +152,22 @@ export class FilutilsSdk {
             miner,
             height: 0,
             pageIndex: page,
-            pageSize: 100,
+            pageSize: 20,
           });
 
           if (!res.data || res.data.length === 0) {
             break;
           }
+
           const blocks = res.data.filter(item => {
-            return dayjs(item.time).isBetween(startAt, endAt);
+            return dayjs(item.mineTime).isBetween(startAt, endAt);
           });
 
           if (blocks.length > 0) {
+            console.log('筛选后 block 写入 ', blocks && blocks.length);
             lonelyblock.push(...blocks);
-          }
-
-          if (
-            !dayjs(res.data[res.data.length - 1].time).isBetween(startAt, endAt)
-          ) {
+          } else {
+            console.log('筛选后 block 为空 ', miner, startAt, endAt);
             break;
           }
 

@@ -12,6 +12,7 @@ export class LarkSdk {
 
   public async larkNotify(data: any) {
     if (process.env.REAL_ENV === 'local') {
+      console.log('local 环境不报警');
       return;
     }
     try {
