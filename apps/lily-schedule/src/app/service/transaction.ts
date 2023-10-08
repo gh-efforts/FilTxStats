@@ -255,7 +255,8 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
 
     const item = JSON.parse(address);
 
-    const len = Math.floor((endHeight - startHeight) / 500);
+    //总页数，不足一页算一页
+    const len = Math.ceil((endHeight - startHeight) / 500);
     let status = 1;
     this.logger.info(
       `derivedgas startHeight=%s, endHeight=%s, ilen=%s`,
@@ -338,7 +339,8 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
       startHeight = lastDerivedGasTask.runingHeight;
     }
 
-    const len = Math.floor((endHeight - startHeight) / 500);
+    //总页数，不足一页算一页
+    const len = Math.ceil((endHeight - startHeight) / 500);
     let status = 1;
     this.logger.info(
       `vmmsg startHeight=%s, endHeight=%s, ilen=%s`,
