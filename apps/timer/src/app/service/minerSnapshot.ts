@@ -1,4 +1,4 @@
-import { Config, Init, Inject, Provide } from '@midwayjs/core';
+import { Config, ILogger, Init, Inject, Logger, Provide } from '@midwayjs/core';
 
 import {
   MinerMapping,
@@ -22,6 +22,9 @@ export class MinerSnapshotService extends BaseService<MinerSnapshotEntity> {
 
   pixiu: PixiuSdk;
 
+  @Logger()
+  logger: ILogger;
+
   @Init()
   async initMethod() {
     this.pixiu = new PixiuSdk(this.pixiuUrl);
@@ -37,6 +40,10 @@ export class MinerSnapshotService extends BaseService<MinerSnapshotEntity> {
       const minerSnapshot = minerSnapshots.find(
         item => item.miner_id === miner
       );
+      if (!minerSnapshot) {
+        this.logger.error('syncMinerSnapshot查询minerSnapshot空, %s', miner);
+        continue;
+      }
       await this.mapping.addMinerSnapshot({
         minerName: minerSnapshot.miner_id,
         rawPower: minerSnapshot.raw_byte_power || 0,
