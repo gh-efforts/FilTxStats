@@ -236,7 +236,7 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
             { where: { robustAddress } }
           );
         } catch (e) {
-          this.logger.info(`error:%s,%s`, name, robustAddress);
+          this.logger.info(`ignore error:%s,%s`, name, robustAddress);
         }
         return true;
       })
@@ -269,7 +269,7 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
             { where: { name } }
           );
         } catch (e) {
-          this.logger.info(`error:%s,%s`, name, robustAddress);
+          this.logger.info(`ignore error:%s,%s`, name, robustAddress);
         }
         return true;
       })
@@ -288,10 +288,12 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
    * 2.定时时间间隔设置为每分钟的第0秒和第30秒 0/30 * * * * *
    */
   public async syncChangeMessage() {
+    this.logger.info('syncChangeMessage 开始');
     const [minerNames, startHeight] = await Promise.all([
       this.getMinerIds(),
       this.redisUtils.getString('sync_change_message_start_height'),
     ]);
+    this.logger.info('syncChangeMessage startHeight=%s', startHeight);
 
     const changeMessages =
       await this.lilyParsedMessagesMapping.getChangeMessage(
@@ -300,6 +302,7 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
       );
 
     if (changeMessages.length === 0) {
+      this.logger.info('syncChangeMessage 查无changeMessages,', minerNames);
       return true;
     }
     const newStartHeight = changeMessages[changeMessages.length - 1].height;
@@ -356,11 +359,18 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
         });
       }
     }
+    this.logger.info(
+      'syncChangeMessage dataForOff=',
+      dataForOff && JSON.stringify(dataForOff)
+    );
+
     // 将发生过change事件的miner的地址状态改为弃用
     // 将change事件更新到表中
     await Promise.all([
       this._updateStatusToOffByChangeMessage(dataForOff),
-      this.mapping.bulkCreateMinerNode(dataForInsert),
+      this.mapping.bulkCreateMinerNode(dataForInsert, {
+        updateOnDuplicate: ['type'],
+      }),
     ]);
     // 补全所有长短地址
     await this.syncNameAndRobustAddress();
@@ -373,6 +383,7 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
       'sync_change_message_start_height',
       newStartHeight
     );
+    this.logger.info('syncChangeMessage 完成写入新高速', newStartHeight);
   }
 
   private async _updateStatusToOffByChangeMessage(dataForOff: TDataForOff) {

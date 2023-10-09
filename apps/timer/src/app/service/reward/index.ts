@@ -1,4 +1,4 @@
-import { Config, Init, Inject, Provide } from '@midwayjs/core';
+import { Config, ILogger, Init, Inject, Provide } from '@midwayjs/core';
 
 import { FilfoxSdk } from '@filfox/http';
 import { PixiuSdk } from '@pixiu/http';
@@ -44,6 +44,9 @@ export class RewardService {
   @Inject()
   mrrs: MinerReleaseRecordService;
 
+  @Inject()
+  logger: ILogger;
+
   @Init()
   async initMethod() {
     this.pixiu = new PixiuSdk(this.pixiuUrl);
@@ -66,6 +69,7 @@ export class RewardService {
   }
 
   async syncMinerRewardLatest() {
+    this.logger.info('syncMinerRewardLatest 开始执行');
     const t = await this.defaultDataSource.transaction();
 
     try {
@@ -81,6 +85,12 @@ export class RewardService {
         const endAt = dayjs().subtract(1, 'hour').unix();
         // 只同步比当前时间早一个小时的交易数据（为了避免交易分叉，保证数据的准确性）
         if (startAt <= endAt) {
+          this.logger.info(
+            'syncMinerRewardLatest 参数 %s, %s, %s',
+            miner,
+            dayjs(startAt).format(),
+            dayjs(endAt).format()
+          );
           params.push({
             miner,
             startAt,
@@ -103,15 +113,23 @@ export class RewardService {
       // 转换成 map 结构
       const minerRewardMap = _.keyBy(_.flatten(rewards), 'miner_id');
 
-      if (Object.keys(minerRewardMap).length === 0) {
+      let mapKeyLen = Object.keys(minerRewardMap).length;
+      if (mapKeyLen === 0) {
+        this.logger.info('syncMinerRewardLatest minerRewardMap空');
         // 释放事务
         await t.commit();
         return true;
       }
+      this.logger.info('syncMinerRewardLatest minerRewardMap=', mapKeyLen);
 
       for (const miner in minerRewardMap) {
         const reward = minerRewardMap[miner];
         const latestReward = _.maxBy(reward.Rewards, 'height');
+
+        this.logger.info(
+          'syncMinerRewardLatest写入reward, %s',
+          reward.Rewards && reward.Rewards.length
+        );
 
         await Promise.all([
           this.mrs.addMinerReward(reward.Rewards, t),

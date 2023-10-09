@@ -4,8 +4,11 @@ import MyError from '../app/comm/myError';
 import { MinerNodeService } from '../app/service/minerNode';
 
 import { LarkSdk } from '@lark/core';
-@Processor('minerNode', {
-  //只执行一次，后续数据变更走 minerNodeChange 任务
+@Processor('minerNodeChange', {
+  repeat: {
+    //每天执行一次
+    cron: '0 30 3 * * *',
+  },
   removeOnComplete: true,
   removeOnFail: true,
   attempts: 5,
@@ -14,7 +17,7 @@ import { LarkSdk } from '@lark/core';
     delay: 1000 * 60,
   },
 })
-export class MinerNodeProcessor implements IProcessor {
+export class MinerNodeChangeProcessor implements IProcessor {
   @Inject()
   logger;
 
@@ -30,10 +33,10 @@ export class MinerNodeProcessor implements IProcessor {
     this.lark = new LarkSdk();
   }
 
-  async execute(params: { miner: string }) {
+  async execute() {
     const { job } = this.ctx;
     try {
-      await this.service.saveNodes(params.miner);
+      await this.service.syncChangeMessage();
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
@@ -52,7 +55,7 @@ export class MinerNodeProcessor implements IProcessor {
       } else {
         this.logger.error(`Job ${job.id} retry failed`);
         await this.lark.sendLarkByQueueStatus(
-          '节点昨日统计',
+          '节点变化任务',
           false,
           error.message
         );

@@ -15,7 +15,7 @@ type MinerRewardParams = {
 @Processor('minerReward', {
   repeat: {
     //每小时执行一次
-    cron: '0 0 * * * *',
+    cron: '0 1 * * * *',
   },
   removeOnComplete: true,
   removeOnFail: true,
