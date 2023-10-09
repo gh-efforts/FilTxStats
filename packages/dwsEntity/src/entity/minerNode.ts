@@ -38,6 +38,7 @@ export class MinerNodeEntity extends Model {
     comment: '节点名称',
     field: 'name',
     defaultValue: '',
+    unique: 'uk_height_name_robust_address',
   })
   name: string;
 
@@ -56,6 +57,7 @@ export class MinerNodeEntity extends Model {
     comment: '节点长地址',
     field: 'robust_address',
     defaultValue: '',
+    unique: 'uk_height_name_robust_address',
   })
   robustAddress: string;
 
@@ -74,6 +76,7 @@ export class MinerNodeEntity extends Model {
     comment: 'change事件时高度',
     field: 'height',
     defaultValue: 0,
+    unique: 'uk_height_name_robust_address',
   })
   height: number;
 }

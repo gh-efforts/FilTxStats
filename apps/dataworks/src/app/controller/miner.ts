@@ -31,7 +31,7 @@ export class MinerController {
     summary: '从filfox同步历史区块奖励数据',
   })
   async getMinerHisRewardFromFilfox(
-    @Body(ALL) param: MinerDTO.SyncMinerRewardHistoryDTO
+    @Body(ALL) param?: MinerDTO.SyncMinerRewardHistoryDTO
   ) {
     return this.service.syncHisMinerReward(param);
   }
@@ -95,6 +95,13 @@ export class MinerController {
       });
     });
     return true;
+  }
+
+  @Post('/sync_miner_node_change', {
+    summary: '同步 miner 相关节点地址变化',
+  })
+  async syncMinerNodeChange() {
+    return this.service.runJob('minerNodeChange');
   }
 
   @Post('/sync_node_address', {

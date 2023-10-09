@@ -103,6 +103,10 @@ export class MinerService extends BaseService<MinerEntity> {
   }
 
   async syncHisMinerReward(params: SyncMinerRewardHistoryDTO) {
+    if (!params || !params.miners) {
+      await this.runJob('minerReward');
+      return true;
+    }
     const { miners, startAt, endAt } = params;
     for (let miner of miners) {
       await this.runJob('minerReward', {
