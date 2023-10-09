@@ -13,6 +13,10 @@ type MinerRewardParams = {
   isHisiory?: boolean;
 };
 @Processor('minerReward', {
+  repeat: {
+    //每小时执行一次
+    cron: '0 0 * * * *',
+  },
   removeOnComplete: true,
   removeOnFail: true,
   attempts: 5,

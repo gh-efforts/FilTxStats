@@ -5,6 +5,10 @@ import { MinerNodeService } from '../app/service/minerNode';
 
 import { LarkSdk } from '@lark/core';
 @Processor('minerNode', {
+  repeat: {
+    //每天执行一次
+    cron: '0 30 3 * * *',
+  },
   removeOnComplete: true,
   removeOnFail: true,
   attempts: 5,
