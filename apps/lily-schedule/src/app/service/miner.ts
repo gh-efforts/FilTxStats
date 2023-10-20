@@ -53,9 +53,6 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
   filutils: FilutilsSdk;
   lotus: LotusSdk;
 
-  @Logger()
-  logger: ILogger;
-
   @Init()
   async initMethod() {
     this.filutils = new FilutilsSdk(this.filutilsUrl);
