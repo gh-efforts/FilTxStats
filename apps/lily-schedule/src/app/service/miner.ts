@@ -8,11 +8,12 @@ import { getYesterdayTime } from '@dws/utils';
 import { FilutilsSdk } from '@filutils/http';
 import { LilyMapping } from '@lily/entity';
 import { LotusSdk } from '@lotus/http';
-import { Config, Init, Inject, Provide } from '@midwayjs/core';
+import { Config, ILogger, Init, Inject, Logger, Provide } from '@midwayjs/core';
 import BigNumber from 'bignumber.js';
 import * as pLimit from 'p-limit';
 import { BaseService } from '../../core/baseService';
 import { MinerGas } from '../mapping/interface';
+import { isEmpty } from 'lodash';
 
 Array.prototype.get = function <T>(key: string, value: any): T | undefined {
   return this.find(item => {
@@ -45,6 +46,9 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
     url: string;
     token: string;
   };
+
+  @Logger()
+  logger: ILogger;
 
   filutils: FilutilsSdk;
   lotus: LotusSdk;
@@ -92,6 +96,34 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
 
     return true;
   }
+
+  /**
+   * 获得 miner power
+   * 1. 先查 lily， 有数据返回
+   * 2. 部分不活跃 miner，lily 可能没有数据，从链上查
+   * @param miner
+   * @param endAt
+   */
+  private async getMinerPower(
+    miner: string,
+    endAt: string
+  ): Promise<{ miner: string; rawbytepower: string; qualityadjpower: string }> {
+    let lilyRet = await this.lilyMapping.getMinerPower(miner, endAt);
+    if (!isEmpty(lilyRet)) {
+      this.logger.info('getMinerPower lily结果 %s,%s', miner, lilyRet);
+      return lilyRet;
+    }
+    let lotusRet = await this.lotus.stateMinerPower(miner, []);
+    if (isEmpty(lotusRet)) {
+      return;
+    }
+    return {
+      miner: miner,
+      rawbytepower: lotusRet.MinerPower.RawBytePower,
+      qualityadjpower: lotusRet.MinerPower.QualityAdjPower,
+    };
+  }
+
   // 同步 miner 质押
   async syncMinersByEncapsulation() {
     const miners = await this.getMinerIds();
@@ -165,7 +197,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
     // 查询昨日算力
     const minersPower = await Promise.all(
       miners.map(miner => {
-        return limit(() => this.lilyMapping.getMinerPower(miner, endAt));
+        return limit(() => this.getMinerPower(miner, endAt));
       })
     );
 
