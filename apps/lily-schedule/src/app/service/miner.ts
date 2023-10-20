@@ -117,6 +117,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
     if (isEmpty(lotusRet)) {
       return;
     }
+    this.logger.info('getMinerPower lotus结果 %s,%s', miner, lotusRet);
     return {
       miner: miner,
       rawbytepower: lotusRet.MinerPower.RawBytePower,
