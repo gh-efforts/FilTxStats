@@ -15,3 +15,11 @@ export enum METHOD {
   CHANGE_WORKER = 'ChangeWorkerAddress',
   CHANGE_OWNER = 'ChangeOwnerAddress',
 }
+
+export interface IGas32Data {
+  to: string;
+  method: number;
+  base_fee_burn: string;
+  over_estimation_burn: string;
+  miner_tip: string;
+}

@@ -1,5 +1,6 @@
 import { Provide } from '@midwayjs/core';
 import { LilyService } from '../../core/lily';
+import { IGas32Data, gasMethod } from '../comm/gasMethod';
 
 /**
  * 查询一些全网数据
@@ -114,5 +115,42 @@ export class NetworkMapping extends LilyService {
         totalvalue: (res && res.totalvalue) || 0,
       };
     });
+  }
+
+  /**
+   * 先查  32G miner，再查这些 miner 一个小时内的 gas 消耗
+   * 6: PreCommitSector
+   * 7: ProveCommitSector
+   */
+  public getGas32Data(
+    startHeight: number,
+    endHeight: number
+  ): Promise<IGas32Data[] | undefined> {
+    let SQL = `
+      SELECT
+        "to",
+        "method",
+        base_fee_burn,
+        over_estimation_burn,
+        miner_tip 
+      FROM
+        derived_gas_outputs 
+      WHERE
+        height >= ?
+        AND height <= ? 
+        AND "method" IN ( ${gasMethod.PreCommitSector}, ${gasMethod.ProveCommitSector} ) 
+        AND "to" IN ( SELECT miner_id FROM miner_infos WHERE sector_size = 34359738368 )
+      ORDER BY
+        height
+    `;
+    return this.query<IGas32Data[]>(SQL, [startHeight, endHeight], false).then(
+      //plain:true返回不了数组
+      res => {
+        if (!res) {
+          return;
+        }
+        return (res || []).map(item => item);
+      }
+    );
   }
 }
