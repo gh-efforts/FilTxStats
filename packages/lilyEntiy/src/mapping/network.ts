@@ -138,7 +138,7 @@ export class NetworkMapping extends LilyService {
       WHERE
         height >= ?
         AND height <= ? 
-        AND "method" IN ( ${gasMethod.PreCommitSector}, ${gasMethod.ProveCommitSector} ) 
+        AND "method" IN ( ${gasMethod.PreCommitSector}, ${gasMethod.ProveCommitSector}, ${gasMethod.PublishStorageDeals} ) 
         AND "to" IN ( SELECT miner_id FROM miner_infos WHERE sector_size = 34359738368 )
       ORDER BY
         height

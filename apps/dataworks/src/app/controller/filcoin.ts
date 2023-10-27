@@ -28,6 +28,6 @@ export class FilcoinController {
     summary: 'filcoin 全网数据大概统计 gas32, gas64',
   })
   async getGasInfoByTime(@Query() dto: ByTimeRangeDTO) {
-    return this.service.getGasInfoByTime(dto);
+    return this.service.getGasInfoByTimeNew(dto);
   }
 }

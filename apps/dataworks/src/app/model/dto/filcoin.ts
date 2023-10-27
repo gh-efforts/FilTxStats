@@ -46,5 +46,6 @@ export class ByTimeRangeDTO {
 export interface Gas32TrimMap {
   preCommitSectorRecords: IGas32Data[];
   proveCommitSectorRecords: IGas32Data[];
+  publishStorageDealsRecords: IGas32Data[];
   sectorCount: number; //封装扇区数量，每个扇区在这里是 32GB
 }

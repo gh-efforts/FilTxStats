@@ -82,6 +82,11 @@ export type MinerDcSealedRes = {
   sealed: string;
 };
 
+export type GetAvgSealGasRes = {
+  sealGas32G: string;
+  sealGas64G: string;
+};
+
 export type MinerPledgeRes = {
   // 节点名称
   miner_id: string;

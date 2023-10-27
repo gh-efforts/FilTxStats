@@ -5,6 +5,7 @@ import * as dayjs from 'dayjs';
 import * as _ from 'lodash';
 
 import type {
+  GetAvgSealGasRes,
   IGasFeeByDateRes,
   IGet,
   MinerBaseRes,
@@ -252,5 +253,22 @@ export class PixiuSdk {
         ) || [];
       return item;
     });
+  }
+
+  public async getAvgSealGas(
+    startHeight: number,
+    endHeight: number
+  ): Promise<GetAvgSealGasRes> {
+    let ret = await this._get({
+      url: 'v2/chain/avgSealGas',
+      query: {
+        startHeight,
+        endHeight,
+      },
+    });
+    if (ret.code != 0) {
+      throw new Error(`getAvgSealGas ret.code=${ret.code}`);
+    }
+    return ret && ret.data;
   }
 }
