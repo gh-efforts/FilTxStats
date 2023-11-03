@@ -30,4 +30,11 @@ export class FilcoinController {
   async getGasInfoByTime(@Query() dto: ByTimeRangeDTO) {
     return this.service.getGasInfoByTimeNew(dto);
   }
+
+  @Get('/maxheight/basefee', {
+    summary: '从 lily 查询最大basefee',
+  })
+  async getMaxHeightBaseFee() {
+    return this.service.getMaxHeightBaseFee();
+  }
 }

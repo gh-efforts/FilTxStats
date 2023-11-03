@@ -14,7 +14,7 @@ import {
   INetworkByHeightVO,
   NetworkByHeightDTO,
 } from '../model/dto/filcoin';
-import { NetworkMapping } from '@lily/entity';
+import { MessageGasEconomyMapping, NetworkMapping } from '@lily/entity';
 import { bigSub } from 'happy-node-utils';
 import { convertPowerToPiB, convertToFil, getHeightByTime } from '@dws/utils';
 import BigNumber from 'bignumber.js';
@@ -41,6 +41,9 @@ export class FilcoinNetworkService extends BaseService<FilcoinNetworkDataEntity>
 
   @Logger()
   logger: ILogger;
+
+  @Inject()
+  messageGasEconomyMapping: MessageGasEconomyMapping;
 
   private filscan: FilscanSdk;
 
@@ -226,5 +229,10 @@ export class FilcoinNetworkService extends BaseService<FilcoinNetworkDataEntity>
 
   private formatAvgSealGas(num) {
     return BigNumber(num).div(Math.pow(10, 18));
+  }
+
+  public async getMaxHeightBaseFee() {
+    let ret = await this.messageGasEconomyMapping.getMasHeightBaseFee();
+    return ret && ret.baseFee;
   }
 }
