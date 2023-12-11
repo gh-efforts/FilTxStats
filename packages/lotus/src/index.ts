@@ -52,7 +52,7 @@ export class LotusSdk {
 
       return res.data.result;
     } catch (e: any) {
-      console.log('e', e.response.data);
+      console.log('e', e);
       const message = (e as Error).message;
 
       errorMsg.push(`Lotus Post ${data.method} 方法出错：${message}`);
