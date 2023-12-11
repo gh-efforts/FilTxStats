@@ -7,11 +7,11 @@ import { LarkSdk } from '@lark/core';
 
 @Processor('minerBalance', {
   repeat: {
-    cron: '*/5 * * * *',
+    cron: '*/20 * * * *',
   },
   removeOnComplete: true,
   removeOnFail: true,
-  attempts: 1,
+  attempts: 0,
   backoff: {
     type: 'fixed',
     delay: 1000 * 60,
