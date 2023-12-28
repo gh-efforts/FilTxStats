@@ -40,7 +40,20 @@ pipeline{
             }
           }
       }
-  
+  stage('sonar-scanner') {
+	when {
+		branch 'dev'
+	   }
+  steps {
+	   container ('nodejs') {
+				sh 'sonar-scanner \
+					  -Dsonar.projectKey=$APP_NAME \
+					  -Dsonar.sources=. \
+					  -Dsonar.host.url=http://172.29.64.2:4095 \
+					  -Dsonar.login=c636aa552888af8abe7678782359b5383a6feacc'
+			   }
+		}
+	}   
       //构建Docker镜像并推送到远程Docker仓库
       stage('Build images && Push Hw imgaed center Dev') {
          when {
