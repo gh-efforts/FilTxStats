@@ -168,7 +168,7 @@ pipeline{
                 git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
                 sh 'ls -la'
                 sh 'cat tag_name.txt'
-                withCredentials([kubeconfigContent(credentialsId : 'demo-kubeconfig' ,variable : 'KUBECONFIG_CONTENT' ,)]) {
+                withCredentials([kubeconfigContent(credentialsId : 'kubeconfig-cce' ,variable : 'KUBECONFIG_CONTENT' ,)]) {
                 sh '''ls -la
                 tag_name=`cat tag_name.txt`
                 mkdir ~/.kube
