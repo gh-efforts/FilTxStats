@@ -1,5 +1,5 @@
 import { Context, IProcessor, Processor } from '@midwayjs/bull';
-import { Inject } from '@midwayjs/core';
+import { ILogger, Inject } from '@midwayjs/core';
 import MyError from '../app/comm/myError';
 import { TransactionService } from '../app/service/transaction';
 
@@ -19,7 +19,7 @@ import { LarkSdk } from '@lark/core';
 })
 export class TransactionTaskProcessor implements IProcessor {
   @Inject()
-  logger;
+  logger: ILogger;
 
   @Inject()
   ctx: Context;
@@ -33,14 +33,29 @@ export class TransactionTaskProcessor implements IProcessor {
     this.lark = new LarkSdk();
   }
 
-  async execute(params: { isHistory: boolean }) {
+  async execute(params: { isHistory: boolean; transactionId: number }) {
     const { job } = this.ctx;
     try {
       if (params.isHistory) {
+        //历史
+        this.logger.info('transactionTask history, %s', params.isHistory);
         await this.service.syncTransaction();
+      } else if (params.transactionId) {
+        //特定某个任务
+        let task = await this.service.findOneTransactionSyncStatus(
+          params.transactionId
+        );
+        this.logger.info(
+          'transactionTask transactionId, %s',
+          params.transactionId
+        );
+        if (task) {
+          return this.service.runJob('transaction', task);
+        }
       } else {
+        //定时跑最新
         const transactionTask = await this.service.getTransactionSyncStatus();
-        console.log('transactionTask', transactionTask);
+        this.logger.info('transactionTask, %j', transactionTask);
         const unfinishedTask = transactionTask.filter(
           item => item.status === -1
         );

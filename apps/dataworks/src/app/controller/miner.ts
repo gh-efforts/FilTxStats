@@ -105,11 +105,29 @@ export class MinerController {
   }
 
   @Post('/sync_node_address', {
-    summary: '同步 相关节点交易记录，任务阶段',
+    summary: '同步 相关节点交易记录，任务阶段，最新',
   })
   async syncNodeAddress(@Body(ALL) param: MinerDTO.SyncTransactionDTO) {
     return this.service.runJob('transactionTask', {
       miners: param.miners,
+    });
+  }
+
+  @Post('/sync_node_address_history', {
+    summary: '同步 相关节点交易记录，任务阶段；历史节点',
+  })
+  async syncNodeAddressHistory(@Body(ALL) param: MinerDTO.SyncTransactionDTO) {
+    return this.service.runJob('transactionTask', {
+      isHistory: true,
+    });
+  }
+
+  @Post('/sync_node_address_one', {
+    summary: '同步 相关节点交易记录，任务阶段; 特定一个',
+  })
+  async syncTransactionOne(@Body(ALL) param: { id: number }) {
+    return this.service.runJob('transactionTask', {
+      transactionId: param.id,
     });
   }
 

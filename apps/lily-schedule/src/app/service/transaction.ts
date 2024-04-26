@@ -418,6 +418,10 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     return true;
   }
 
+  /**
+   * 分组查询 syncId 最新任务
+   * @returns
+   */
   async getTransactionSyncStatus() {
     return this.transactionSyncStatusMapping.findAllTransactionSyncStatus({
       attributes: [
@@ -433,5 +437,15 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
       raw: true,
       group: 'syncId',
     });
+  }
+
+  async findOneTransactionSyncStatus(id: number) {
+    return await this.transactionSyncStatusMapping.findOneTransactionSyncStatus(
+      {
+        where: {
+          id,
+        },
+      }
+    );
   }
 }
