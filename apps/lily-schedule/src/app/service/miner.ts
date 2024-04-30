@@ -125,7 +125,11 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
     };
   }
 
-  // 同步 miner 质押
+  /**
+   * 同步 miner 质押
+   * @param params
+   * @returns
+   */
   async syncMinersByEncapsulation(params?: IMinerEncapsulationParam) {
     const miners = await this.getMinerIds();
     let { startAt, endAt } = await getYesterdayTime();

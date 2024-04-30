@@ -33,24 +33,26 @@ export class TransactionTaskProcessor implements IProcessor {
     this.lark = new LarkSdk();
   }
 
-  async execute(params: { isHistory: boolean; transactionId: number }) {
+  async execute(params: { isHistory: boolean; transactionIds: number[] }) {
     const { job } = this.ctx;
     try {
       if (params.isHistory) {
         //历史
         this.logger.info('transactionTask history, %s', params.isHistory);
         await this.service.syncTransaction();
-      } else if (params.transactionId) {
-        //特定某个任务
-        let task = await this.service.findOneTransactionSyncStatus(
-          params.transactionId
+      } else if (params.transactionIds) {
+        //特定某些任务
+        let tasks = await this.service.findTransactionSyncStatusByIds(
+          params.transactionIds
         );
         this.logger.info(
-          'transactionTask transactionId, %s',
-          params.transactionId
+          'transactionTask transactionIds, %s',
+          params.transactionIds
         );
-        if (task) {
-          return this.service.runJob('transaction', task);
+        if (tasks && tasks.length > 0) {
+          for (let task of tasks) {
+            return this.service.runJob('transaction', task);
+          }
         }
       } else {
         //定时跑最新

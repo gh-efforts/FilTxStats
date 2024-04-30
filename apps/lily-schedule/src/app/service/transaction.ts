@@ -439,11 +439,11 @@ export class TransactionService extends BaseService<MinerEncapsulationEntity> {
     });
   }
 
-  async findOneTransactionSyncStatus(id: number) {
-    return await this.transactionSyncStatusMapping.findOneTransactionSyncStatus(
+  async findTransactionSyncStatusByIds(ids: number[]) {
+    return await this.transactionSyncStatusMapping.findAllTransactionSyncStatus(
       {
         where: {
-          id,
+          id: ids,
         },
       }
     );
