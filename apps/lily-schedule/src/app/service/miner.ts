@@ -14,6 +14,8 @@ import * as pLimit from 'p-limit';
 import { BaseService } from '../../core/baseService';
 import { MinerGas } from '../mapping/interface';
 import { isEmpty } from 'lodash';
+import { PixiuSdk } from '@pixiu/http';
+import * as dayjs from 'dayjs';
 
 Array.prototype.get = function <T>(key: string, value: any): T | undefined {
   return this.find(item => {
@@ -53,10 +55,16 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
   filutils: FilutilsSdk;
   lotus: LotusSdk;
 
+  @Config('pixiuConfig.url')
+  pixiuUrl;
+
+  pixiu: PixiuSdk;
+
   @Init()
   async initMethod() {
     this.filutils = new FilutilsSdk(this.filutilsUrl);
     this.lotus = new LotusSdk(this.lotusConfig.url, this.lotusConfig.token);
+    this.pixiu = new PixiuSdk(this.pixiuUrl);
   }
 
   async getMinerIds() {
@@ -131,7 +139,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
    * @returns
    */
   async syncMinersByEncapsulation(params?: IMinerEncapsulationParam) {
-    const miners = await this.getMinerIds();
+    const miners = params.miners || (await this.getMinerIds());
     let { startAt, endAt } = await getYesterdayTime();
     if (params && (params.startAt || params.endAt)) {
       startAt = params.startAt;
@@ -158,12 +166,30 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
     // 预计出快
     const minersProdictBlockOut = await Promise.all(
       miners.map(miner => {
-        return limit(() =>
-          this.lilyMapping.getMinerProdictBlockOut(miner, startAt, endAt)
-        );
+        return limit(async () => {
+          //pixiu 查当前算力
+          let dateSec = Math.floor(dayjs(endAt).valueOf() / 1000).toString();
+          let res = await this.pixiu.queryMinerPower(miner, dateSec);
+          this.logger.info(
+            'syncMinersByEncapsulation 1_2, %s,%s,%j',
+            miner,
+            dateSec,
+            res
+          );
+          //得出预计出块
+          return await this.lilyMapping.getMinerProdictBlockOut(
+            miner,
+            startAt,
+            endAt,
+            res[0]?.quality_adj_power
+          );
+        });
       })
     );
-    this.logger.info('syncMinersByEncapsulation step2');
+    this.logger.info(
+      'syncMinersByEncapsulation step2, %j',
+      minersProdictBlockOut
+    );
 
     // 质押量
     const minersPledgeIncr = await Promise.all(
@@ -173,6 +199,8 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         )
       )
     );
+    this.logger.info('syncMinersByEncapsulation step2_3, %j', minersPledgeIncr);
+
     const gas = await Promise.all(
       miners.map(miner => {
         return limit(() => this.lilyMapping.getMinerGas(miner, startAt, endAt));
@@ -263,7 +291,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
         sectorSize: minersInfo.get('miner', miner)?.sectorsize || 0,
         qualityAdjPower: minersPower.get('miner', miner)?.qualityadjpower || 0,
         rawBytePower: minersPower.get('miner', miner)?.rawbytepower || 0,
-        increasePledge: minersPledgeIncr.get('miner', miner)?.initiaPledge || 0,
+        increasePledge: minersPledgeIncr.get('miner', miner)?.initiapledge || 0,
         encapsulationGas: getMinersGas.get('miner', miner)?.gas || 0,
         windowPost: getMinersGas.get('miner', miner)?.windowPost || 0,
         penalty: getMinersGas.get('miner', miner)?.penalty || 0,
@@ -275,7 +303,7 @@ export class MinerService extends BaseService<MinerEncapsulationEntity> {
       };
     });
 
-    this.logger.info('syncMinersByEncapsulation 结果', datas && datas.length);
+    this.logger.info('syncMinersByEncapsulation 结果,%j', datas);
 
     await this.minerEncapsulationMapping.bulkCreateMinerEncapsulation(datas, {
       updateOnDuplicate: [

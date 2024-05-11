@@ -133,3 +133,9 @@ export type MinerRewardDetailRes = {
     dailyReward?: string;
   }[];
 };
+
+export interface QueryMinerPowerRes {
+  miner_id: string;
+  raw_byte_power: string;
+  quality_adj_power: string;
+}

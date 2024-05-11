@@ -40,7 +40,7 @@ export class LilyMapping extends LilyService {
     const SQL = `
       SELECT
         miner_id as miner,
-        sum( initial_pledge ) as initiaPledge
+        sum( initial_pledge ) as initiapledge
       FROM
         miner_sector_infos_v7 
       WHERE
@@ -51,7 +51,7 @@ export class LilyMapping extends LilyService {
     `;
     return this.query<{
       miner: string;
-      initiaPledge: string;
+      initiapledge: string;
     }>(SQL, [miner, startHeight - 1, endHeight - 1], true);
   }
 
@@ -337,25 +337,30 @@ export class LilyMapping extends LilyService {
   }
 
   //  - 预计出快：（结束高度算力/结束高度全网算力）* (4.8 * 120) * （(结束高度-开始高度) * 30/3600）
-  async getMinerProdictBlockOut(miner: string, startAt: string, endAt: string) {
+  async getMinerProdictBlockOut(
+    miner: string,
+    startAt: string,
+    endAt: string,
+    actorQualityadjpower?: string
+  ) {
     const [startHeight, endHeight] = [
       getHeightByTime(startAt),
       getHeightByTime(endAt),
     ];
 
-    const ACTOR_SQL = `
-      SELECT
-        miner_id as miner,
-        quality_adj_power as qualityadjpower 
-      FROM
-        power_actor_claims 
-      WHERE
-        miner_id = ?
-        AND height <= ? 
-      ORDER BY
-        height DESC 
-        LIMIT 1;
-    `;
+    // const ACTOR_SQL = `
+    //   SELECT
+    //     miner_id as miner,
+    //     quality_adj_power as qualityadjpower
+    //   FROM
+    //     power_actor_claims
+    //   WHERE
+    //     miner_id = ?
+    //     AND height <= ?
+    //   ORDER BY
+    //     height DESC
+    //     LIMIT 1;
+    // `;
     // 全网算力
     const CHAIN_SQL = `
       SELECT
@@ -366,12 +371,11 @@ export class LilyMapping extends LilyService {
         height = ? 
         LIMIT 1;
     `;
-    const actor = await this.query<{ miner: string; qualityadjpower: string }>(
-      ACTOR_SQL,
-      [miner, endHeight],
-      true
-    );
-
+    // const actor = await this.query<{ miner: string; qualityadjpower: string }>(
+    //   ACTOR_SQL,
+    //   [miner, endHeight],
+    //   true
+    // );
     const chain = await this.query<{ totalqabytespower: string }>(
       CHAIN_SQL,
       [endHeight],
@@ -379,8 +383,8 @@ export class LilyMapping extends LilyService {
     );
     return {
       miner,
-      num: actor
-        ? BigNumber(actor.qualityadjpower)
+      num: actorQualityadjpower
+        ? BigNumber(actorQualityadjpower)
             .div(chain.totalqabytespower)
             .multipliedBy(4.8 * 120)
             .multipliedBy(((endHeight - startHeight) * 30) / 3600)

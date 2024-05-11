@@ -15,6 +15,7 @@ import type {
   MinerRewardRes,
   MinerSectorStatsPledgeRes,
   MinerStaticRes,
+  QueryMinerPowerRes,
 } from './interface';
 
 export type {
@@ -268,6 +269,39 @@ export class PixiuSdk {
     });
     if (ret.code != 0) {
       throw new Error(`getAvgSealGas ret.code=${ret.code}`);
+    }
+    return ret && ret.data;
+  }
+
+  /**
+   * 查询节点算力，支持过去时间查询
+   * 为 getMinerProdictBlockOut 服务，直接查
+    SELECT
+        miner_id as miner,
+        quality_adj_power as qualityadjpower 
+      FROM
+        power_actor_claims 
+      WHERE
+        miner_id = ?
+        AND height <= ? 
+      ORDER BY
+        height DESC 
+        LIMIT 1;
+    查不出来数据，替换成 pixiu 查询
+   */
+  public async queryMinerPower(
+    minerId: string,
+    dateSec: string
+  ): Promise<QueryMinerPowerRes[]> {
+    let ret = await this._get({
+      url: '/v2/dspa/miner/power',
+      query: {
+        minerId,
+        dateTime: dateSec,
+      },
+    });
+    if (ret.code != 0) {
+      throw new Error(`queryMinerPower ret.code=${ret.code}`);
     }
     return ret && ret.data;
   }
