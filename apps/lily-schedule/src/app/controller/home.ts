@@ -17,11 +17,11 @@ export class HomeController {
 
   @Get('/test')
   async testEncapsulation() {
-    await this.minerService.syncMinersByEncapsulation({
-      miners: ['f01135819'],
-      startAt: '2024-05-10 00:00:00',
-      endAt: '2024-05-10 23:59:59',
-    });
+    // await this.minerService.syncMinersByEncapsulation({
+    //   miners: ['f01135819'],
+    //   startAt: '2024-05-10 00:00:00',
+    //   endAt: '2024-05-10 23:59:59',
+    // });
 
     //['f01135819', 'f02956073', 'f03028412']
 
@@ -31,5 +31,12 @@ export class HomeController {
     //   '2024-05-10 23:59:59'
     // );
     // console.log('===', ret);
+
+    let ret = await this.lilyMapping.getFaultedSector(
+      'f03028412',
+      '2024-05-09 00:00:00',
+      '2024-05-09 23:59:59'
+    );
+    console.log('===', ret);
   }
 }

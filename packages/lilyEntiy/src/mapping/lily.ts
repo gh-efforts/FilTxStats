@@ -154,7 +154,7 @@ export class LilyMapping extends LilyService {
 
     const SQL = `
       SELECT 
-        count(*) 
+        count(*)
       FROM
         miner_sector_events 
       WHERE
@@ -168,6 +168,7 @@ export class LilyMapping extends LilyService {
       [miner, startHeight, endHeight],
       true
     );
+    console.log('xxxx', result);
     return {
       miner,
       count: result.count,
