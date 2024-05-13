@@ -73,6 +73,18 @@ export type MinerStaticRes = {
   address: string;
   // 扇区大小/byte
   sector_size: number;
+  owner: {
+    id: string;
+    address: string;
+  };
+  worker: {
+    id: string;
+    address: string;
+  };
+  controller: {
+    id: string;
+    address: string;
+  }[];
 };
 
 export type MinerDcSealedRes = {

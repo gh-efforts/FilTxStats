@@ -36,7 +36,7 @@ export class MinerNodeChangeProcessor implements IProcessor {
   async execute() {
     const { job } = this.ctx;
     try {
-      await this.service.syncChangeMessage();
+      await this.service.updateNodes();
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
