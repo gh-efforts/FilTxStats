@@ -58,15 +58,23 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
     });
   }
 
-  async syncMinersSector() {
+  async syncMinersSector(params?: { endAt: string }) {
     const miners = await this.getMinerIds();
-    const { startAt, endAt } = await getYesterdayTime();
+    let { startAt, endAt } = await getYesterdayTime();
+    if (params.endAt) {
+      endAt = params.endAt;
+    }
 
     const endHeight = getHeightByTime(endAt);
     const limit = pLimit(5);
     const cids = await this.lotus.getChainGetTipSetByHeight(endHeight);
 
-    this.logger.info('syncMinersSector start');
+    this.logger.info(
+      'syncMinersSector start, %s,%s,%j',
+      endAt,
+      endHeight,
+      cids
+    );
 
     // 查询扇区大小
     const minersInfo = await Promise.all(

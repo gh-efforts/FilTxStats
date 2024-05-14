@@ -1,6 +1,7 @@
 import { Controller, Get, Inject } from '@midwayjs/core';
 import { MinerService } from '../service/miner';
 import { LilyMapping } from '@lily/entity';
+import { MinerSectorService } from '../service/minerSector';
 
 @Controller('/')
 export class HomeController {
@@ -9,6 +10,9 @@ export class HomeController {
 
   @Inject()
   lilyMapping: LilyMapping;
+
+  @Inject()
+  minerSectorService: MinerSectorService;
 
   @Get('/')
   async home() {
@@ -32,11 +36,15 @@ export class HomeController {
     // );
     // console.log('===', ret);
 
-    let ret = await this.lilyMapping.getFaultedSector(
-      'f03028412',
-      '2024-05-09 00:00:00',
-      '2024-05-09 23:59:59'
-    );
-    console.log('===', ret);
+    // let ret = await this.lilyMapping.getFaultedSector(
+    //   'f03028412',
+    //   '2024-05-09 00:00:00',
+    //   '2024-05-09 23:59:59'
+    // );
+
+    let sector = await this.minerSectorService.syncMinersSector({
+      endAt: '2024-05-09 23:59:59',
+    });
+    console.log('===', sector);
   }
 }
