@@ -529,7 +529,7 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
         minerInfo.owner?.id
           ? this.mapping.getModel().create({
               minerName: miner,
-              type: MINER_NODE_TYPE.WORKER,
+              type: MINER_NODE_TYPE.OWNER,
               name: this.utils.returnName(minerInfo.owner?.id),
               robustAddress: this.utils.returnRobustAddress(
                 minerInfo.owner?.address
@@ -543,23 +543,30 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
 
     // 判断controller是否更新
     await this.mapping.modifyMinerNode(
-      { status: MINER_NODE_STATUS.OFF, type: MINER_NODE_TYPE.CONTROL },
-      { where: { minerName: miner } }
+      { status: MINER_NODE_STATUS.OFF },
+      { where: { minerName: miner, type: MINER_NODE_TYPE.CONTROL } }
     );
 
     if (minerInfo.controller && minerInfo.controller.length > 0) {
       minerInfo.controller.forEach(controller => {
-        this.mapping.getModel().create({
-          minerName: miner,
-          type: MINER_NODE_TYPE.CONTROL,
-          name: this.utils.returnName(controller?.id),
-          robustAddress: this.utils.returnRobustAddress(controller?.address),
-          status: MINER_NODE_STATUS.ON,
-          height: 0,
-        });
+        if (nowMinerNodes.controller[controller.id]) {
+          this.mapping.modifyMinerNode(
+            {
+              status: MINER_NODE_STATUS.ON,
+            },
+            { where: { id: nowMinerNodes.controller[controller.id].id } }
+          );
+        } else {
+          this.mapping.getModel().create({
+            minerName: miner,
+            type: MINER_NODE_TYPE.CONTROL,
+            name: this.utils.returnName(controller?.id),
+            robustAddress: this.utils.returnRobustAddress(controller?.address),
+            status: MINER_NODE_STATUS.ON,
+            height: 0,
+          });
+        }
       });
-
-      this.mapping.getModel().upsert({}, { fields: ['minerName', 'name'] });
     }
   }
 
@@ -568,8 +575,8 @@ export class MinerNodeService extends BaseService<MinerNodeEntity> {
     const nodes: {
       worker?: MinerNodeEntity;
       owner?: MinerNodeEntity;
-      controller?: Record<string, MinerNodeEntity>;
-    } = {};
+      controller: Record<string, MinerNodeEntity>;
+    } = { controller: {} };
 
     minerNodes.forEach(minerNode => {
       switch (minerNode.type) {
