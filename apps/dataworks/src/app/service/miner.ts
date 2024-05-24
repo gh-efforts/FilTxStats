@@ -1,10 +1,20 @@
-import { MinerEntity, MinerMapping, MinerSnapshotMapping } from '@dws/entity';
+import {
+  MinerEntity,
+  MinerMapping,
+  MinerSnapshotMapping,
+  MinerTypeMapping,
+} from '@dws/entity';
 import { LilyMapping } from '@lily/entity';
 import { LotusSdk } from '@lotus/http';
 import * as bull from '@midwayjs/bull';
 import { Config, Init, Inject, Provide } from '@midwayjs/core';
 import { BaseService } from '../../core/baseService';
-import { SectorSizeDTO, SyncMinerRewardHistoryDTO } from '../model/dto/miner';
+import {
+  SectorSizeDTO,
+  SyncMinerRewardHistoryDTO,
+  UpdateMinerTypeDTO,
+  AddMinerTypeDTO,
+} from '../model/dto/miner';
 import dayjs = require('dayjs');
 
 @Provide()
@@ -20,6 +30,9 @@ export class MinerService extends BaseService<MinerEntity> {
 
   @Inject()
   minerSnapshotMapping: MinerSnapshotMapping;
+
+  @Inject()
+  minerTypeMapping: MinerTypeMapping;
 
   bullOpts: {
     removeOnComplete: true;
@@ -69,9 +82,9 @@ export class MinerService extends BaseService<MinerEntity> {
     // 当新增完 miner 后， 开始同步 miner 的基础信息
     await this.runJob('minerBaseInfo');
     // 当新增完 miner 后, 同步 miner 的类型
-    await this.runJob('minerType', {
-      miners,
-    });
+    // await this.runJob('minerType', {
+    //   miners,
+    // });
     // 同步 miner 的历史奖励
     await this.syncHisMinerReward({
       miners,
@@ -127,5 +140,22 @@ export class MinerService extends BaseService<MinerEntity> {
     // 立即执行这个任务
     await bullQueue.add(param);
     return true;
+  }
+
+  async update(params: UpdateMinerTypeDTO) {
+    const miner = await this.mapping
+      .getModel()
+      .findOne({ where: { miner: params.miner } });
+
+    if (!miner) {
+      return true;
+    }
+
+    await miner.update(params);
+  }
+
+  async addMinerType(params: AddMinerTypeDTO) {
+    const res = await this.minerTypeMapping.saveNew(params);
+    return res;
   }
 }

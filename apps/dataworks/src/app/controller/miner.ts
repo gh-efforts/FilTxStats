@@ -137,4 +137,14 @@ export class MinerController {
   async syncMinerBalance() {
     return this.service.runJob('minerBalance');
   }
+
+  @Post('/update', { summary: '更新 miner' })
+  async updateMiner(@Body(ALL) params: MinerDTO.UpdateMinerTypeDTO) {
+    return this.service.update(params);
+  }
+
+  @Post('/add/type', { summary: '新增节点类型' })
+  async addMinerType(@Body(ALL) params: MinerDTO.AddMinerTypeDTO) {
+    return this.service.addMinerType(params);
+  }
 }

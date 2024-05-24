@@ -52,3 +52,19 @@ export class SyncTransactionDTO {
   @Rule(RuleType.array().items(RuleType.string()))
   miners: string[];
 }
+
+export class UpdateMinerTypeDTO {
+  @Rule(RuleType.string().required())
+  miner: string;
+
+  @Rule(RuleType.number().integer().valid(1, 2).required())
+  dataType: number;
+
+  @Rule(RuleType.number().integer().required())
+  typeId: number;
+}
+
+export class AddMinerTypeDTO {
+  @Rule(RuleType.string().min(1).max(32).required())
+  name: string;
+}

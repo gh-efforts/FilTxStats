@@ -2,6 +2,7 @@
 import { DerivedGasOutputsEntity } from './src/entity/derivedGasOutputs';
 import { FilcoinNetworkDataEntity } from './src/entity/filcoinNetworkData';
 import { MinerEntity } from './src/entity/miner';
+import { MinerTypeEntity } from './src/entity/minerType';
 import { MinerBalanceEntity } from './src/entity/minerBalance';
 import { MinerDailyStatsEntity } from './src/entity/minerDailyStats';
 import { MinerEncapsulationEntity } from './src/entity/minerEncapsulation';
@@ -20,6 +21,7 @@ import { TransactionSyncStatusEntity } from './src/entity/transactionSyncStatus'
 import { DerivedGasOutputsMapping } from './src/mapping/derivedGasOutputs';
 import { FilcoinNetworkDataMapping } from './src/mapping/filcoinNetworkData';
 import { MinerMapping } from './src/mapping/miner';
+import { MinerTypeMapping } from './src/mapping/minerType';
 import { MinerBalanceMapping } from './src/mapping/minerBalance';
 import { MinerDailyStatsMapping } from './src/mapping/minerDailyStats';
 import { MinerEncapsulationMapping } from './src/mapping/minerEncapsulation';
@@ -47,9 +49,11 @@ export {
   MinerEncapsulationEntity,
   MinerEncapsulationMapping,
   MinerEntity,
+  MinerTypeEntity,
   MinerLockedRewardEntity,
   MinerLockedRewardMapping,
   MinerMapping,
+  MinerTypeMapping,
   MinerNodeEntity,
   MinerNodeMapping,
   MinerReleaseRecordEntity,
