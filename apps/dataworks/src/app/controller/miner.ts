@@ -143,6 +143,11 @@ export class MinerController {
     return this.service.update(params);
   }
 
+  @Post('/remove', { summary: '移除节点 miner' })
+  async remove(@Body(ALL) params: MinerDTO.RemoveMinerDTO) {
+    return this.service.remove(params);
+  }
+
   @Post('/add/type', { summary: '新增节点类型' })
   async addMinerType(@Body(ALL) params: MinerDTO.AddMinerTypeDTO) {
     return this.service.addMinerType(params);

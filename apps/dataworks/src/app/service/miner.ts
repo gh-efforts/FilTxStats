@@ -14,6 +14,7 @@ import {
   SyncMinerRewardHistoryDTO,
   UpdateMinerTypeDTO,
   AddMinerTypeDTO,
+  RemoveMinerDTO,
 } from '../model/dto/miner';
 import dayjs = require('dayjs');
 
@@ -152,6 +153,18 @@ export class MinerService extends BaseService<MinerEntity> {
     }
 
     await miner.update(params);
+  }
+
+  async remove(params: RemoveMinerDTO) {
+    const miner = await this.mapping
+      .getModel()
+      .findOne({ where: { miner: params.miner } });
+
+    if (!miner) {
+      return true;
+    }
+
+    await miner.destroy();
   }
 
   async addMinerType(params: AddMinerTypeDTO) {

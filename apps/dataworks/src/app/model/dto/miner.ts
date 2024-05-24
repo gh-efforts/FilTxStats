@@ -68,3 +68,8 @@ export class AddMinerTypeDTO {
   @Rule(RuleType.string().min(1).max(32).required())
   name: string;
 }
+
+export class RemoveMinerDTO {
+  @Rule(RuleType.string().required())
+  miner: string;
+}
