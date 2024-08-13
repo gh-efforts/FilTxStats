@@ -1,10 +1,18 @@
 def image_name
 def envir
+def image_name
+def envir
 pipeline{
     agent {
         node {label 'nodejs'}
+        node {label 'nodejs'}
     }
     environment {
+        DOCKER_CREDENTIAL_ID = 'huaweidocker'
+        DOCKER_REGISTRY = 'swr.ap-southeast-1.myhuaweicloud.com'
+        DOCKER_NAMESPACE = 'gh'
+        APP_NAME = 'lily-schedule'
+    }
         DOCKER_CREDENTIAL_ID = 'huaweidocker'
         DOCKER_REGISTRY = 'swr.ap-southeast-1.myhuaweicloud.com'
         DOCKER_NAMESPACE = 'gh'
@@ -62,31 +70,18 @@ pipeline{
                 }
             }
         }
-        stage('test分支Lark通知') {
+        stage('Lark通知') {
             when {
-                branch pattern: 'lily-schedule-test', comparator: "REGEXP"
+                branch pattern: 'lily-schedule-test|lily-schedule-master', comparator: "REGEXP"
             }
             steps {
                 container ('nodejs') {
                     git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
-                    sh 'sed -i "s/cryptomint_HHJKKK/$APP_NAME/g" lark.sh'                   
-                    sh 'bash lark.sh test'
+                    sh 'sed -i "s/cryptomint_HHJKKK/$APP_NAME/g" lark.sh'
+                    sh 'bash lark.sh $envir'
                 }
             }
         }
-        stage('master分支Lark通知') {
-            when {
-                branch pattern: 'lily-schedule-master', comparator: "REGEXP"
-            }
-            steps {
-                container ('nodejs') {
-                    git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
-                    sh 'sed -i "s/cryptomint_HHJKKK/$APP_NAME/g" lark.sh'                   
-                    sh 'bash lark.sh prod'
-                }
-            }
-        }
-
         stage('Sonar-scanner') {
             when {
                 branch 'lily-schedule-master'
