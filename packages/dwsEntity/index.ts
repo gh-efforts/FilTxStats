@@ -36,6 +36,10 @@ import { TransactionSyncStatusMapping } from './src/mapping/transactionSyncStatu
 import { VmMessagesMapping } from './src/mapping/vmMessages';
 import { WalletMapping } from './src/mapping/wallet';
 import { WalletTypeMapping } from './src/mapping/walletType';
+import { SyncAleoTransferMapping } from './src/mapping/syncAleoTransfer';
+import { SyncAleoTransferEntity } from './src/entity/syncGhAleoTransfer';
+import { GhAleoAddrMapping } from './src/mapping/ghAleoAddr';
+import { GhAleoAddrEntity } from './src/entity/ghAleoAddr';
 
 export {
   DerivedGasOutputsEntity,
@@ -74,4 +78,8 @@ export {
   WalletMapping,
   WalletTypeEntity,
   WalletTypeMapping,
+  SyncAleoTransferMapping,
+  SyncAleoTransferEntity,
+  GhAleoAddrMapping,
+  GhAleoAddrEntity,
 };
