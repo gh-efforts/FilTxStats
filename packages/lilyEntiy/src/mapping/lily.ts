@@ -369,8 +369,9 @@ export class LilyMapping extends LilyService {
       FROM
         chain_powers 
       WHERE
-        height = ? 
-        LIMIT 1;
+        height BETWEEN ? AND ? 
+      ORDER BY height DESC
+      LIMIT 1;
     `;
     // const actor = await this.query<{ miner: string; qualityadjpower: string }>(
     //   ACTOR_SQL,
@@ -379,7 +380,7 @@ export class LilyMapping extends LilyService {
     // );
     const chain = await this.query<{ totalqabytespower: string }>(
       CHAIN_SQL,
-      [endHeight],
+      [endHeight - 5, endHeight],
       true
     );
     return {
