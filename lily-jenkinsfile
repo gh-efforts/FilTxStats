@@ -1,212 +1,93 @@
+def image_name
+def envir
 pipeline{
     agent {
-      node {
-        label 'nodejs'
-      }
+        node {label 'nodejs'}
     }
     environment {
-         //Docker凭证ID
-         DOCKER_CREDENTIAL_ID = 'huaweidocker'
-         //Docker仓库地址
-         DOCKER_REGISTRY = 'swr.ap-southeast-1.myhuaweicloud.com'
-         //Docker仓库命名空间
-         DOCKER_NAMESPACE = 'gh'
-         APP_NAME = 'lily-schedule'
-         // 部署代码yaml dev
-         CODE_TO_DEV = 'lily-schedule/dev'
-         // 部署代码yaml test
-         CODE_TO_TEST = 'lily-schedule/test'
-         // 部署代码yaml uat
-        //  CODE_TO_UAT = 'lily-schedule/uat'
-         // 部署代码yaml master
-         CODE_TO_MASTER = 'lily-schedule/prod'
+        DOCKER_CREDENTIAL_ID = 'huaweidocker'
+        DOCKER_REGISTRY = 'swr.ap-southeast-1.myhuaweicloud.com'
+        DOCKER_NAMESPACE = 'gh'
+        APP_NAME = 'lily-schedule'
     }
-  
-    //构建阶段
     stages {
-  
-      //生成镜像版本
-      stage('get tag') {
-          steps {
-            container ('nodejs') {
-            sh 'git rev-parse HEAD > tag_name.txt && cat tag_name.txt && tag_name=`cat tag_name.txt`'
+        stage('Build') {
+            when {
+                branch pattern: 'lily-schedule-test|lily-schedule-master', comparator: "REGEXP"
+            }
+            steps {
+                script {
+                    container ('nodejs') {
+                        def tag_name = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+                        sh "echo $tag_name > tag_name.txt"
+                        image_name = "$DOCKER_REGISTRY/$DOCKER_NAMESPACE/$APP_NAME-$BRANCH_NAME:$tag_name"
+                        sh "docker build -f apps/lily-schedule/DockerFile -t $image_name ."
+                        withCredentials([usernamePassword(passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME', credentialsId: "$DOCKER_CREDENTIAL_ID",)]) {
+                            sh 'echo "$DOCKER_PASSWORD" | docker login $DOCKER_REGISTRY -u "$DOCKER_USERNAME" --password-stdin'
+                            sh "docker push $image_name"
+                        }
+                    }
                 }
-              }
-      }
-      stage('check code tag or download') {
-          steps {
-            container ('nodejs') {
-               sh 'ls -la && pwd'
             }
-          }
-      }
-  stage('sonar-scanner') {
-	when {
-		branch 'dev'
-	   }
-  steps {
-	   container ('nodejs') {
-				sh 'sonar-scanner \
-					  -Dsonar.projectKey=$APP_NAME \
-					  -Dsonar.sources=. \
-					  -Dsonar.host.url=http://172.29.64.2:4095 \
-					  -Dsonar.login=c636aa552888af8abe7678782359b5383a6feacc'
-			   }
-		}
-	}  
-      //构建Docker镜像并推送到远程Docker仓库
-
-      stage('Build images && Push Hw imgaed center Test') {
-         when {
-           branch 'lily-schedule-test'
-         }
-          steps {
-            container ('nodejs') {
-                  sh 'ls -la'
-                  sh 'cat tag_name.txt'
-               //构建docker镜像
-                  sh 'docker build -t $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$APP_NAME-test:`cat tag_name.txt` -f apps/lily-schedule/DockerFile .'
-               //登录Docker并推送镜像到远程Docker仓库
-                  withCredentials([usernamePassword(passwordVariable : 'DOCKER_PASSWORD' ,usernameVariable : 'DOCKER_USERNAME' ,credentialsId : "$DOCKER_CREDENTIAL_ID" ,)]) {
-                  sh 'echo "$DOCKER_PASSWORD" | docker login $DOCKER_REGISTRY -u "$DOCKER_USERNAME" --password-stdin'
-                  sh 'docker push $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$APP_NAME-test:`cat tag_name.txt`'
-               }
+        }
+        stage('Deploy') {
+            when {
+                branch pattern: 'lily-schedule-test|lily-schedule-master', comparator: "REGEXP"
             }
-          
-      }
-             
-  }
-
-       stage('Build images && Push Hw imgaed center master') {
-         when {
-           branch 'lily-schedule-master'
-         }
-          steps {
-            container ('nodejs') {
-                  sh 'ls -la'
-                  sh 'cat tag_name.txt'
-               //构建docker镜像
-                  sh 'docker build -t $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$APP_NAME-prod:`cat tag_name.txt` -f apps/lily-schedule/DockerFile .'
-               //登录Docker并推送镜像到远程Docker仓库
-                  withCredentials([usernamePassword(passwordVariable : 'DOCKER_PASSWORD' ,usernameVariable : 'DOCKER_USERNAME' ,credentialsId : "$DOCKER_CREDENTIAL_ID" ,)]) {
-                  sh 'echo "$DOCKER_PASSWORD" | docker login $DOCKER_REGISTRY -u "$DOCKER_USERNAME" --password-stdin'
-                  sh 'docker push $DOCKER_REGISTRY/$DOCKER_NAMESPACE/$APP_NAME-prod:`cat tag_name.txt`'
-               }
-            }
-          
-      }
-             
-  }
-
-      // K8S部署
-      stage('Deploy to Dev') {
-         when {
-           branch 'interstellar_dev111'
-         }
-          steps {
-            container ('nodejs') {
-                git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
-                sh 'ls -la'
-                sh 'cat tag_name.txt'
-                withCredentials([kubeconfigContent(credentialsId : 'demo-kubeconfig' ,variable : 'KUBECONFIG_CONTENT' ,)]) {
-                sh '''ls -la
-                tag_name=`cat tag_name.txt`
-                mkdir ~/.kube
-                echo "$KUBECONFIG_CONTENT" > ~/.kube/config
-                sed -i "s/lasssetest:tag_names/$APP_NAME-dev:`cat tag_name.txt`/g" $CODE_TO_DEV/deployment.yaml  
-                envsubst < $CODE_TO_DEV/deployment.yaml | kubectl apply -f -'''
-                                  }
-                           }
+            steps {
+                script {
+                    container ('nodejs') {
+                        def kubeconfig
+                        def k8s_namespace
+                        def k8s_deployment_name
+                        def k8s_container_name
+                        if(BRANCH_NAME != 'lily-schedule-master') {
+                            kubeconfig = 'demo-kubeconfig'
+                            envir = BRANCH_NAME.substring(14)
+                        } else {
+                            input(message: '@admin @harrison', submitter: 'admin, harrison')
+                            kubeconfig = 'kubeconfig-cce'
+                            envir = 'prod'
+                        }
+                        k8s_namespace = "dws-$envir"
+                        k8s_deployment_name = "$APP_NAME"
+                        k8s_container_name = "$APP_NAME"
+                        withCredentials([kubeconfigContent(credentialsId: kubeconfig, variable: 'KUBECONFIG_CONTENT')]) {
+                            sh """
+                                mkdir ~/.kube && echo "$KUBECONFIG_CONTENT" > ~/.kube/config;
+                                kubectl -n $k8s_namespace set image deployment/$k8s_deployment_name $k8s_container_name=$image_name
+                            """
+                        }
                     }
+                }
             }
-      stage('Deploy to TEST') {
-         when {
-           branch 'lily-schedule-test'
-         }
-          steps {
-            container ('nodejs') {
-                git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
-                sh 'ls -la'
-                sh 'cat tag_name.txt'
-                withCredentials([kubeconfigContent(credentialsId : 'demo-kubeconfig' ,variable : 'KUBECONFIG_CONTENT' ,)]) {
-                sh '''ls -la
-                tag_name=`cat tag_name.txt`
-                mkdir ~/.kube
-                echo "$KUBECONFIG_CONTENT" > ~/.kube/config
-                sed -i "s/lasssetest:tag_names/$APP_NAME-test:`cat tag_name.txt`/g" $CODE_TO_TEST/deployment.yaml  
-                envsubst < $CODE_TO_TEST/deployment.yaml | kubectl apply -f -'''
-                                  }
-                           }
-                    }
+        }
+        stage('Lark通知') {
+            when {
+                branch pattern: 'lily-schedule-test|lily-schedule-master', comparator: "REGEXP"
             }
-
-        stage('Deploy to MASTER') {
-         when {
-           branch 'lily-schedule-master'
-         }
-          steps {
-            container ('nodejs') {
-                git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
-                sh 'ls -la'
-                sh 'cat tag_name.txt'
-                withCredentials([kubeconfigContent(credentialsId : 'kubeconfig-cce' ,variable : 'KUBECONFIG_CONTENT' ,)]) {
-                sh '''ls -la
-                tag_name=`cat tag_name.txt`
-                mkdir ~/.kube
-                echo "$KUBECONFIG_CONTENT" > ~/.kube/config
-                sed -i "s/lasssetest:tag_names/$APP_NAME-prod:`cat tag_name.txt`/g" $CODE_TO_MASTER/deployment.yaml  
-                envsubst < $CODE_TO_MASTER/deployment.yaml | kubectl apply -f -'''
-                                  }
-                           }
-                    }
+            steps {
+                container ('nodejs') {
+                    git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
+                    sh 'sed -i "s/cryptomint_HHJKKK/$APP_NAME/g" lark.sh'
+                    envir = 'prod'
+                    sh 'bash lark.sh $envir'
+                }
             }
-
-      stage('lark通知 DEV') {
-         when {
-           branch 'interstellar_dev111'
-         }
-          steps {
-            container ('nodejs') {
-                git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
-                sh 'ls -la'
-                sh 'cat tag_name.txt'
-                sh 'sed -i "s/cryptomint_HHJKKK/$APP_NAME/g" lark.sh'
-                sh 'cat lark.sh'
-                sh 'bash lark.sh dev'
-                  }
+        }
+        stage('Sonar-scanner') {
+            when {
+                branch 'lily-schedule-master'
             }
-  }
-      stage('lark通知 TEST') {
-         when {
-           branch 'lily-schedule-test'
-         }
-          steps {
-            container ('nodejs') {
-                git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
-                sh 'ls -la'
-                sh 'cat tag_name.txt'
-                sh 'sed -i "s/cryptomint_HHJKKK/$APP_NAME/g" lark.sh'
-                sh 'cat lark.sh'
-                sh 'bash lark.sh test'
-                  }
+            steps {
+                container ('nodejs') {
+                    sh 'sonar-scanner \
+                      -Dsonar.projectKey=$APP_NAME \
+                      -Dsonar.sources=. \
+                      -Dsonar.host.url=http://172.29.64.2:4095 \
+                      -Dsonar.login=c636aa552888af8abe7678782359b5383a6feacc'
+                }
             }
-  }
-
-      stage('lark通知 MASTER') {
-         when {
-           branch 'lily-schedule-master'
-         }
-          steps {
-            container ('nodejs') {
-                git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
-                sh 'ls -la'
-                sh 'cat tag_name.txt'
-                sh 'sed -i "s/cryptomint_HHJKKK/$APP_NAME/g" lark.sh'
-                sh 'cat lark.sh'
-                sh 'bash lark.sh prod'
-                  }
-            }
-  }
-
- }
+        }
+    }
 }
