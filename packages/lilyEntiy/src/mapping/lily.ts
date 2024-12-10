@@ -415,4 +415,66 @@ export class LilyMapping extends LilyService {
     );
     return result;
   }
+
+  // 获取终止扇区的节点
+  async getStopSectorMiner(startHeight: number, endHeight: number) {
+    const SQL = `
+      WITH filtered_dgo AS (
+        SELECT *
+        FROM derived_gas_outputs
+        WHERE height BETWEEN ${startHeight} AND ${endHeight}
+          AND (actor_family = 'storageminer' AND method = 9)
+      ), filtered_pm AS (
+        SELECT *
+        FROM parsed_messages
+        WHERE height BETWEEN ${startHeight} AND ${endHeight}
+        AND method ='TerminateSectors'
+      ),filtered_vm AS (
+        SELECT height, source, "from", value
+        FROM vm_messages
+        WHERE height BETWEEN ${startHeight} AND ${endHeight}
+        AND method = 0
+        AND "to" = 'f099'
+      )
+      SELECT
+        dgo."to",
+        SUM((
+          SELECT sum((s.value::int))
+          FROM jsonb_array_elements(pm.params->'Terminations') t,
+          jsonb_each_text(t->'Sectors') s
+          WHERE s.key = 'elemcount'
+        )) AS counts,
+        SUM(dgo.base_fee_burn + dgo.over_estimation_burn + dgo.miner_tip ) AS gas_fee,
+        SUM(COALESCE(vm.value, 0)) + SUM(COALESCE(vmm.value, 0)) AS burn
+      FROM
+        filtered_dgo dgo
+      INNER JOIN
+        filtered_pm pm
+          ON dgo.height = pm.height
+          AND dgo.cid = pm.cid
+      LEFT JOIN
+        filtered_vm vm
+          ON dgo.height = vm.height
+          AND dgo.cid = vm.source
+          AND dgo."to" = vm."from"
+      LEFT JOIN
+        filtered_vm vmm
+          ON dgo.height = vmm.height
+          AND dgo.cid = vmm.source
+          AND 'f05' = vmm."from"
+      GROUP BY
+        dgo."to"
+      ORDER BY
+        dgo."to"
+    `;
+    const result = await this.query<
+      {
+        to: string;
+        counts: number;
+        gas_fee: string;
+        burn: string;
+      }[]
+    >(SQL, []);
+    return result;
+  }
 }

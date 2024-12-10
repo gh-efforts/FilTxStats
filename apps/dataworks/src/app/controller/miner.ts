@@ -152,4 +152,9 @@ export class MinerController {
   async addMinerType(@Body(ALL) params: MinerDTO.AddMinerTypeDTO) {
     return this.service.addMinerType(params);
   }
+
+  @Get('/dead', { summary: '获取终止扇区的 miner数据' })
+  async getDeadMinerInfo(@Query(ALL) params: MinerDTO.DeadMinerDTO) {
+    return this.service.getDeadMinerInfo(params);
+  }
 }

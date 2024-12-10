@@ -15,8 +15,16 @@ import {
   UpdateMinerTypeDTO,
   AddMinerTypeDTO,
   RemoveMinerDTO,
+  DeadMinerDTO,
 } from '../model/dto/miner';
-import dayjs = require('dayjs');
+import * as dayjs from 'dayjs';
+import {
+  getHeightByTime,
+  bigAdd,
+  bigMul,
+  convertToFil,
+  formateStorageUnit,
+} from '@dws/utils';
 
 @Provide()
 export class MinerService extends BaseService<MinerEntity> {
@@ -169,6 +177,46 @@ export class MinerService extends BaseService<MinerEntity> {
 
   async addMinerType(params: AddMinerTypeDTO) {
     const res = await this.minerTypeMapping.saveNew(params);
+    return res;
+  }
+
+  // 统计全网终止扇区的 miner数据
+  async getDeadMinerInfo(params: DeadMinerDTO) {
+    const { date = dayjs().subtract(1, 'day').format('YYYY-MM-DD') } = params;
+
+    const startHeight = getHeightByTime(`${date} 00:00:00`);
+    const endHeight = getHeightByTime(`${date} 23:59:59`);
+
+    const stopSectorMiner = await this.lilyMapping.getStopSectorMiner(
+      startHeight,
+      endHeight
+    );
+
+    // 获取节点的sectorSize
+    const sectorSizes = await this.getMinerSectorSize({
+      miners: stopSectorMiner.map(item => item.to).join(','),
+    });
+
+    const res = {
+      deadMinerNum: stopSectorMiner.length, // 全网终结节点数量
+      sectorNum: '0', // 全网终结扇区数量
+      deadSectorPower: '0', // 全网终结扇区
+      deadBurn: '0', // 全网终结扇区惩罚
+      list: stopSectorMiner,
+    };
+
+    stopSectorMiner.forEach(item => {
+      const { sectorSize } = sectorSizes.find(
+        sectorSize => sectorSize.miner === item.to
+      );
+      res.sectorNum = bigAdd(res.sectorNum, item.counts).toString();
+      res.deadSectorPower = bigAdd(
+        res.deadSectorPower,
+        bigMul(formateStorageUnit(sectorSize, 'BYTE', 'TB'), item.counts) // 直接转换成TB
+      ).toString();
+      res.deadBurn = bigAdd(res.deadBurn, convertToFil(item.burn)).toFixed(4);
+    });
+
     return res;
   }
 }

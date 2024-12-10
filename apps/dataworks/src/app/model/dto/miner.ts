@@ -73,3 +73,8 @@ export class RemoveMinerDTO {
   @Rule(RuleType.string().required())
   miner: string;
 }
+
+export class DeadMinerDTO {
+  @Rule(RuleType.string().required())
+  date: string;
+}
