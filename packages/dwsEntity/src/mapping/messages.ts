@@ -1,4 +1,5 @@
 import { Provide } from '@midwayjs/core';
+import * as _ from 'lodash';
 
 import { MessagesEntity } from '@dws/entity';
 
