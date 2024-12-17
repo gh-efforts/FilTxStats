@@ -8,6 +8,7 @@ import { IBruceTaskBody } from '../app/model/dto/transaction';
   {
     removeOnComplete: true,
     removeOnFail: true,
+    delay: 0,
     attempts: 5,
     backoff: {
       type: 'fixed',

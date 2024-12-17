@@ -9,7 +9,7 @@ import { LarkSdk } from '@lark/core';
 @Processor('transaction', {
   removeOnComplete: true,
   removeOnFail: true,
-  attempts: 5,
+  attempts: 2,
   backoff: {
     type: 'fixed',
     delay: 1000 * 60,

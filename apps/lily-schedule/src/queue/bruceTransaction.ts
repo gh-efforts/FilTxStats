@@ -8,7 +8,8 @@ import { BruceService } from '../app/service/bruceService';
   {
     removeOnComplete: true,
     removeOnFail: true,
-    attempts: 5,
+    attempts: 2,
+    delay: 0,
     backoff: {
       type: 'fixed',
       delay: 1000 * 60,
