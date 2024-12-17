@@ -1,14 +1,14 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
-  tableName: 'actors',
+  tableName: 'messages',
   timestamps: false,
   paranoid: false,
   createdAt: true,
   updatedAt: false,
   deletedAt: false,
 })
-export class ActorsEntity extends Model {
+export class MessagesEntity extends Model {
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
@@ -21,18 +21,10 @@ export class ActorsEntity extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
-    field: 'address_id',
-    comment: '地址id',
-  })
-  addressId: string;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-    field: 'address',
+    field: 'cid',
     comment: '地址',
   })
-  address: string;
+  cid: string;
 
   @Column({
     type: DataType.INTEGER,
@@ -45,16 +37,32 @@ export class ActorsEntity extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
-    field: 'cid',
+    field: 'from',
+    comment: '地址id',
+  })
+  from: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    field: 'to',
     comment: '地址',
   })
-  cid: string;
+  to: string;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    field: 'method',
+    comment: '方法',
+  })
+  method: number;
 
   @Column({
     type: DataType.DECIMAL,
     allowNull: false,
-    field: 'balance',
-    comment: '余额',
+    field: 'value',
+    comment: '金额',
   })
-  balance: string;
+  value: string;
 }

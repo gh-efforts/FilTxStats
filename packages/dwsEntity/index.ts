@@ -18,6 +18,7 @@ import { WalletEntity } from './src/entity/wallet';
 import { WalletTypeEntity } from './src/entity/walletType';
 import { ActorsEntity } from './src/entity/actors';
 import { ExchangeAddressEntity } from './src/entity/exchangeAddress';
+import { MessagesEntity } from './src/entity/messages';
 
 import { TransactionSyncStatusEntity } from './src/entity/transactionSyncStatus';
 import { DerivedGasOutputsMapping } from './src/mapping/derivedGasOutputs';
@@ -44,6 +45,7 @@ import { GhAleoAddrMapping } from './src/mapping/ghAleoAddr';
 import { GhAleoAddrEntity } from './src/entity/ghAleoAddr';
 import { ActorsMapping } from './src/mapping/actors';
 import { ExchangeAddressMapping } from './src/mapping/exchangeAddress';
+import { MessagesMapping } from './src/mapping/messages';
 
 export {
   DerivedGasOutputsEntity,
@@ -90,4 +92,6 @@ export {
   ExchangeAddressEntity,
   ActorsMapping,
   ExchangeAddressMapping,
+  MessagesEntity,
+  MessagesMapping,
 };
