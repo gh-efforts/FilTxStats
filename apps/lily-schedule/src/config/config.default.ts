@@ -188,5 +188,9 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     clearRepeatJobWhenStart: true,
   };
 
+  config.bullBoard = {
+    basePath: '/ui',
+  };
+
   return config;
 };

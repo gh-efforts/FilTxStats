@@ -24,8 +24,10 @@ import * as lilyEntity from '@lily/entity';
 import { NotFoundFilter } from './filter/notfound';
 import { AccessLogMiddleware } from './middleware/accessLog';
 import { FormatMiddleware } from './middleware/format';
-import { JwtMiddleware } from './middleware/jwt';
+// import { JwtMiddleware } from './middleware/jwt';
 import { RequestIdMiddleware } from './middleware/requestId';
+import * as bullBoard from '@midwayjs/bull-board';
+
 const entity = entity => {
   const arr = [];
   Object.keys(entity).map(key => {
@@ -43,6 +45,7 @@ const entity = entity => {
     crossDomain,
     koa,
     bull,
+    bullBoard,
     { component: swagger, enabledEnvironment: ['local'] },
     redis,
     validate,
@@ -63,7 +66,7 @@ export class ContainerLifeCycle implements ILifeCycle {
       RequestIdMiddleware,
       AccessLogMiddleware,
       FormatMiddleware,
-      JwtMiddleware,
+      // JwtMiddleware,
     ]);
     this.app.useFilter([NotFoundFilter]);
   }

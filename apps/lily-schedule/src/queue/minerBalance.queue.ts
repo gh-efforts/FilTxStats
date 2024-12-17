@@ -34,6 +34,10 @@ export class MinerBalanceProcessor implements IProcessor {
   }
 
   async execute() {
+    if (process.env.REAL_ENV !== 'prod') {
+      this.logger.info(`${process.env.REAL_ENV}环境，不执行任务minerBalance`);
+      return;
+    }
     const { job } = this.ctx;
     try {
       await this.service.syncMinerBalance();

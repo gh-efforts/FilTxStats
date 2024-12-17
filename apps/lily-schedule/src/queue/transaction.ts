@@ -32,6 +32,10 @@ export class TransactionProcessor implements IProcessor {
   }
 
   async execute(params: TransactionSyncStatusEntity) {
+    if (process.env.REAL_ENV !== 'prod') {
+      this.logger.info(`${process.env.REAL_ENV}环境，不执行任务 transaction`);
+      return;
+    }
     const { job } = this.ctx;
     const { type } = params;
     try {
