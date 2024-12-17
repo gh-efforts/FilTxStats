@@ -9,6 +9,10 @@ import { MessageGasEconomyMapping } from './src/mapping/messageGasEconomy';
 import { NetworkMapping } from './src/mapping/network';
 import { ParsedMessagesMapping } from './src/mapping/parsedMessages';
 import { LilyVmMessagesMapping } from './src/mapping/vmMessages';
+import { MessagesMapping } from './src/mapping/messages';
+import { MessagesEntity } from './src/entity/messages';
+import { ActorsMapping } from './src/mapping/actors';
+import { ActorsEntity } from './src/entity/actors';
 
 export {
   DerivedGasOutputsEntity,
@@ -21,6 +25,10 @@ export {
   NetworkMapping,
   MessageGasEconomyMapping,
   MessaggeGasEconomyEntity,
+  MessagesMapping,
+  MessagesEntity,
+  ActorsMapping,
+  ActorsEntity,
 };
 
 export * from './src/comm/gasMethod';
