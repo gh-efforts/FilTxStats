@@ -58,5 +58,11 @@ export class ActorsEntity extends Model {
   })
   balance: string;
 
-  maxHeight?: number;
+  @Column({
+    type: DataType.TINYINT,
+    allowNull: false,
+    field: 'fill',
+    comment: '是否程序填充 0=>否；1=>是',
+  })
+  fill: number;
 }
