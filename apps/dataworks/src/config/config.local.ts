@@ -43,6 +43,14 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
         port: +process.env.PG_DATABASE_PORT,
         logging: false,
       },
+      lilybruse: {
+        database: process.env.PG_DATABASE_DATABASE,
+        username: process.env.PG_DATABASE_USERNAME,
+        password: process.env.PG_DATABASE_PASSWORD,
+        host: process.env.PG_DATABASE_HOST,
+        port: +process.env.PG_DATABASE_PORT,
+        logging: false,
+      },
     },
   };
 

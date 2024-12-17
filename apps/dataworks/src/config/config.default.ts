@@ -90,6 +90,10 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
         dialect: 'postgres',
         entities: entity(lilyEntity),
       },
+      lilybruse: {
+        dialect: 'postgres',
+        entities: entity(lilyEntity),
+      },
     },
     defaultDataSourceName: 'default',
   };
