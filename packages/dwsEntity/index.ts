@@ -16,6 +16,8 @@ import { MinerSnapshotEntity } from './src/entity/minerSnapshot';
 import { VmMessagesEntity } from './src/entity/vmMessages';
 import { WalletEntity } from './src/entity/wallet';
 import { WalletTypeEntity } from './src/entity/walletType';
+import { ActorsEntity } from './src/entity/actors';
+import { ExchangeAddressEntity } from './src/entity/exchangeAddress';
 
 import { TransactionSyncStatusEntity } from './src/entity/transactionSyncStatus';
 import { DerivedGasOutputsMapping } from './src/mapping/derivedGasOutputs';
@@ -40,6 +42,8 @@ import { SyncAleoTransferMapping } from './src/mapping/syncAleoTransfer';
 import { SyncAleoTransferEntity } from './src/entity/syncGhAleoTransfer';
 import { GhAleoAddrMapping } from './src/mapping/ghAleoAddr';
 import { GhAleoAddrEntity } from './src/entity/ghAleoAddr';
+import { ActorsMapping } from './src/mapping/actors';
+import { ExchangeAddressMapping } from './src/mapping/exchangeAddress';
 
 export {
   DerivedGasOutputsEntity,
@@ -82,4 +86,8 @@ export {
   SyncAleoTransferEntity,
   GhAleoAddrMapping,
   GhAleoAddrEntity,
+  ActorsEntity,
+  ExchangeAddressEntity,
+  ActorsMapping,
+  ExchangeAddressMapping,
 };
