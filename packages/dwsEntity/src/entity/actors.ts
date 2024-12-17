@@ -57,4 +57,6 @@ export class ActorsEntity extends Model {
     comment: '余额',
   })
   balance: string;
+
+  maxHeight?: number;
 }

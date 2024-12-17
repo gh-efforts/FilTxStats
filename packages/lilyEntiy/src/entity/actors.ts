@@ -64,4 +64,6 @@ export class ActorsEntity extends Model {
     allowNull: true,
   })
   codeCid: string;
+
+  maxHeight?: number;
 }
