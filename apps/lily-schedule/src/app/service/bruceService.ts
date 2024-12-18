@@ -205,12 +205,14 @@ export class BruceService extends BaseService<ActorsEntity> {
       order: [['height', 'asc']],
       raw: true,
     });
+    let maxHeight = actors[actors.length - 1].height;
     this.logger.info(
-      `syncLilyActors耗时: %s, %s,%s,%s,len=%d`,
+      `syncLilyActors耗时: %s, %s,%s,%s,%s,len=%d`,
       Date.now() - st,
       address,
       startHeight,
       endHeight,
+      maxHeight,
       (actors && actors.length) || 0
     );
 
@@ -228,9 +230,9 @@ export class BruceService extends BaseService<ActorsEntity> {
         fill: 0, //原始数据
       };
     });
-    //填充所有 gap
+    //填充所有 gap， 到最后一条后不能再填充； 因为后面的数据可能理解改变
     let preb = null;
-    for (let i = startHeight; i < endHeight; i++) {
+    for (let i = startHeight; i <= maxHeight; i++) {
       //判断该高度是否有数据
       let matchRow = actors.find(ac => ac.height == i);
       if (matchRow) {
