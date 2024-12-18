@@ -129,7 +129,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
         //应用日志没有 ctx，只有上下文日志才有
         enableJSON: true,
         enableFile: true,
-        enableConsole: true,
+        enableConsole: process.env.NODE_ENV != 'prod',
         jsonFormat: (info, meta) => {
           const { timestamp, message } = info;
           const { pid, level } = meta;
