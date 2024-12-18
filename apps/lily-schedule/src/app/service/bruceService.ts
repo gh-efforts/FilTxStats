@@ -201,9 +201,9 @@ export class BruceService extends BaseService<ActorsEntity> {
       endHeight,
       (actors && actors.length) || 0
     );
-    if (_.isEmpty(actors)) {
-      return;
-    }
+
+    //为空也不能返回，要补齐最新
+    actors = actors || [];
     let resultArr = actors.map(ac => {
       return {
         addressId: ac.id,
