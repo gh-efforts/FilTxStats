@@ -235,4 +235,57 @@ export class BruceService extends BaseService<ActorsEntity> {
       }
     );
   }
+
+  private _getMessagesWhere(param: any = {}) {
+    const where: any = {};
+
+    if (_.isEmpty(param)) {
+      return where;
+    }
+
+    const { heightRange, from, to, method, fromOrTo } = param;
+
+    if (heightRange) {
+      where.height = {
+        [Op.between]: heightRange,
+      };
+    }
+
+    if (from) {
+      where.from = from;
+    }
+
+    if (to) {
+      where.to = to;
+    }
+
+    if (method) {
+      where.method = method;
+    }
+
+    if (fromOrTo) {
+      where[Op.or] = {
+        from: fromOrTo,
+        to: fromOrTo,
+      };
+    }
+
+    return where;
+  }
+
+  // 分页查询messages
+  async getMessagesPage(param) {
+    const { page, limit } = param;
+
+    const offset = (page - 1) * limit;
+    const where = this._getMessagesWhere(param);
+    const res = await this.lilyMessagesMapping.getModel().findAndCountAll({
+      where,
+      limit,
+      offset: offset > 0 ? offset : 0,
+      order: [['height', 'desc']],
+      attributes: ['cid', 'height', 'from', 'to', 'method', 'value'],
+    });
+    return res;
+  }
 }

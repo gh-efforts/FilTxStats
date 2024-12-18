@@ -1,4 +1,5 @@
 import { Rule, RuleType } from '@midwayjs/validate';
+import { QueryParamDTO } from './base';
 
 export class SyncBaseDTO {
   @Rule(RuleType.array().items(RuleType.string()).optional())
@@ -37,4 +38,23 @@ export interface IActorGapFillBody {
   addressId: string;
   startHeight: number;
   endHeight: number;
+}
+
+export class GetMessagesPageDTO extends QueryParamDTO {
+  @Rule(
+    RuleType.array().items(RuleType.number().integer()).length(2).required()
+  )
+  heightRange: number[];
+
+  @Rule(RuleType.array().items(RuleType.string()).min(1).optional())
+  from: string[];
+
+  @Rule(RuleType.array().items(RuleType.string()).min(1).optional())
+  to: string[];
+
+  @Rule(RuleType.array().items(RuleType.number().integer()).min(1).optional())
+  method: number[];
+
+  @Rule(RuleType.array().items(RuleType.string()).min(1).optional())
+  fromOrTo: string[];
 }
