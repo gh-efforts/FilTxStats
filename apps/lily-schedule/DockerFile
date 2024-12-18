@@ -44,6 +44,7 @@ RUN npm install pm2 --registry=https://registry.npmmirror.com/  -g
 
 EXPOSE 7001
 
+echo "npx online"
 # ENTRYPOINT ["npm", "run", "online"]
 ENTRYPOINT ["npx", "turbo", "run", "online", "--filter=lily-schedule"]
 
