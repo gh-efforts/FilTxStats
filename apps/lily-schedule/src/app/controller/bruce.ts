@@ -32,11 +32,11 @@ export class BruceController {
     return true;
   }
 
-  @Post('/start/message')
-  async startMessage(@Body(ALL) body: SyncReqParam) {
-    await this.bruceService.startMessages(body);
-    return true;
-  }
+  // @Post('/start/message')
+  // async startMessage(@Body(ALL) body: SyncReqParam) {
+  //   await this.bruceService.startMessages(body);
+  //   return true;
+  // }
 
   @Post('/page/messages')
   async getMessagesPage(@Body(ALL) body: GetMessagesPageDTO) {
