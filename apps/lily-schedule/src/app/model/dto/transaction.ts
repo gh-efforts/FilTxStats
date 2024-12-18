@@ -46,11 +46,11 @@ export class GetMessagesPageDTO extends QueryParamDTO {
   )
   heightRange: number[];
 
-  @Rule(RuleType.array().items(RuleType.string()).min(1).optional())
-  from: string[];
+  @Rule(RuleType.string().optional())
+  from: string;
 
-  @Rule(RuleType.array().items(RuleType.string()).min(1).optional())
-  to: string[];
+  @Rule(RuleType.string().optional())
+  to: string;
 
   @Rule(RuleType.array().items(RuleType.number().integer()).min(1).optional())
   method: number[];
