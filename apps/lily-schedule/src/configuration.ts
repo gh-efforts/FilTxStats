@@ -69,6 +69,8 @@ export class ContainerLifeCycle implements ILifeCycle {
       // JwtMiddleware,
     ]);
     this.app.useFilter([NotFoundFilter]);
+
+    console.log(this.app.getConfig('sequelize'));
   }
 
   async onServerReady(container: IMidwayContainer): Promise<void> {}
