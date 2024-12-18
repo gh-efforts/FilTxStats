@@ -202,8 +202,10 @@ export class BruceService extends BaseService<ActorsEntity> {
       (actors && actors.length) || 0
     );
 
-    //为空也不能返回，要补齐最新
-    actors = actors || [];
+    //为空也不能补，不能确定是 lily 没同步到数据，还是 actor 确实没变化
+    if (_.isEmpty(actors)) {
+      return;
+    }
     let resultArr = actors.map(ac => {
       return {
         addressId: ac.id,
