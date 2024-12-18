@@ -5,7 +5,7 @@ import { IBruceTaskBody } from '../app/model/dto/transaction';
 
 @Processor(
   'bruceBalance',
-  5,
+  1, //并发数限制 1
   {
     removeOnComplete: true,
     removeOnFail: true,

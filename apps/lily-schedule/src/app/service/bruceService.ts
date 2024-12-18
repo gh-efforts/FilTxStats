@@ -176,6 +176,10 @@ export class BruceService extends BaseService<ActorsEntity> {
 
   /**
    * 同步lily_actors
+   *
+   * actor 要 fill，前后页存在关联关系,不能够并发
+   * 历史数据（3484079 and 4535279）只能手动导出后，脚本处理转化成 mysql insert导入
+   * 4535280之后数据依靠程序同步
    */
   public async syncLilyActors(task: IBruceTaskBody) {
     let { addressId, startHeight, endHeight } = task;
@@ -192,17 +196,48 @@ export class BruceService extends BaseService<ActorsEntity> {
     if (_.isEmpty(actors)) {
       return;
     }
-    //先全部写入
-    await this.dwsActorMapping.getModel().bulkCreate(
-      actors.map(ac => {
-        return {
-          ...ac,
-        };
-      }),
-      {
-        updateOnDuplicate: ['balance'],
+    let resultArr = actors.map(ac => {
+      return {
+        addressId: ac.id,
+        address,
+        height: ac.height,
+        cid: ac.codeCid,
+        balance: ac.balance,
+        fill: 0, //原始数据
+      };
+    });
+    //填充所有 gap
+    let preb = null;
+    for (let i = startHeight; i < endHeight; i++) {
+      //判断该高度是否有数据
+      let matchRow = actors.find(ac => ac.height == i);
+      if (matchRow) {
+        preb = matchRow.balance;
+        continue;
       }
-    );
+      if (!preb) {
+        //需要去库里找最近一条 balance
+        let pre = await this.getLastestBalance(addressId, i);
+        if (!pre) {
+          //库里一条数据没有
+          continue;
+        }
+        preb = pre;
+      }
+      //没有数据，填充
+      resultArr.push({
+        addressId,
+        address,
+        height: i,
+        cid: '',
+        balance: preb,
+        fill: 1, //填充数据
+      });
+    }
+    //先全部写入
+    await this.dwsActorMapping.getModel().bulkCreate(resultArr, {
+      updateOnDuplicate: ['balance'],
+    });
   }
 
   /**

@@ -3,25 +3,16 @@ import { Inject } from '@midwayjs/core';
 import { IBruceTaskBody } from '../app/model/dto/transaction';
 import { BruceService } from '../app/service/bruceService';
 
-@Processor(
-  'bruceTransaction',
-  {
-    removeOnComplete: true,
-    removeOnFail: true,
-    attempts: 2,
-    delay: 0,
-    backoff: {
-      type: 'fixed',
-      delay: 1000 * 60,
-    },
+@Processor('bruceTransaction', {
+  removeOnComplete: true,
+  removeOnFail: true,
+  attempts: 2,
+  delay: 0,
+  backoff: {
+    type: 'fixed',
+    delay: 1000 * 60,
   },
-  {
-    limiter: {
-      max: 1,
-      duration: 1000 * 60,
-    },
-  }
-)
+})
 export class BruceTransactionProcessor implements IProcessor {
   @Inject()
   logger;
@@ -37,7 +28,8 @@ export class BruceTransactionProcessor implements IProcessor {
   async execute(params: IBruceTaskBody) {
     const { job } = this.ctx;
     try {
-      await this.service.syncLilyMessages(params);
+      this.logger.info('params:', params); //同步
+      // await this.service.syncLilyMessages(params);
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
