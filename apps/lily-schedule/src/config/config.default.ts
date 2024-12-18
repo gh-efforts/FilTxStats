@@ -113,12 +113,18 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
   };
 
   config.midwayLogger = {
+    default: {
+      //clients 配置段中的每个对象都是一个独立的日志配置项，其配置会和 default 段落合并后创建 logger 实例。
+      maxFiles: '7d',
+      level: 'info',
+      consoleLevel: 'warn',
+    },
     clients: {
-      default: {
-        fileLogName: 'insight',
-        level: 'info',
-        consoleLevel: 'info',
-      },
+      // default: {
+      //   fileLogName: 'insight',
+      //   level: 'info',
+      //   consoleLevel: 'warn',
+      // },
       appLogger: {
         //应用日志没有 ctx，只有上下文日志才有
         enableJSON: true,

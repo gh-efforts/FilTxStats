@@ -193,6 +193,14 @@ export class BruceService extends BaseService<ActorsEntity> {
       order: [['height', 'asc']],
       raw: true,
     });
+    this.logger.info(
+      `syncLilyActors耗时: %s, %s,%s,%s,len=%d`,
+      Date.now() - st,
+      address,
+      startHeight,
+      endHeight,
+      (actors && actors.length) || 0
+    );
     if (_.isEmpty(actors)) {
       return;
     }
