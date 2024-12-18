@@ -106,18 +106,18 @@ export class MinerBalanceService extends BaseService<MinerBalanceEntity> {
                 //lily没查到，有可能矿工数据比较老旧;
                 let chainRet = await this.lotus.stateGetActor(node.name);
                 balance = (chainRet && chainRet.Balance) || '0';
-                this.logger.info(
-                  'lotus补齐balance,name=%s,balace=%s',
-                  node.name,
-                  balance
-                );
+                // this.logger.info(
+                //   'lotus补齐balance,name=%s,balace=%s',
+                //   node.name,
+                //   balance
+                // );
               } else {
                 balance = (res?.balance || 0).toString();
-                this.logger.info(
-                  'lily查出balance,name=%s,balace=%s',
-                  node.name,
-                  balance
-                );
+                // this.logger.info(
+                //   'lily查出balance,name=%s,balace=%s',
+                //   node.name,
+                //   balance
+                // );
               }
               return {
                 miner: node.name,
