@@ -40,7 +40,7 @@ COPY --from=installer /home/apps/lily-schedule ./apps/lily-schedule
 
 ENV TZ="Asia/Shanghai"
 
-RUN npm install --registry=https://registry.npmmirror.com/  -g turbo@1.6.3
+RUN npm install turbo@1.6.3  -g 
 RUN npm install pm2 --registry=https://registry.npmmirror.com/  -g
 
 EXPOSE 7001
