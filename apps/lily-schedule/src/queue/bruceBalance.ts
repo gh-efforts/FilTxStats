@@ -5,6 +5,7 @@ import { IBruceTaskBody } from '../app/model/dto/transaction';
 
 @Processor(
   'bruceBalance',
+  5,
   {
     removeOnComplete: true,
     removeOnFail: true,
@@ -16,9 +17,8 @@ import { IBruceTaskBody } from '../app/model/dto/transaction';
     },
   },
   {
-    limiter: {
-      max: 1,
-      duration: 1000 * 60,
+    settings: {
+      // retryProcessDelay: 0, //_processJobOnNextTick 错误重试setTimeout延时
     },
   }
 )
