@@ -45,7 +45,7 @@ const entity = entity => {
     crossDomain,
     koa,
     bull,
-    bullBoard,
+    { component: bullBoard, enabledEnvironment: ['local'] },
     { component: swagger, enabledEnvironment: ['local'] },
     redis,
     validate,
