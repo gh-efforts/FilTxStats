@@ -205,14 +205,12 @@ export class BruceService extends BaseService<ActorsEntity> {
       order: [['height', 'asc']],
       raw: true,
     });
-    let maxHeight = actors[actors.length - 1].height;
     this.logger.info(
-      `syncLilyActors耗时: %s, %s,%s,%s,%s,len=%d`,
+      `syncLilyActors耗时: %s, %s,%s,%s,len=%d`,
       Date.now() - st,
       address,
       startHeight,
       endHeight,
-      maxHeight,
       (actors && actors.length) || 0
     );
 
@@ -220,6 +218,9 @@ export class BruceService extends BaseService<ActorsEntity> {
     if (_.isEmpty(actors)) {
       return;
     }
+    let maxHeight = actors[actors.length - 1].height;
+    this.logger.info(`maxHeight: %s`, maxHeight);
+
     let resultArr = actors.map(ac => {
       return {
         addressId: ac.id,
