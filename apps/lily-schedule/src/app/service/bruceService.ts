@@ -18,7 +18,8 @@ import {
   SyncReqParam,
 } from '../model/dto/transaction';
 import * as dwsentity from '@dws/entity';
-import * as lilyentity from '@lily/entity';
+import * as lilymessageentity from '@lilymessages/entity';
+import { bigMul } from 'happy-node-utils';
 
 @Provide()
 export class BruceService extends BaseService<ActorsEntity> {
@@ -303,7 +304,7 @@ export class BruceService extends BaseService<ActorsEntity> {
       return where;
     }
 
-    const { heightRange, from, to, method, fromOrTo } = param;
+    const { heightRange, from, to, method, fromOrTo, gtValue } = param;
 
     if (heightRange) {
       where.height = {
@@ -321,6 +322,12 @@ export class BruceService extends BaseService<ActorsEntity> {
 
     if (method) {
       where.method = method;
+    }
+
+    if (gtValue) {
+      where.value = {
+        [Op.gt]: bigMul(gtValue, 1e18).toString(),
+      };
     }
 
     if (fromOrTo) {

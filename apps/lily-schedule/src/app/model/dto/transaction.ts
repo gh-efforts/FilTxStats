@@ -57,4 +57,7 @@ export class GetMessagesPageDTO extends QueryParamDTO {
 
   @Rule(RuleType.array().items(RuleType.string()).min(1).optional())
   fromOrTo: string[];
+
+  @Rule(RuleType.number().optional())
+  gtValue: number;
 }
