@@ -71,11 +71,11 @@ pipeline{
                     git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
                     sh 'sed -i "s/cryptomint_HHJKKK/$APP_NAME/g" lark.sh'
                     if(BRANCH_NAME != 'lily-schedule-master') {
-                        sh 'bash lark.sh test'
+                        envir = BRANCH_NAME.substring(14)
                     } else {
-                        sh 'bash lark.sh prod'
+                        envir = 'prod'
                     }
-
+                    sh 'bash lark.sh $envir'
                 }
             }
         }
