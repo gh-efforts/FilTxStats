@@ -43,4 +43,16 @@ export class BruceController {
     const res = await this.bruceService.getMessagesPage(body);
     return res;
   }
+
+  @Post('/monitor_big_messages')
+  async monitorBigMessages() {
+    const res = await this.bruceService.monitorBigMessages();
+    return res;
+  }
+
+  @Post('/monitor_daily_total')
+  async monitorDailyTotal() {
+    const res = await this.bruceService.monitorDailyTotal();
+    return res;
+  }
 }

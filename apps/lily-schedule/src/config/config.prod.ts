@@ -117,5 +117,9 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     defaultConcurrency: 10,
   };
 
+  config.larkConfig = {
+    larkToBruceUrl: process.env.LARK_TO_BRUCE_URL,
+  };
+
   return config;
 };

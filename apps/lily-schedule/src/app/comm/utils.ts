@@ -1,4 +1,4 @@
-import { Config, Singleton } from '@midwayjs/core';
+import { Config, Singleton, HttpClient } from '@midwayjs/core';
 import * as dayjs from 'dayjs';
 import { bigDiv } from 'happy-node-utils';
 import { isString } from 'lodash';
@@ -56,6 +56,45 @@ class Utils {
         dayjs(timeStr).diff(dayjs(this.timeAndHeight.time), 'second') / 30
       ) + this.timeAndHeight.height;
     return height;
+  }
+
+  public async httpRequest(
+    {
+      url,
+      method,
+      data,
+      options = {},
+    }: {
+      url: string;
+      method: 'POST' | 'GET';
+      data?: any;
+      options?: any;
+    },
+    retries = 3
+  ) {
+    const httpClient = new HttpClient();
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        const result = await httpClient.request(url, {
+          method,
+          data,
+          dataType: 'json',
+          contentType: 'json', // 发送的 post 为 json
+          ...options,
+        });
+        return result;
+      } catch (error) {
+        // 判断是否为EAI_AGAIN错误，如果是则进行重试
+        if (error.message.includes('EAI_AGAIN') && i < retries - 1) {
+          // 等待2s
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
+        }
+
+        throw error; // 达到最大重试次数，抛出错误
+      }
+    }
   }
 }
 

@@ -1,10 +1,14 @@
-import { ActorsEntity, ExchangeAddressMapping } from '@dws/entity';
+import {
+  ActorsEntity,
+  ExchangeAddressMapping,
+  GlobalConfigMapping,
+} from '@dws/entity';
 import { Config, Init, Inject, Provide, Logger } from '@midwayjs/core';
 import * as dayjs from 'dayjs';
 import { Op, col, fn } from 'sequelize';
 import { BaseService } from '../../core/baseService';
 import { ILogger } from '@midwayjs/logger';
-import { getHeightByTime } from '@dws/utils';
+import { getHeightByTime, transferFilValue } from '@dws/utils';
 import * as bull from '@midwayjs/bull';
 import _ = require('lodash');
 import {
@@ -39,10 +43,18 @@ export class BruceService extends BaseService<ActorsEntity> {
   @Inject()
   bullFramework: bull.Framework;
 
+  @Inject()
+  globalConfigMapping: GlobalConfigMapping;
+
   @Config('lotusConfig')
   lotusConfig: {
     url: string;
     token: string;
+  };
+
+  @Config('larkConfig')
+  larkConfig: {
+    larkToBruceUrl: string;
   };
 
   @Logger()
@@ -332,5 +344,147 @@ export class BruceService extends BaseService<ActorsEntity> {
       attributes: ['cid', 'height', 'from', 'to', 'method', 'value'],
     });
     return res;
+  }
+
+  // 监控大额交易
+  async monitorBigMessages() {
+    const [config, allAddress] = await Promise.all([
+      this.globalConfigMapping
+        .getModel()
+        .findOne({ where: { name: 'Bruce监控' } }),
+      this.exchangeAddressMapping.getModel().findAll(),
+    ]);
+
+    const {
+      singleMax,
+      heightDelay,
+      heightCycle,
+    }: { singleMax: number; heightDelay: number; heightCycle: number } =
+      JSON.parse(config.value);
+
+    // 获取当前时间的高度
+    const now = dayjs().format('YYYY-MM-DD HH:mm:ss');
+    const nowHeight = getHeightByTime(now);
+
+    // 计算要查询的高度区间
+    const heightRange = [
+      nowHeight - heightDelay - heightCycle + 1,
+      nowHeight - heightDelay,
+    ];
+
+    const where = this._getMessagesWhere({
+      heightRange,
+      fromOrTo: allAddress.map(item => item.address),
+      method: [0],
+    });
+
+    const messages = await this.lilyMessagesMapping
+      .getModel()
+      .findAll({ where });
+
+    let content = '';
+    for (const message of messages) {
+      const value = transferFilValue(message.value);
+      if (Number(value) < singleMax) {
+        continue;
+      }
+      content += `[${message.cid}](https://www.filutils.com/zh/message/${message.cid}) 金额：${value}\n`;
+    }
+
+    if (content) {
+      this.utils.httpRequest({
+        url: this.larkConfig.larkToBruceUrl,
+        method: 'POST',
+        data: this._larkCardTemplate({
+          title: '大额交易提醒',
+          content,
+        }),
+      });
+    }
+
+    return true;
+  }
+
+  // 监控每日累计交易
+  async monitorDailyTotal() {
+    const [config, allAddress] = await Promise.all([
+      this.globalConfigMapping
+        .getModel()
+        .findOne({ where: { name: 'Bruce监控' } }),
+      this.exchangeAddressMapping.getModel().findAll(),
+    ]);
+
+    const { dailyTotal }: { dailyTotal: number } = JSON.parse(config.value);
+
+    // 获取当前时间的高度
+    const date = dayjs().format('YYYY-MM-DD');
+    // 计算要查询的高度区间
+    const heightRange = [
+      getHeightByTime(date + ' 00:00:00'),
+      getHeightByTime(date + ' 23:59:59'),
+    ];
+
+    const where = this._getMessagesWhere({
+      heightRange,
+      to: allAddress.map(item => item.address),
+      method: [0],
+    });
+
+    const toValue = await await this.lilyMessagesMapping.getModel().findAll({
+      attributes: ['to', [fn('SUM', col('value')), 'value']],
+      where,
+      group: ['to'],
+    });
+
+    let content = '';
+    for (const item of toValue) {
+      const volume = transferFilValue(item.value);
+
+      // 判断volume是否大于singleMax
+      if (Number(volume) > dailyTotal) {
+        content += `[${item.to}](https://www.filutils.com/zh/account/${item.to}) 今日累计充值 ${volume}\n`;
+      }
+    }
+
+    if (content) {
+      this.utils.httpRequest({
+        url: this.larkConfig.larkToBruceUrl,
+        method: 'POST',
+        data: this._larkCardTemplate({
+          title: '充值累计提醒',
+          content,
+        }),
+      });
+    }
+
+    return true;
+  }
+
+  private _larkCardTemplate({ title, template = 'red', content = '' }) {
+    const cardTemplate = {
+      msg_type: 'interactive',
+      card: {
+        config: {
+          wide_screen_mode: true,
+        },
+        header: {
+          template: template,
+          title: {
+            tag: 'plain_text',
+            content: title,
+          },
+        },
+        elements: [
+          {
+            tag: 'div',
+            text: {
+              content: content,
+              tag: 'lark_md',
+            },
+          },
+        ],
+      },
+    };
+    return cardTemplate;
   }
 }

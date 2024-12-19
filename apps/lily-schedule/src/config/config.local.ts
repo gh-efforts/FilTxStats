@@ -84,5 +84,9 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     password: process.env.QINIUYUN_PASSWORD,
   };
 
+  config.larkConfig = {
+    larkToBruceUrl: process.env.LARK_TO_BRUCE_URL,
+  };
+
   return config;
 };
