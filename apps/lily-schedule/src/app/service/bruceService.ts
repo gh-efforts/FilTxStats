@@ -127,7 +127,7 @@ export class BruceService extends BaseService<ActorsEntity> {
           addressId: target.addressId,
           address: target.address,
         };
-        bullQueue.add(param, { priority: 1, jobId });
+        await bullQueue.add(param, { priority: endh, jobId }); //高度越高优先级越高
       }
       this.logger.info(`addToTaskQueue完成,%s, %j`, queueName, target);
     });
