@@ -32,6 +32,7 @@ export interface IBruceTaskBody {
   addressId: string;
   startHeight: number;
   endHeight: number;
+  lastPage: boolean;
 }
 
 export interface IActorGapFillBody {

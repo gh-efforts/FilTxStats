@@ -112,7 +112,9 @@ export class BruceService extends BaseService<ActorsEntity> {
     //将任务推送到queue
     const bullQueue = this.bullFramework.ensureQueue(queueName);
 
-    targets.forEach(async target => {
+    for (let i = 0, ilen = targets.length; i < ilen; i++) {
+      let target = targets[i];
+
       let { endHeight, startHeight, addressId } = target;
       //按照 500 分页
       const len = Math.ceil((endHeight - startHeight) / 500);
@@ -127,6 +129,7 @@ export class BruceService extends BaseService<ActorsEntity> {
           endHeight: endh,
           addressId: target.addressId,
           address: target.address,
+          lastPage: i == ilen - 1, //标记最后一页
         };
         await bullQueue.add(param, { priority: endh, jobId }); //高度越高优先级越高
       }
@@ -195,7 +198,8 @@ export class BruceService extends BaseService<ActorsEntity> {
    * 4535280之后数据依靠程序同步
    */
   public async syncLilyActors(task: IBruceTaskBody) {
-    let { addressId, startHeight, endHeight } = task;
+    let { addressId, startHeight, endHeight, address, lastPage } = task;
+    let st = Date.now();
     let actors = await this.lilyActorsMapping.getModel().findAll({
       where: {
         id: addressId,
@@ -220,7 +224,13 @@ export class BruceService extends BaseService<ActorsEntity> {
       return;
     }
     let maxHeight = actors[actors.length - 1].height;
-    this.logger.info(`maxHeight: %s`, maxHeight);
+    let fillHeight = lastPage ? maxHeight : endHeight;
+    this.logger.info(
+      `addr:%s,maxHeight:%s, fillheight:%s`,
+      address,
+      maxHeight,
+      fillHeight
+    );
 
     let resultArr = actors.map(ac => {
       return {
@@ -234,7 +244,7 @@ export class BruceService extends BaseService<ActorsEntity> {
     });
     //填充所有 gap， 到最后一条后不能再填充； 因为后面的数据可能理解改变
     let preb = null;
-    for (let i = startHeight; i <= maxHeight; i++) {
+    for (let i = startHeight; i <= fillHeight; i++) {
       //判断该高度是否有数据
       let matchRow = actors.find(ac => ac.height == i);
       if (matchRow) {
