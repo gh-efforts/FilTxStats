@@ -7,7 +7,7 @@ import {
 import { LilyMapping } from '@lily/entity';
 import { LotusSdk } from '@lotus/http';
 import * as bull from '@midwayjs/bull';
-import { Config, Init, Inject, Provide } from '@midwayjs/core';
+import { Config, ILogger, Init, Inject, Logger, Provide } from '@midwayjs/core';
 import { BaseService } from '../../core/baseService';
 import {
   SectorSizeDTO,
@@ -25,11 +25,15 @@ import {
   convertToFil,
   formateStorageUnit,
 } from '@dws/utils';
+import { isEmpty } from 'lodash';
 
 @Provide()
 export class MinerService extends BaseService<MinerEntity> {
   @Inject()
   bullFramework: bull.Framework;
+
+  @Logger()
+  logger: ILogger;
 
   @Inject()
   mapping: MinerMapping;
@@ -191,12 +195,6 @@ export class MinerService extends BaseService<MinerEntity> {
       startHeight,
       endHeight
     );
-
-    // 获取节点的sectorSize
-    const sectorSizes = await this.getMinerSectorSize({
-      miners: stopSectorMiner.map(item => item.to).join(','),
-    });
-
     const res = {
       deadMinerNum: stopSectorMiner.length, // 全网终结节点数量
       sectorNum: '0', // 全网终结扇区数量
@@ -204,6 +202,18 @@ export class MinerService extends BaseService<MinerEntity> {
       deadBurn: '0', // 全网终结扇区惩罚
       list: stopSectorMiner,
     };
+
+    if (isEmpty(stopSectorMiner)) {
+      //有可能为空，全网一天内没有终结数据
+      this.logger.info(`stopSectorMiner empty,%s,%s`, startHeight, endHeight);
+      return res;
+    }
+    this.logger.info(`stopSectorMiner size=%d`, stopSectorMiner.length);
+
+    // 获取节点的sectorSize
+    const sectorSizes = await this.getMinerSectorSize({
+      miners: stopSectorMiner.map(item => item.to).join(','),
+    });
 
     stopSectorMiner.forEach(item => {
       const { sectorSize } = sectorSizes.find(
