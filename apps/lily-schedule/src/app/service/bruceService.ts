@@ -77,6 +77,7 @@ export class BruceService extends BaseService<ActorsEntity> {
       let exchangeAddresses = await this.exchangeAddressMapping
         .getModel()
         .findAll({ raw: true });
+      //先查redis 最新结果
       //查询当前最新 actor 高度
       let nowAddrHeight = await this.dwsActorMapping.getModel().findAll({
         attributes: [[fn('max', col('height')), 'maxHeight']],
@@ -87,25 +88,51 @@ export class BruceService extends BaseService<ActorsEntity> {
         },
         group: ['id'],
       });
-      const oneYearAgoHeight = getHeightByTime('2023-12-17 00:00:00');
       const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss'));
       //组合最新地址
-      targets = exchangeAddresses.map(addr => {
-        return {
+      targets = [];
+      for (let addr of exchangeAddresses) {
+        let redisHeight = await this.redisUtils.getString(
+          `branceBalance:taskHeight:${addr.addressId}`
+        );
+        let startHeight = redisHeight ? Number(redisHeight) : 0;
+        let dbHeight = 0;
+        if (!startHeight) {
+          //redis 没有读库
+          dbHeight = nowAddrHeight.find(
+            addrHeight => addrHeight.addressId === addr.addressId
+          )?.maxHeight;
+          startHeight = dbHeight;
+        }
+        this.logger.info(
+          `startActorBalance addr:%s,redisH:%s, dbH:%s, startH:%s, nowH:%s`,
+          addr.address,
+          redisHeight,
+          dbHeight,
+          startHeight,
+          nowHeight
+        );
+        targets.push({
           addressId: addr.addressId,
           address: addr.address,
-          startHeight:
-            nowAddrHeight.find(
-              addrHeight => addrHeight.addressId === addr.addressId
-            )?.maxHeight || oneYearAgoHeight,
+          startHeight,
           endHeight: nowHeight,
-        };
-      });
+        });
+      }
     }
-    this.logger.info(`syncActorBalance: %j`, targets);
+    this.logger.info(`startActorBalance targets: %j`, targets);
 
     //将任务推送到queue
     await this.addToTaskQueue(targets, 'bruceBalance');
+
+    //将最新 height 写入 redis，避免正在执行中； 又被调用添加了重复任务，会导致数据错乱
+    for (let target of targets) {
+      let t = target;
+      await this.redisUtils.setValue(
+        `branceBalance:taskHeight:${t.addressId}`,
+        t.endHeight.toString()
+      );
+    }
 
     return true;
   }
@@ -140,56 +167,24 @@ export class BruceService extends BaseService<ActorsEntity> {
     return true;
   }
 
-  /**
-   * 分析交易，拆分任务，放到 bull 队列
-   * @returns
-   */
-  public async startMessages(opts: SyncReqParam) {
-    let targets: ISyncTarget[] = opts.targets;
-    if (_.isEmpty(opts)) {
-      //查询交易所地址
-      let exchangeAddresses = await this.exchangeAddressMapping
-        .getModel()
-        .findAll({ raw: true });
-      let maxHeightMap: Map<string, number> = new Map();
-      for (let addr of exchangeAddresses) {
-        //查询当前最新 actor 高度
-        let nowOneMax = await this.dwsMessageMapping.getModel().findOne({
-          attributes: ['height'],
-          where: {
-            [Op.or]: {
-              from: {
-                [Op.in]: addr.address,
-              },
-              to: {
-                [Op.in]: addr.address,
-              },
-            },
-          },
-          order: [['height', 'desc']],
-          raw: true,
-        });
-        maxHeightMap.set(addr.address, nowOneMax.height);
-      }
-
-      const oneYearAgoHeight = getHeightByTime('2023-12-17 00:00:00');
-      const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss'));
-      //组合最新地址
-      targets = exchangeAddresses.map(addr => {
-        return {
-          addressId: addr.addressId,
-          address: addr.address,
-          startHeight: maxHeightMap.get(addr.address) || oneYearAgoHeight,
-          endHeight: nowHeight,
-        };
-      });
+  private async getLastestBalance(
+    addressId: string,
+    sheight: number
+  ): Promise<string> {
+    let pre = await this.dwsActorMapping.getModel().findOne({
+      where: {
+        addressId,
+        height: {
+          [Op.lt]: sheight,
+        },
+      },
+      order: [['height', 'desc']],
+      raw: true,
+    });
+    if (pre) {
+      return pre.balance;
     }
-    this.logger.info(`syncMessages: %j`, targets);
-
-    //将任务推送到queue
-    await this.addToTaskQueue(targets, 'bruceTransaction');
-
-    return true;
+    return null;
   }
 
   /**

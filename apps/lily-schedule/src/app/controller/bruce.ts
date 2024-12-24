@@ -14,6 +14,7 @@ import {
   GetMessagesPageDTO,
   SumBalanceGroupHeightDTO,
 } from '../model/dto/transaction';
+import { RedisService } from '@midwayjs/redis';
 
 @Controller('/f')
 export class BruceController {
@@ -23,10 +24,18 @@ export class BruceController {
   @Inject()
   bullFramework: bull.Framework;
 
+  @Inject()
+  private redis: RedisService;
+
   @Get('/bull/clear')
   async clearBull(@Query('queueName') queueName: string) {
     let queue = await this.bullFramework.ensureQueue(queueName);
     await queue.clean(0);
+    //去掉 taskkey
+    let taskRKeys = await this.redis.keys('branceBalance:taskHeight:*');
+    for (let rk of taskRKeys) {
+      await this.redis.del(rk);
+    }
     return true;
   }
 
