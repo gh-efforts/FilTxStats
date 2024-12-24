@@ -21,7 +21,7 @@ export function getTimeByHeight(
 }
 
 // 根据时间获取对应高度
-export function getHeightByTime(timeStr: string) {
+export function getHeightByTime(timeStr: string | Date) {
   const height =
     Math.floor(
       dayjs(timeStr).diff(dayjs('2023-01-01 00:00:00'), 'second') / 30
