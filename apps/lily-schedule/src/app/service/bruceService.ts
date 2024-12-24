@@ -8,7 +8,7 @@ import * as dayjs from 'dayjs';
 import { Op, col, fn } from 'sequelize';
 import { BaseService } from '../../core/baseService';
 import { ILogger } from '@midwayjs/logger';
-import { getHeightByTime, transferFilValue } from '@dws/utils';
+import { getHeightByTime, getTimeByHeight, transferFilValue } from '@dws/utils';
 import * as bull from '@midwayjs/bull';
 import _ = require('lodash');
 import {
@@ -19,7 +19,9 @@ import {
 } from '../model/dto/transaction';
 import * as dwsentity from '@dws/entity';
 import * as lilymessageentity from '@lilymessages/entity';
-import { bigAdd, bigMul } from 'happy-node-utils';
+import { bigMul } from 'happy-node-utils';
+import MyError from '../comm/myError';
+import BigNumber from 'bignumber.js';
 
 @Provide()
 export class BruceService extends BaseService<ActorsEntity> {
@@ -348,6 +350,153 @@ export class BruceService extends BaseService<ActorsEntity> {
     }
 
     return where;
+  }
+
+  /**
+   * 将高度归属到某个时间区间
+   * 如果步长是一天，则返回 height 所在那一天零点的高度值
+   * @param height
+   * @param heightCycle
+   */
+  private getStartPointByHeightCycle(height: number, heightCycle: number) {
+    let date = dayjs(getTimeByHeight(height)).toDate();
+    let ret: number = 0;
+    let start: Date = null;
+    switch (heightCycle) {
+      case 1:
+        start = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate(),
+          date.getHours(),
+          date.getMinutes(),
+          date.getSeconds()
+        );
+        break; //秒
+      case 2:
+        start = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate(),
+          date.getHours(),
+          date.getMinutes()
+        );
+        break; //分
+      case 120:
+        start = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate(),
+          date.getHours()
+        );
+        break; //时
+      case 2880:
+        start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        break; //天
+      default:
+        throw new MyError(`非法刻度, ${heightCycle}`);
+    }
+    ret = getHeightByTime(start);
+    return ret;
+  }
+
+  /**
+   * 获得刻度表
+   * @param heightRange
+   * @param heightCycle
+   * @param nowHeight
+   */
+  private getKeDuHeights(
+    heightRange: number[],
+    heightCycle: number,
+    nowHeight: number
+  ): number[] {
+    let ret: number[] = [];
+    let maxHeight = Math.max(heightRange[1], nowHeight);
+    let minHeight = Math.min(heightRange[0], nowHeight);
+    while (minHeight <= maxHeight) {
+      ret.push(this.getStartPointByHeightCycle(minHeight, heightCycle));
+      minHeight += heightCycle;
+    }
+    return ret;
+  }
+
+  /**
+   * 统计净流入流出
+   * 接口有点慢，数据在几十万条的级别
+   */
+  async listInOutByMessage(
+    addressIds: string[],
+    timeRange: string[],
+    heightCycle: number, //步长
+    nowHeight: number //当前高度
+  ) {
+    const heightRange = [
+      getHeightByTime(timeRange[0]),
+      getHeightByTime(timeRange[1]),
+    ];
+    if (!nowHeight) {
+      nowHeight = heightRange[1];
+    }
+    let st = Date.now();
+    //直接查出所有数据
+    let ret = await this.lilyMessagesMapping.getModel().findAll({
+      attributes: ['from', 'to', 'value', 'height'],
+      where: {
+        height: {
+          [Op.between]: heightRange,
+        },
+        method: [0, 3844450837],
+        [Op.or]: {
+          from: addressIds,
+          to: addressIds,
+        },
+      },
+      order: [['height', 'desc']],
+      raw: true,
+    });
+    if (_.isEmpty(ret)) {
+      return [];
+    }
+    this.logger.info(`listInOutByMessage sql duration: %d`, Date.now() - st);
+    st = Date.now();
+    //直接累加所有数据
+    let inMap: Map<number, BigNumber> = new Map();
+    let outMap: Map<number, BigNumber> = new Map();
+    let addressSet: Set<string> = new Set(addressIds);
+
+    for (let i = 0, ilen = ret.length; i < ilen; i++) {
+      let row = ret[i];
+      let height = row.height;
+      let value = row.value;
+      let from = row.from;
+      let to = row.to;
+      let rangeHeight = this.getStartPointByHeightCycle(height, heightCycle);
+      if (addressSet.has(from) && !addressSet.has(to)) {
+        //转出
+        let nv = outMap.get(rangeHeight);
+        outMap.set(rangeHeight, nv ? nv.plus(value) : new BigNumber(value));
+      } else if (!addressSet.has(from) && addressSet.has(to)) {
+        //转入
+        let nv = inMap.get(rangeHeight);
+        inMap.set(rangeHeight, nv ? nv.plus(value) : new BigNumber(value));
+      } else {
+        //内部转账不计算
+        continue;
+      }
+    }
+    //组装结果返回
+    let kds = this.getKeDuHeights(heightRange, heightCycle, nowHeight);
+    let arr = kds.map(kd => {
+      return {
+        height: kd,
+        time: getTimeByHeight(kd),
+        in: inMap.get(kd) || '0',
+        out: outMap.get(kd) || '0',
+      };
+    });
+    this.logger.info(`listInOutByMessage js duration: %d`, Date.now() - st);
+    return arr;
   }
 
   // 分页查询messages

@@ -70,7 +70,7 @@ export class ContainerLifeCycle implements ILifeCycle {
     ]);
     this.app.useFilter([NotFoundFilter]);
 
-    console.log(this.app.getConfig('sequelize'));
+    // console.log(this.app.getConfig('sequelize'));
   }
 
   async onServerReady(container: IMidwayContainer): Promise<void> {}

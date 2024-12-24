@@ -9,7 +9,11 @@ import {
 } from '@midwayjs/core';
 import { BruceService } from '../service/bruceService';
 import * as bull from '@midwayjs/bull';
-import { SyncReqParam, GetMessagesPageDTO } from '../model/dto/transaction';
+import {
+  SyncReqParam,
+  GetMessagesPageDTO,
+  SumBalanceGroupHeightDTO,
+} from '../model/dto/transaction';
 
 @Controller('/f')
 export class BruceController {
@@ -41,6 +45,17 @@ export class BruceController {
   @Post('/page/messages')
   async getMessagesPage(@Body(ALL) body: GetMessagesPageDTO) {
     const res = await this.bruceService.getMessagesPage(body);
+    return res;
+  }
+
+  @Post('/list/in_out_flow')
+  async listInOutFlow(@Body(ALL) body: SumBalanceGroupHeightDTO) {
+    const res = await this.bruceService.listInOutByMessage(
+      body.addressId,
+      body.timeRange,
+      body.heightCycle,
+      body.nowHeight
+    );
     return res;
   }
 

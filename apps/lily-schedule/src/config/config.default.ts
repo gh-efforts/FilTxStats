@@ -117,7 +117,7 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
       //clients 配置段中的每个对象都是一个独立的日志配置项，其配置会和 default 段落合并后创建 logger 实例。
       maxFiles: '7d',
       level: 'info',
-      consoleLevel: 'warn',
+      consoleLevel: process.env.REAL_ENV == 'prod' ? 'warn' : 'info',
     },
     clients: {
       // default: {

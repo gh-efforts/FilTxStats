@@ -41,6 +41,20 @@ export interface IActorGapFillBody {
   endHeight: number;
 }
 
+export class SumBalanceGroupHeightDTO {
+  @Rule(RuleType.array().items(RuleType.string()).min(1).required())
+  addressId: string[];
+
+  @Rule(RuleType.array().items(RuleType.string()).length(2).required())
+  timeRange: string[];
+
+  @Rule(RuleType.number().integer().required())
+  heightCycle: number;
+
+  @Rule(RuleType.number().integer().optional())
+  nowHeight: number;
+}
+
 export class GetMessagesPageDTO extends QueryParamDTO {
   @Rule(
     RuleType.array().items(RuleType.number().integer()).length(2).required()
