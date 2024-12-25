@@ -401,6 +401,12 @@ export class BruceService extends BaseService<ActorsEntity> {
       content += `[${message.cid}](https://www.filutils.com/zh/message/${message.cid}) 金额：${value}\n`;
     }
 
+    this.logger.info(
+      `监控大额交易, 当前时间: ${now}, 高度区间: ${heightRange}, 查询结果: ${JSON.stringify(
+        messages
+      )}, content 内容: ${content}, webhook: ${this.larkConfig.larkToBruceUrl}`
+    );
+
     if (content) {
       this.utils.httpRequest({
         url: this.larkConfig.larkToBruceUrl,
