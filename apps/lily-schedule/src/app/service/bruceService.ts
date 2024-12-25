@@ -407,8 +407,8 @@ export class BruceService extends BaseService<ActorsEntity> {
     nowHeight: number
   ): number[] {
     let ret: number[] = [];
-    let maxHeight = Math.max(heightRange[1], nowHeight);
-    let minHeight = Math.min(heightRange[0], nowHeight);
+    let maxHeight = Math.min(heightRange[1], nowHeight);
+    let minHeight = heightRange[0];
     while (minHeight <= maxHeight) {
       ret.push(this.getStartPointByHeightCycle(minHeight, heightCycle));
       minHeight += heightCycle;
