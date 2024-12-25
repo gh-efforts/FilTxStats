@@ -398,7 +398,9 @@ export class BruceService extends BaseService<ActorsEntity> {
       if (Number(value) < singleMax) {
         continue;
       }
-      content += `[${message.cid}](https://www.filutils.com/zh/message/${message.cid}) 金额：${value}\n`;
+      content += `[${message.cid}](https://www.filutils.com/zh/message/${
+        message.cid
+      }) 金额：${bigMul(value, 1).toFixed(2)}\n`;
     }
 
     this.logger.info(
@@ -456,11 +458,31 @@ export class BruceService extends BaseService<ActorsEntity> {
     for (const item of toValue) {
       const volume = transferFilValue(item.value);
 
-      // 判断volume是否大于singleMax
-      if (Number(volume) > dailyTotal) {
-        content += `[${item.to}](https://www.filutils.com/zh/account/${item.to}) 今日累计充值 ${volume}\n`;
+      // 判断volume是否小于等于singleMax
+      if (Number(volume) <= dailyTotal) {
+        continue;
       }
+
+      // 判断to是否在redis中
+      const key = `monitor_daily_total:${date}:${item.to}`;
+      const cache = await this.redisUtils.getString(key);
+
+      if (cache) {
+        continue;
+      }
+
+      await this.redisUtils.setValue(key, '1', 86400);
+
+      content += `[${item.to}](https://www.filutils.com/zh/account/${
+        item.to
+      }) 今日累计充值 ${bigMul(volume, 1).toFixed(2)}\n`;
     }
+
+    this.logger.info(
+      `监控大额交易, 当前时间: ${date}, 高度区间: ${heightRange}, 查询结果: ${JSON.stringify(
+        toValue
+      )}, content 内容: ${content}, webhook: ${this.larkConfig.larkToBruceUrl}`
+    );
 
     if (content) {
       this.utils.httpRequest({
