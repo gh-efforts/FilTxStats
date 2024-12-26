@@ -19,7 +19,7 @@ import {
 } from '../model/dto/transaction';
 import * as dwsentity from '@dws/entity';
 import * as lilymessageentity from '@lilymessages/entity';
-import { bigMul } from 'happy-node-utils';
+import { bigAdd, bigMul } from 'happy-node-utils';
 
 @Provide()
 export class BruceService extends BaseService<ActorsEntity> {
@@ -358,11 +358,11 @@ export class BruceService extends BaseService<ActorsEntity> {
 
   // 监控大额交易
   async monitorBigMessages() {
-    const [config, allAddress] = await Promise.all([
+    const [config, addressObj] = await Promise.all([
       this.globalConfigMapping
         .getModel()
         .findOne({ where: { name: 'Bruce监控' } }),
-      this.exchangeAddressMapping.getModel().findAll(),
+      this.exchangeAddressMapping.getObj(),
     ]);
 
     const {
@@ -382,9 +382,10 @@ export class BruceService extends BaseService<ActorsEntity> {
       nowHeight - heightDelay,
     ];
 
+    const addresses = Object.keys(addressObj);
     const where = this._getMessagesWhere({
       heightRange,
-      fromOrTo: allAddress.map(item => item.address),
+      to: addresses,
       method: [0],
     });
 
@@ -398,9 +399,19 @@ export class BruceService extends BaseService<ActorsEntity> {
       if (Number(value) < singleMax) {
         continue;
       }
-      content += `[${message.cid}](https://www.filutils.com/zh/message/${
+
+      const { exchange, addressName } = addressObj[message.to];
+
+      content += `[${exchange}${addressName}](https://www.filutils.com/zh/account/${addressName}) [${
         message.cid
-      }) 金额：${bigMul(value, 1).toFixed(2)}\n`;
+      }](https://www.filutils.com/zh/message/${message.cid}) 金额：${bigMul(
+        value,
+        1
+      ).toFormat(0, {
+        decimalSeparator: '.',
+        groupSeparator: ',',
+        groupSize: 3,
+      })} FIL\n`;
     }
 
     this.logger.info(
@@ -414,7 +425,7 @@ export class BruceService extends BaseService<ActorsEntity> {
         url: this.larkConfig.larkToBruceUrl,
         method: 'POST',
         data: this._larkCardTemplate({
-          title: '大额交易提醒',
+          title: '大额交易流入提醒',
           content,
         }),
       });
@@ -425,63 +436,72 @@ export class BruceService extends BaseService<ActorsEntity> {
 
   // 监控每日累计交易
   async monitorDailyTotal() {
-    const [config, allAddress] = await Promise.all([
-      this.globalConfigMapping
-        .getModel()
-        .findOne({ where: { name: 'Bruce监控' } }),
-      this.exchangeAddressMapping.getModel().findAll(),
-    ]);
+    const config = await this.globalConfigMapping
+      .getModel()
+      .findOne({ where: { name: 'Bruce监控' } });
 
     const { dailyTotal }: { dailyTotal: number } = JSON.parse(config.value);
 
     // 获取当前时间的高度
-    const date = dayjs().format('YYYY-MM-DD');
+    const today = dayjs().format('YYYY-MM-DD');
+    const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
     // 计算要查询的高度区间
     const heightRange = [
-      getHeightByTime(date + ' 00:00:00'),
-      getHeightByTime(date + ' 23:59:59'),
+      getHeightByTime(yesterday + ' 08:00:00'),
+      getHeightByTime(today + ' 08:00:00'),
     ];
 
-    const where = this._getMessagesWhere({
-      heightRange,
-      to: allAddress.map(item => item.address),
-      method: [0],
-    });
+    // 获取交易所列表
+    const exchangeList = await this.exchangeAddressMapping.getExchangeList();
 
-    const toValue = await await this.lilyMessagesMapping.getModel().findAll({
-      attributes: ['to', [fn('SUM', col('value')), 'value']],
-      where,
-      group: ['to'],
-    });
-
+    // 遍历交易所
     let content = '';
-    for (const item of toValue) {
-      const volume = transferFilValue(item.value);
+    for (const exchange of exchangeList) {
+      const [collects, colds] = await Promise.all([
+        this.exchangeAddressMapping.getAddressList({ type: 1, exchange }), // 归集钱包
+        this.exchangeAddressMapping.getAddressList({ type: 2, exchange }), // 冷钱包
+      ]);
 
-      // 判断volume是否小于等于singleMax
-      if (Number(volume) <= dailyTotal) {
+      const where = this._getMessagesWhere({
+        heightRange,
+        fromOrTo: [...collects, ...colds],
+        method: [0],
+      });
+
+      const messages = await this.lilyMessagesMapping.getModel().findAll({
+        where,
+        attributes: ['cid', 'height', 'from', 'to', 'method', 'value'],
+      });
+
+      // 遍历message
+      let totalValue = '0';
+      for (const message of messages) {
+        const { from, to } = message;
+
+        // 如果from是归集钱包，to是冷钱包，就跳过
+        if (collects.includes(from) && colds.includes(to)) {
+          continue;
+        }
+
+        // 统计净值
+        totalValue = bigAdd(totalValue, message.value).toString();
+      }
+
+      // 如果净值超过dailyTotal，则加入content
+      const valueFil = transferFilValue(totalValue);
+      if (Number(valueFil) < dailyTotal) {
         continue;
       }
 
-      // 判断to是否在redis中
-      const key = `monitor_daily_total:${date}:${item.to}`;
-      const cache = await this.redisUtils.getString(key);
-
-      if (cache) {
-        continue;
-      }
-
-      await this.redisUtils.setValue(key, '1', 86400);
-
-      content += `[${item.to}](https://www.filutils.com/zh/account/${
-        item.to
-      }) 今日累计充值 ${bigMul(volume, 1).toFixed(2)}\n`;
+      content += `${exchange} 净值增量 ${bigMul(valueFil, 1).toFormat(0, {
+        decimalSeparator: '.',
+        groupSeparator: ',',
+        groupSize: 3,
+      })} FIL\n`;
     }
 
     this.logger.info(
-      `监控大额交易, 当前时间: ${date}, 高度区间: ${heightRange}, 查询结果: ${JSON.stringify(
-        toValue
-      )}, content 内容: ${content}, webhook: ${this.larkConfig.larkToBruceUrl}`
+      `每日净值增量提醒, 当前时间: ${today}, 高度区间: ${heightRange}, content 内容: ${content}, webhook: ${this.larkConfig.larkToBruceUrl}`
     );
 
     if (content) {
@@ -489,7 +509,7 @@ export class BruceService extends BaseService<ActorsEntity> {
         url: this.larkConfig.larkToBruceUrl,
         method: 'POST',
         data: this._larkCardTemplate({
-          title: '充值累计提醒',
+          title: '每日净值增量提醒',
           content,
         }),
       });
