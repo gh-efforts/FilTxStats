@@ -554,9 +554,9 @@ export class BruceService extends BaseService<ActorsEntity> {
         continue;
       }
 
-      const { exchange, addressName } = addressObj[message.to];
+      const { exchange, addressName, address } = addressObj[message.to];
 
-      content += `[${exchange}${addressName}](https://www.filutils.com/zh/account/${addressName}) [${
+      content += `[${exchange}${addressName}](https://www.filutils.com/zh/account/${address}) [${
         message.cid
       }](https://www.filutils.com/zh/message/${message.cid}) 金额：${bigMul(
         value,
