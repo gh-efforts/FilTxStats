@@ -45,6 +45,12 @@ export class BruceController {
     return true;
   }
 
+  @Post('/check/sync/actor/delay')
+  async checkActorSyncDelay() {
+    await this.bruceService.checkActorSyncDelay();
+    return true;
+  }
+
   // @Post('/start/message')
   // async startMessage(@Body(ALL) body: SyncReqParam) {
   //   await this.bruceService.startMessages(body);

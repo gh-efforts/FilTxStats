@@ -67,6 +67,29 @@ export class BruceService extends BaseService<ActorsEntity> {
   async initMethod() {}
 
   /**
+   * 同步 actor 落后很多高度就报警
+   * 说明同步出现问题
+   */
+  public async checkActorSyncDelay() {
+    const maxHeight = await this.dwsActorMapping.getModel().findOne({
+      attributes: ['addressId', 'height'],
+      order: [['height', 'desc']],
+      raw: true,
+    });
+    const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss'));
+    this.logger.info(
+      'checkActorSyncDelay, maxHeight:%s, nowHeight:%s',
+      nowHeight,
+      maxHeight.height
+    );
+    if (nowHeight - maxHeight.height > 1 * 2 * 60 * 3) {
+      //2小时没更新
+      throw new MyError(`syncActorSyncDelay 同步 actor 落后很多高度`);
+    }
+    return true;
+  }
+
+  /**
    * 分析交易，拆分任务，放到 bull 队列
    * @returns
    */
@@ -92,9 +115,10 @@ export class BruceService extends BaseService<ActorsEntity> {
       //组合最新地址
       targets = [];
       for (let addr of exchangeAddresses) {
-        let redisHeight = await this.redisUtils.getString(
-          `branceBalance:taskHeight:${addr.addressId}`
-        );
+        // let redisHeight = await this.redisUtils.getString(
+        //   `branceBalance:taskHeight:${addr.addressId}`
+        // );
+        let redisHeight = null; //lily有延迟，查最新的一直返回 0
         let startHeight = redisHeight ? Number(redisHeight) : 0;
         let dbHeight = 0;
         if (!startHeight) {
@@ -126,13 +150,13 @@ export class BruceService extends BaseService<ActorsEntity> {
     await this.addToTaskQueue(targets, 'bruceBalance');
 
     //将最新 height 写入 redis，避免正在执行中； 又被调用添加了重复任务，会导致数据错乱
-    for (let target of targets) {
-      let t = target;
-      await this.redisUtils.setValue(
-        `branceBalance:taskHeight:${t.addressId}`,
-        t.endHeight.toString()
-      );
-    }
+    // for (let target of targets) {
+    //   let t = target;
+    //   await this.redisUtils.setValue(
+    //     `branceBalance:taskHeight:${t.addressId}`,
+    //     t.endHeight.toString()
+    //   );
+    // }
 
     return true;
   }
