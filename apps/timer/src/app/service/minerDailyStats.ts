@@ -4,6 +4,7 @@ import {
   MinerDailyStatsEntity,
   MinerDailyStatsMapping,
   MinerMapping,
+  GasDetailMapping,
 } from '@dws/entity';
 import { IGasFeeByDateRes, PixiuSdk } from '@pixiu/http';
 import * as dayjs from 'dayjs';
@@ -16,6 +17,9 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
 
   @Inject()
   minerMapping: MinerMapping;
+
+  @Inject()
+  gasDetailMapping: GasDetailMapping;
 
   @Config('pixiuConfig.url')
   pixiuUrl;
@@ -33,30 +37,40 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
     });
   }
 
+  // 和insight服务的getMinerGasfees方法一致
   private _getMinerGas(minerGas: IGasFeeByDateRes[], method?: number) {
     return minerGas.map(item => {
       const {
         minerGasDetails,
-        minerPenalty = 0,
+        // minerPenalty = 0,
         PreAndProveBatchBurn = [],
       } = item;
       let gas = 0;
-      minerGasDetails?.forEach(gasDetail => {
-        //  miner gas 费
-        if (!method && gasDetail.method !== 5) {
-          gas += Number(gasDetail.gas_fee);
-        }
-        // method = 5, 为扇区的 wp 消耗
-        if (method && gasDetail.method === method) {
-          gas += Number(gasDetail.gas_fee);
-        }
-      });
 
-      PreAndProveBatchBurn?.forEach(gasDetail => {
-        gas += Number(gasDetail.gas_fee);
-      });
+      if (minerGasDetails && minerGasDetails.length > 0) {
+        minerGasDetails.forEach(gasDetail => {
+          //  miner gas 费
+          if (!method && gasDetail.method !== 5) {
+            gas += Number(gasDetail.gas_fee);
+          }
+          // method = 5, 为扇区的 wp 消耗
+          if (method && gasDetail.method === method) {
+            gas += Number(gasDetail.gas_fee);
+          }
+        });
+      }
 
-      gas += Number(minerPenalty);
+      if (
+        method != 5 && // wp消耗不算上PreAndProveBatchBurn
+        PreAndProveBatchBurn &&
+        PreAndProveBatchBurn.length > 0
+      ) {
+        PreAndProveBatchBurn.forEach(gasDetail => {
+          gas += Number(gasDetail?.gas_fee);
+        });
+      }
+
+      // gas += Number(minerPenalty);
 
       return {
         ...item,
@@ -100,16 +114,27 @@ export class MinerDailyService extends BaseService<MinerDailyStatsEntity> {
         dateAt: date,
       };
     });
-    await this.mapping.bulkCreateMinerDailyStats(minerDailyStats, {
-      updateOnDuplicate: [
-        'reward',
-        'powerIncrease24H',
-        'gas',
-        'windowPost',
-        'pledgeConsume',
-        'pledgeReturn',
-        'updatedAt',
-      ],
-    });
+
+    await Promise.all([
+      this.mapping.bulkCreateMinerDailyStats(minerDailyStats, {
+        updateOnDuplicate: [
+          'reward',
+          'powerIncrease24H',
+          'gas',
+          'windowPost',
+          'pledgeConsume',
+          'pledgeReturn',
+          'updatedAt',
+        ],
+      }),
+      this.gasDetailMapping.bulkCreate(
+        gasFee.map(it => {
+          return { dateAt: it.date, miner: it.minerId, detail: it };
+        }),
+        {
+          updateOnDuplicate: ['dateAt', 'miner', 'detail'],
+        }
+      ),
+    ]);
   }
 }

@@ -149,7 +149,7 @@ export class PixiuSdk {
     minerIds: string[],
     date: string
   ): Promise<IGasFeeByDateRes[]> {
-    return this.requestChunk('/v2/miner/gasFeeByDate', minerIds, 5, {
+    return this.requestChunk('/v2/miner/gasFeeDetailByDate', minerIds, 5, {
       date,
     });
   }

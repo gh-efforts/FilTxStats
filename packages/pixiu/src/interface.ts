@@ -23,7 +23,12 @@ export interface IGasFeeByDateRes {
   date: string;
   minerPenalty: string;
   minerGasDetails:
-    | { method: 5 | 4 | 6 | 7 | 25 | 26; gas_fee: string }[]
+    | {
+        method: 5 | 4 | 6 | 7 | 25 | 26;
+        gas_fee: string;
+        from: string;
+        id: string;
+      }[]
     | null;
   PreAndProveBatchBurn:
     | { method: 5 | 4 | 6 | 7 | 25 | 26; gas_fee: string }[]

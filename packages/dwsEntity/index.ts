@@ -20,6 +20,7 @@ import { ActorsEntity } from './src/entity/actors';
 import { ExchangeAddressEntity } from './src/entity/exchangeAddress';
 import { MessagesEntity } from './src/entity/messages';
 import { GlobalConfigEntity } from './src/entity/globalConfig';
+import { GasDetailEntity } from './src/entity/gasDetail';
 
 import { TransactionSyncStatusEntity } from './src/entity/transactionSyncStatus';
 import { DerivedGasOutputsMapping } from './src/mapping/derivedGasOutputs';
@@ -48,6 +49,7 @@ import { ActorsMapping } from './src/mapping/actors';
 import { ExchangeAddressMapping } from './src/mapping/exchangeAddress';
 import { MessagesMapping } from './src/mapping/messages';
 import { GlobalConfigMapping } from './src/mapping/globalConfig';
+import { GasDetailMapping } from './src/mapping/gasDetail';
 
 export {
   DerivedGasOutputsEntity,
@@ -98,4 +100,6 @@ export {
   MessagesMapping,
   GlobalConfigEntity,
   GlobalConfigMapping,
+  GasDetailEntity,
+  GasDetailMapping,
 };
