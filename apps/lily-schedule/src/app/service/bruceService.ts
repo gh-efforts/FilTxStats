@@ -335,12 +335,16 @@ export class BruceService extends BaseService<ActorsEntity> {
       return where;
     }
 
-    const { heightRange, from, to, method, fromOrTo, gtValue } = param;
+    const { heightRange, from, to, method, fromOrTo, gtValue, cid } = param;
 
     if (heightRange) {
       where.height = {
         [Op.between]: heightRange,
       };
+    }
+
+    if (cid) {
+      where.cid = cid;
     }
 
     if (from) {
@@ -574,7 +578,9 @@ export class BruceService extends BaseService<ActorsEntity> {
     let content = '';
     for (const message of messages) {
       const value = transferFilValue(message.value);
-      if (Number(value) < singleMax) {
+
+      // 金额没超限制 或 from地址为记录的归集类型地址
+      if (Number(value) < singleMax || addressObj[message.from]?.type == 1) {
         continue;
       }
 
