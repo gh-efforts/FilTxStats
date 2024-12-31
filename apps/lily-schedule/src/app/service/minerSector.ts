@@ -61,7 +61,7 @@ export class MinerSectorService extends BaseService<MinerSectorEntity> {
   async syncMinersSector(params?: { endAt: string }) {
     const miners = await this.getMinerIds();
     let { startAt, endAt } = await getYesterdayTime();
-    if (params.endAt) {
+    if (params?.endAt) {
       endAt = params.endAt;
     }
 
