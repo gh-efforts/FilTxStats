@@ -445,6 +445,32 @@ export class BruceService extends BaseService<ActorsEntity> {
   }
 
   /**
+   * 查询所有交易信息
+   * from， to 必须用长地址查
+   * @param heightRange
+   * @param addressIds
+   * @returns
+   */
+  private async _listAllMsg(heightRange: number[], addressIds: string[]) {
+    let ret = await this.lilyMessagesMapping.getModel().findAll({
+      attributes: ['from', 'to', 'value', 'height'],
+      where: {
+        height: {
+          [Op.between]: heightRange,
+        },
+        method: [0, 3844450837],
+        [Op.or]: {
+          from: addressIds,
+          to: addressIds,
+        },
+      },
+      order: [['height', 'desc']],
+      raw: true,
+    });
+    return ret;
+  }
+
+  /**
    * 统计净流入流出
    * 接口有点慢，数据在几十万条的级别
    */
@@ -463,21 +489,7 @@ export class BruceService extends BaseService<ActorsEntity> {
     }
     let st = Date.now();
     //直接查出所有数据
-    let ret = await this.lilyMessagesMapping.getModel().findAll({
-      attributes: ['from', 'to', 'value', 'height'],
-      where: {
-        height: {
-          [Op.between]: heightRange,
-        },
-        method: [0, 3844450837],
-        [Op.or]: {
-          from: addressIds,
-          to: addressIds,
-        },
-      },
-      order: [['height', 'desc']],
-      raw: true,
-    });
+    let ret = await this._listAllMsg(heightRange, addressIds);
     if (_.isEmpty(ret)) {
       return [];
     }
@@ -618,6 +630,40 @@ export class BruceService extends BaseService<ActorsEntity> {
     return true;
   }
 
+  /**
+   * 累加拆分 in out
+   * @param ret
+   */
+  private _plusInOut(
+    ret: lilymessageentity.MessagesEntity[],
+    addressArr: string[]
+  ) {
+    let inv: BigNumber = new BigNumber(0);
+    let out: BigNumber = new BigNumber(0);
+    let addressSet: Set<string> = new Set(addressArr);
+    for (let i = 0, ilen = ret.length; i < ilen; i++) {
+      let row = ret[i];
+      let value = row.value;
+      let from = row.from;
+      let to = row.to;
+      if (addressSet.has(from) && !addressSet.has(to)) {
+        //转出
+        out = out.plus(value);
+      } else if (!addressSet.has(from) && addressSet.has(to)) {
+        //转入
+        inv = inv.plus(value);
+      } else {
+        //内部转账不计算
+        continue;
+      }
+    }
+    return {
+      in: inv,
+      out: out,
+      jing: inv.minus(out),
+    };
+  }
+
   // 监控每日累计交易
   async monitorDailyTotal() {
     const config = await this.globalConfigMapping
@@ -633,51 +679,45 @@ export class BruceService extends BaseService<ActorsEntity> {
     const heightRange = [
       getHeightByTime(yesterday + ' 08:00:00'),
       getHeightByTime(today + ' 08:00:00'),
+      // getHeightByTime(yesterday + ' 00:00:00'),
+      // getHeightByTime(today + ' 00:00:00'),
     ];
 
     // 获取交易所列表
-    const exchangeList = await this.exchangeAddressMapping.getExchangeList();
+    const exchangeList = await this.exchangeAddressMapping.getModel().findAll();
+    let binanAddrs = exchangeList.filter(e => e.exchange == '币安');
+    let okxAddrs = exchangeList.filter(e => e.exchange == 'OKX');
+    let allAddr = exchangeList.map(e => e.address);
+
+    //查询交易
+    let ret = await this._listAllMsg(heightRange, allAddr);
+    let binanJing = this._plusInOut(
+      ret,
+      binanAddrs.map(e => e.address)
+    );
+    let okxJing = this._plusInOut(
+      ret,
+      okxAddrs.map(e => e.address)
+    );
 
     // 遍历交易所
     let content = '';
-    for (const exchange of exchangeList) {
-      const [collects, colds] = await Promise.all([
-        this.exchangeAddressMapping.getAddressList({ type: 1, exchange }), // 归集钱包
-        this.exchangeAddressMapping.getAddressList({ type: 2, exchange }), // 冷钱包
-      ]);
 
-      const where = this._getMessagesWhere({
-        heightRange,
-        fromOrTo: [...collects, ...colds],
-        method: [0],
-      });
+    // 如果净值超过dailyTotal，则加入content
+    const binanFil = transferFilValue(
+      binanJing.jing.absoluteValue().toString()
+    );
+    if (Number(binanFil) >= dailyTotal) {
+      content += `币安 净值增量 ${bigMul(binanFil, 1).toFormat(0, {
+        decimalSeparator: '.',
+        groupSeparator: ',',
+        groupSize: 3,
+      })} FIL\n`;
+    }
 
-      const messages = await this.lilyMessagesMapping.getModel().findAll({
-        where,
-        attributes: ['cid', 'height', 'from', 'to', 'method', 'value'],
-      });
-
-      // 遍历message
-      let totalValue = '0';
-      for (const message of messages) {
-        const { from, to } = message;
-
-        // 如果from是归集钱包，to是冷钱包，就跳过
-        if (collects.includes(from) && colds.includes(to)) {
-          continue;
-        }
-
-        // 统计净值
-        totalValue = bigAdd(totalValue, message.value).toString();
-      }
-
-      // 如果净值超过dailyTotal，则加入content
-      const valueFil = transferFilValue(totalValue);
-      if (Number(valueFil) < dailyTotal) {
-        continue;
-      }
-
-      content += `${exchange} 净值增量 ${bigMul(valueFil, 1).toFormat(0, {
+    const okxFil = transferFilValue(okxJing.jing.absoluteValue().toString());
+    if (Number(binanFil) >= dailyTotal) {
+      content += `OKX 净值增量 ${bigMul(okxFil, 1).toFormat(0, {
         decimalSeparator: '.',
         groupSeparator: ',',
         groupSize: 3,
