@@ -377,14 +377,14 @@ export class BruceService extends BaseService<ActorsEntity> {
 
   /**
    * 将高度归属到某个时间区间
-   * 如果步长是一天，则返回 height 所在那一天零点的高度值
+   * 如果步长是一天，则查询前一天8点到后一天8点的数据
    * @param height
    * @param heightCycle
    */
   private getStartPointByHeightCycle(height: number, heightCycle: number) {
     let date = dayjs(getTimeByHeight(height)).toDate();
     let ret: number = 0;
-    let start: Date = null;
+    let start: Date | string = null;
     switch (heightCycle) {
       case 1:
         start = new Date(
@@ -413,9 +413,18 @@ export class BruceService extends BaseService<ActorsEntity> {
           date.getHours()
         );
         break; //时
-      case 2880:
-        start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      case 2880: {
+        // 如果以天为周期，则只查询8点时的数据
+        if (dayjs().hour() < 8) {
+          start = dayjs(getTimeByHeight(height)).format('YYYY-MM-DD 08:00:00');
+        } else {
+          start = dayjs(getTimeByHeight(height))
+            .add(1, 'day')
+            .format('YYYY-MM-DD 08:00:00');
+        }
+
         break; //天
+      }
       default:
         throw new MyError(`非法刻度, ${heightCycle}`);
     }
