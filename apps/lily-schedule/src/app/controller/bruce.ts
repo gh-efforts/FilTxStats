@@ -85,4 +85,15 @@ export class BruceController {
     const res = await this.bruceService.monitorDailyTotal();
     return res;
   }
+
+  @Get('/test/calculate/jing', {
+    summary: '测试用，计算某个高度范围内净流入量',
+  })
+  async calInOutByRange(
+    @Query('sh') sh: number,
+    @Query('eh') eh: number,
+    @Query('addrstr') addstr: string
+  ) {
+    return await this.bruceService.calInOutByRange(sh, eh, addstr.split(','));
+  }
 }

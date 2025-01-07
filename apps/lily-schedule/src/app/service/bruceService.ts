@@ -654,6 +654,21 @@ export class BruceService extends BaseService<ActorsEntity> {
   }
 
   /**
+   * 测试用，计算某个高度范围内净流入量
+   * @param sh
+   * @param eh
+   * @param addrs  长地址
+   */
+  public async calInOutByRange(sh: number, eh: number, addrs: string[]) {
+    let ret = await this._listAllMsg([sh, eh], addrs);
+    let inOutInfo = this._plusInOut(ret, addrs);
+    return {
+      inOutInfo,
+      formatJing: transferFilValue(inOutInfo.jing.toString()),
+    };
+  }
+
+  /**
    * 累加拆分 in out
    * @param ret
    */
