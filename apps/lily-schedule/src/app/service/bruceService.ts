@@ -418,6 +418,7 @@ export class BruceService extends BaseService<ActorsEntity> {
           date.minute(),
           date.second()
         );
+        ret = getHeightByTime(start);
         break; //秒
       case 2:
         start = new Date(
@@ -427,19 +428,21 @@ export class BruceService extends BaseService<ActorsEntity> {
           date.hour(),
           date.minute()
         );
+        ret = getHeightByTime(start);
         break; //分
       case 120:
         start = new Date(date.year(), date.month(), date.date(), date.hour());
+        ret = getHeightByTime(start);
         break; //时
       case 2880: {
         start = new Date(date.year(), date.month(), date.date());
-
+        ret = this._getHeightByUtcTime(start);
         break; //天
       }
       default:
-        throw new MyError(`非法刻度, ${heightCycle}`);
+        throw new Error(`非法刻度, ${heightCycle}`);
     }
-    ret = this._getHeightByUtcTime(start);
+
     return ret;
   }
 
