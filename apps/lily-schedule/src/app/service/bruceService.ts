@@ -440,7 +440,7 @@ export class BruceService extends BaseService<ActorsEntity> {
         break; //天
       }
       default:
-        throw new Error(`非法刻度, ${heightCycle}`);
+        throw new MyError(`非法刻度, ${heightCycle}`);
     }
 
     return ret;
