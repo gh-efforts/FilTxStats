@@ -23,6 +23,9 @@ import { bigMul } from 'happy-node-utils';
 import MyError from '../comm/myError';
 import BigNumber from 'bignumber.js';
 
+import * as utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
+
 @Provide()
 export class BruceService extends BaseService<ActorsEntity> {
   @Inject()
@@ -65,6 +68,26 @@ export class BruceService extends BaseService<ActorsEntity> {
 
   @Init()
   async initMethod() {}
+
+  // 获取utc时间对应的高度
+  private _getHeightByUtcTime(timeStr: string | Date) {
+    const height =
+      Math.floor(
+        dayjs(timeStr).diff(dayjs('2023-01-01 00:00:00'), 'second') / 30
+      ) + 2474160;
+    return height;
+  }
+
+  // 获取高度对应的utc时间
+  private _getUtcTimeByHeight(
+    height: number,
+    format: string = 'YYYY-MM-DD HH:mm:ss'
+  ): string {
+    const timeStr = dayjs('2023-01-01 00:00:00')
+      .add((height - 2474160) * 30, 'second')
+      .format(format);
+    return timeStr;
+  }
 
   /**
    * 同步 actor 落后很多高度就报警
@@ -382,53 +405,41 @@ export class BruceService extends BaseService<ActorsEntity> {
    * @param heightCycle
    */
   private getStartPointByHeightCycle(height: number, heightCycle: number) {
-    let date = dayjs(getTimeByHeight(height)).toDate();
+    let date = dayjs(this._getUtcTimeByHeight(height));
     let ret: number = 0;
     let start: Date | string = null;
     switch (heightCycle) {
       case 1:
         start = new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-          date.getHours(),
-          date.getMinutes(),
-          date.getSeconds()
+          date.year(),
+          date.month(),
+          date.date(),
+          date.hour(),
+          date.minute(),
+          date.second()
         );
         break; //秒
       case 2:
         start = new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-          date.getHours(),
-          date.getMinutes()
+          date.year(),
+          date.month(),
+          date.date(),
+          date.hour(),
+          date.minute()
         );
         break; //分
       case 120:
-        start = new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-          date.getHours()
-        );
+        start = new Date(date.year(), date.month(), date.date(), date.hour());
         break; //时
       case 2880: {
-        // 如果以天为周期，则只查询8点时的数据
-        if (dayjs().hour() < 8) {
-          start = dayjs(getTimeByHeight(height)).format('YYYY-MM-DD 08:00:00');
-        } else {
-          start = dayjs(getTimeByHeight(height))
-            .add(1, 'day')
-            .format('YYYY-MM-DD 08:00:00');
-        }
+        start = new Date(date.year(), date.month(), date.date());
 
         break; //天
       }
       default:
         throw new MyError(`非法刻度, ${heightCycle}`);
     }
-    ret = getHeightByTime(start);
+    ret = this._getHeightByUtcTime(start);
     return ret;
   }
 
