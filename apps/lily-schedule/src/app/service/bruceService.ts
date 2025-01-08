@@ -716,7 +716,7 @@ export class BruceService extends BaseService<ActorsEntity> {
     // 计算要查询的高度区间
     const heightRange = [
       getHeightByTime(yesterday + ' 08:00:00'),
-      getHeightByTime(today + ' 08:00:00'),
+      getHeightByTime(today + ' 07:59:59'),
       // getHeightByTime(yesterday + ' 00:00:00'),
       // getHeightByTime(today + ' 00:00:00'),
     ];
@@ -739,7 +739,7 @@ export class BruceService extends BaseService<ActorsEntity> {
     );
 
     // 遍历交易所
-    let content = '';
+    let content = `北京时间 ${yesterday} 08:00:00 ~ ${today} 07:59:59\n\n`;
 
     // 如果净值超过dailyTotal，则加入content
     const binanFil = transferFilValue(
@@ -763,7 +763,7 @@ export class BruceService extends BaseService<ActorsEntity> {
     }
 
     this.logger.info(
-      `每日净值增量提醒, 当前时间: ${today}, 高度区间: ${heightRange}, content 内容: ${content}, webhook: ${this.larkConfig.larkToBruceUrl}`
+      `北京时间 ${yesterday} 08:00:00 ~ ${today} 07:59:59\n每日净值增量提醒, 当前时间: ${today}, 高度区间: ${heightRange}, content 内容: ${content}, webhook: ${this.larkConfig.larkToBruceUrl}`
     );
 
     if (content) {
