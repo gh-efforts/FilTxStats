@@ -440,8 +440,9 @@ export class BruceService extends BaseService<ActorsEntity> {
         ret = getHeightByTime(start);
         break; //时
       case 2880: {
-        start = new Date(date.year(), date.month(), date.date());
-        ret = this._getHeightByUtcTime(start);
+        ret = this._getHeightByUtcTime(
+          `${date.year()}-${date.month()}-${date.date()} 00:00:00`
+        );
         break; //天
       }
       default:
@@ -896,8 +897,6 @@ export class BruceService extends BaseService<ActorsEntity> {
       getHeightByTime(timeRange[0]),
       getHeightByTime(timeRange[1]),
     ];
-
-    console.log(heightCycle);
 
     // 按照当前高度算出刻度
     let keDus = await this.getKeDuHeights(
