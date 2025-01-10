@@ -84,15 +84,15 @@ export class BruceService extends BaseService<ActorsEntity> {
   }
 
   // 获取高度对应的utc时间
-  // private _getUtcTimeByHeight(
-  //   height: number,
-  //   format: string = 'YYYY-MM-DD HH:mm:ss'
-  // ): string {
-  //   const timeStr = dayjs('2023-01-01 00:00:00')
-  //     .add((height - 2474160) * 30, 'second')
-  //     .format(format);
-  //   return timeStr;
-  // }
+  private _getUtcTimeByHeight(
+    height: number,
+    format: string = 'YYYY-MM-DD HH:mm:ss'
+  ): string {
+    const timeStr = dayjs('2023-01-01 00:00:00')
+      .add((height - 2474160) * 30, 'second')
+      .format(format);
+    return timeStr;
+  }
 
   /**
    * 同步 actor 落后很多高度就报警
@@ -409,8 +409,14 @@ export class BruceService extends BaseService<ActorsEntity> {
    * @param height
    * @param heightCycle
    */
-  private getStartPointByHeightCycle(height: number, heightCycle: number) {
-    let date = dayjs(getTimeByHeight(height));
+  private getStartPointByHeightCycle(
+    height: number,
+    heightCycle: number,
+    isUtc = false
+  ) {
+    let date = dayjs(
+      isUtc ? this._getUtcTimeByHeight(height) : getTimeByHeight(height)
+    );
     let ret: number = 0;
     let start: Date | string = null;
     switch (heightCycle) {
@@ -440,9 +446,8 @@ export class BruceService extends BaseService<ActorsEntity> {
         ret = getHeightByTime(start);
         break; //时
       case 2880: {
-        ret = this._getHeightByUtcTime(
-          `${date.year()}-${date.month()}-${date.date()} 00:00:00`
-        );
+        start = new Date(date.year(), date.month(), date.date());
+        ret = this._getHeightByUtcTime(start);
         break; //天
       }
       default:
@@ -461,13 +466,14 @@ export class BruceService extends BaseService<ActorsEntity> {
   private getKeDuHeights(
     heightRange: number[],
     heightCycle: number,
-    nowHeight: number
+    nowHeight: number,
+    isUtc = false
   ): number[] {
     let ret: number[] = [];
     let maxHeight = Math.min(heightRange[1], nowHeight);
     let minHeight = heightRange[0];
     while (minHeight <= maxHeight) {
-      ret.push(this.getStartPointByHeightCycle(minHeight, heightCycle));
+      ret.push(this.getStartPointByHeightCycle(minHeight, heightCycle, isUtc));
       minHeight += heightCycle;
     }
     return ret;
@@ -535,7 +541,11 @@ export class BruceService extends BaseService<ActorsEntity> {
       let value = row.value;
       let from = row.from;
       let to = row.to;
-      let rangeHeight = this.getStartPointByHeightCycle(height, heightCycle);
+      let rangeHeight = this.getStartPointByHeightCycle(
+        height,
+        heightCycle,
+        true
+      );
       if (addressSet.has(from) && !addressSet.has(to)) {
         //转出
         let nv = outMap.get(rangeHeight);
@@ -550,7 +560,7 @@ export class BruceService extends BaseService<ActorsEntity> {
       }
     }
     //组装结果返回
-    let kds = this.getKeDuHeights(heightRange, heightCycle, nowHeight);
+    let kds = this.getKeDuHeights(heightRange, heightCycle, nowHeight, true);
     let arr = kds.map(kd => {
       return {
         height: kd,
