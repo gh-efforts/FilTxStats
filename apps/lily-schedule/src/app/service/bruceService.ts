@@ -746,7 +746,10 @@ export class BruceService extends BaseService<ActorsEntity> {
       binanJing.jing.absoluteValue().toString()
     );
     if (Number(binanFil) >= dailyTotal) {
-      content += `币安 净值增量 ${bigMul(binanFil, 1).toFormat(0, {
+      content += `币安 净值增量 ${bigMul(
+        transferFilValue(binanJing.jing.toString()),
+        1
+      ).toFormat(0, {
         decimalSeparator: '.',
         groupSeparator: ',',
         groupSize: 3,
@@ -754,8 +757,11 @@ export class BruceService extends BaseService<ActorsEntity> {
     }
 
     const okxFil = transferFilValue(okxJing.jing.absoluteValue().toString());
-    if (Number(binanFil) >= dailyTotal) {
-      content += `OKX 净值增量 ${bigMul(okxFil, 1).toFormat(0, {
+    if (Number(okxFil) >= dailyTotal) {
+      content += `OKX 净值增量 ${bigMul(
+        transferFilValue(okxJing.jing.toString()),
+        1
+      ).toFormat(0, {
         decimalSeparator: '.',
         groupSeparator: ',',
         groupSize: 3,
