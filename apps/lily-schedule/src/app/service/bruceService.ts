@@ -16,12 +16,14 @@ import {
   IBruceTaskBody,
   ISyncTarget,
   SyncReqParam,
+  SumBalanceGroupHeightDTO,
 } from '../model/dto/transaction';
 import * as dwsentity from '@dws/entity';
 import * as lilymessageentity from '@lilymessages/entity';
-import { bigMul } from 'happy-node-utils';
+import { bigMul, bigAdd } from 'happy-node-utils';
 import MyError from '../comm/myError';
 import BigNumber from 'bignumber.js';
+import { LilyMessagesMapping } from '../mapping/lilyMessages';
 
 import * as utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
@@ -52,6 +54,9 @@ export class BruceService extends BaseService<ActorsEntity> {
   @Inject()
   globalConfigMapping: GlobalConfigMapping;
 
+  @Inject()
+  lilyMapping: LilyMessagesMapping;
+
   @Config('lotusConfig')
   lotusConfig: {
     url: string;
@@ -79,15 +84,15 @@ export class BruceService extends BaseService<ActorsEntity> {
   }
 
   // 获取高度对应的utc时间
-  private _getUtcTimeByHeight(
-    height: number,
-    format: string = 'YYYY-MM-DD HH:mm:ss'
-  ): string {
-    const timeStr = dayjs('2023-01-01 00:00:00')
-      .add((height - 2474160) * 30, 'second')
-      .format(format);
-    return timeStr;
-  }
+  // private _getUtcTimeByHeight(
+  //   height: number,
+  //   format: string = 'YYYY-MM-DD HH:mm:ss'
+  // ): string {
+  //   const timeStr = dayjs('2023-01-01 00:00:00')
+  //     .add((height - 2474160) * 30, 'second')
+  //     .format(format);
+  //   return timeStr;
+  // }
 
   /**
    * 同步 actor 落后很多高度就报警
@@ -405,7 +410,7 @@ export class BruceService extends BaseService<ActorsEntity> {
    * @param heightCycle
    */
   private getStartPointByHeightCycle(height: number, heightCycle: number) {
-    let date = dayjs(this._getUtcTimeByHeight(height));
+    let date = dayjs(getTimeByHeight(height));
     let ret: number = 0;
     let start: Date | string = null;
     switch (heightCycle) {
@@ -812,5 +817,119 @@ export class BruceService extends BaseService<ActorsEntity> {
       },
     };
     return cardTemplate;
+  }
+
+  // 获取地址的余额（补足缺失高度的余额）
+  private async _getAddressIdBalance(id: string, heightRange: number[]) {
+    // 获取高度区间内的actors数据
+    let actors: { id; height; balance }[] = await this.lilyMapping.query(
+      `SELECT
+        "id",
+        "height",
+        "balance"
+      FROM
+        "dws_shim"."actors" AS "Actors"
+      WHERE
+        "Actors"."id" = '${id}'
+        AND "Actors"."height" BETWEEN ${heightRange[0]}
+        AND ${heightRange[1]}
+      ORDER BY
+        "Actors"."height" ASC;`,
+      {}
+    );
+
+    let map: Map<string, string> = new Map();
+
+    if (actors.length === 0) {
+      return map;
+    }
+
+    if (Number(actors[0].height) !== heightRange[0]) {
+      let actor: { id; height; balance }[] = await this.lilyMapping.query(
+        `SELECT
+          "id",
+          "height",
+          "balance"
+        FROM
+          "dws_shim"."actors" AS "Actors"
+        WHERE
+          "Actors"."id" = '${id}'
+          AND "Actors"."height" <= ${heightRange[0]}
+        ORDER BY
+          "Actors"."height" DESC
+        LIMIT 1;`,
+        {}
+      );
+
+      if (actor.length > 0) {
+        actor[0].height = heightRange[0];
+        actors.unshift(actor[0]);
+      }
+    }
+
+    // 补足缺失高度的余额
+    for (let index = 0; index < actors.length; index++) {
+      let { height, balance, id } = actors[index];
+      let next: any = actors[index + 1];
+
+      if (index === actors.length - 1) {
+        next = {
+          height: heightRange[1],
+        };
+      }
+
+      height = Number(height);
+      while (height <= Number(next.height)) {
+        map.set(`${id}_${height}`, balance);
+
+        height++;
+      }
+    }
+
+    return map;
+  }
+
+  async sumBalanceGroupHeightByCode(body: SumBalanceGroupHeightDTO) {
+    const { addressId, timeRange, heightCycle } = body;
+    // 将时间区间转换成高度区间
+    const heightRange = [
+      getHeightByTime(timeRange[0]),
+      getHeightByTime(timeRange[1]),
+    ];
+
+    console.log(heightCycle);
+
+    // 按照当前高度算出刻度
+    let keDus = await this.getKeDuHeights(
+      heightRange,
+      heightCycle,
+      getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss'))
+    );
+
+    let allDtMapArr = await Promise.all(
+      addressId.map(it => {
+        return this._getAddressIdBalance(it, heightRange);
+      })
+    );
+
+    let allDtMap = allDtMapArr.reduce((acc, curr) => {
+      curr.forEach((value, key) => {
+        acc.set(key, value); // 如果 key 已存在，则会覆盖
+      });
+      return acc;
+    }, new Map<string, string>());
+
+    let ret = keDus.map(kd => {
+      return {
+        height: kd,
+        balance: addressId.reduce((pre, cur) => {
+          const key = `${cur}_${kd}`;
+          return bigAdd(pre, allDtMap.get(key) || '0').toString();
+        }, '0'),
+        time: getTimeByHeight(kd),
+      };
+    });
+
+    return ret;
   }
 }

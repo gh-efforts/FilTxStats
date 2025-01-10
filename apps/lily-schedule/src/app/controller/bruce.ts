@@ -96,4 +96,10 @@ export class BruceController {
   ) {
     return await this.bruceService.calInOutByRange(sh, eh, addstr.split(','));
   }
+
+  @Post('/sum_balance_group_height')
+  async sumBalanceGroupHeightByCode(@Body(ALL) body: SumBalanceGroupHeightDTO) {
+    const res = await this.bruceService.sumBalanceGroupHeightByCode(body);
+    return res;
+  }
 }
