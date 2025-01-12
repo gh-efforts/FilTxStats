@@ -755,7 +755,7 @@ export class BruceService extends BaseService<ActorsEntity> {
     );
 
     // 遍历交易所
-    let content = `北京时间 ${yesterday} 08:00:00 ~ ${today} 07:59:59\n\n`;
+    let content = '';
 
     // 如果净值超过dailyTotal，则加入content
     const binanFil = transferFilValue(
@@ -789,6 +789,9 @@ export class BruceService extends BaseService<ActorsEntity> {
     );
 
     if (content) {
+      content =
+        `北京时间 ${yesterday} 08:00:00 ~ ${today} 07:59:59\n\n` + content;
+
       this.utils.httpRequest({
         url: this.larkConfig.larkToBruceUrl,
         method: 'POST',
