@@ -249,11 +249,10 @@ export class BruceService extends BaseService<ActorsEntity> {
     // 计算时间差
     const diffMillis = timestamp.getTime() - fixedPoint.getTime();
 
-    // 计算 t 所归属的时间区域的起点
+    // 计算 t 所归属的时间区域的起点, 2024-12-31T16:35:30+08:00 应当归属到2 024-12-32T00:00:00+08:00， 而不是2024-12-31T00:00:00+08:00
     const zoneStart =
       fixedPoint.getTime() +
-      Math.floor(diffMillis / (quantity * unitMillis)) *
-        (quantity * unitMillis);
+      Math.ceil(diffMillis / (quantity * unitMillis)) * (quantity * unitMillis);
 
     if (isUtc) {
       ret = this._getHeightByUtcTime(zoneStart);
