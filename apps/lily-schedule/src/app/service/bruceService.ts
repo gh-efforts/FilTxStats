@@ -302,6 +302,26 @@ export class BruceService extends BaseService<ActorsEntity> {
    * @returns
    */
   private async _listAllMsg(heightRange: number[], addressIds: string[]) {
+    // let sret: any = await this.lilyMapping.query(
+    //   `select
+    //     "from",
+    //     "to",
+    //     "value",
+    //     "height"
+    //   from "dws_shim"."messages"
+    //   where "height" between :sh and :eh
+    //     and "method" in (:methods)
+    //     and ("from" in (:addressIds) or "to" in (:addressIds))
+    //   order by height desc
+    //   `,
+    //   {
+    //     sh: heightRange[0],
+    //     eh: heightRange[1],
+    //     methods: [0, 3844450837],
+    //     addressIds: addressIds,
+    //   }
+    // );
+    // let ret: any[] = sret;
     let ret = await this.lilyMessagesMapping.getModel().findAll({
       attributes: ['from', 'to', 'value', 'height'],
       where: {
