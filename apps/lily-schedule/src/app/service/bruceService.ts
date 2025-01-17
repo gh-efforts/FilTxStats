@@ -765,7 +765,8 @@ export class BruceService extends BaseService<ActorsEntity> {
       heightRange,
       heightCycle,
       getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss')),
-      unit
+      unit,
+      true
     );
 
     let allDtMapArr = await Promise.all(
