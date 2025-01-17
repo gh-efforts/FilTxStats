@@ -10,7 +10,6 @@ import {
 import { BruceService } from '../service/bruceService';
 import * as bull from '@midwayjs/bull';
 import {
-  SyncReqParam,
   GetMessagesPageDTO,
   SumBalanceGroupHeightDTO,
 } from '../model/dto/transaction';
@@ -39,23 +38,11 @@ export class BruceController {
     return true;
   }
 
-  @Post('/start/actor')
-  async startActor(@Body(ALL) body: SyncReqParam) {
-    await this.bruceService.startActorBalance(body);
-    return true;
-  }
-
   @Post('/check/sync/actor/delay')
   async checkActorSyncDelay() {
     await this.bruceService.checkActorSyncDelay();
     return true;
   }
-
-  // @Post('/start/message')
-  // async startMessage(@Body(ALL) body: SyncReqParam) {
-  //   await this.bruceService.startMessages(body);
-  //   return true;
-  // }
 
   @Post('/page/messages')
   async getMessagesPage(@Body(ALL) body: GetMessagesPageDTO) {
@@ -65,12 +52,7 @@ export class BruceController {
 
   @Post('/list/in_out_flow')
   async listInOutFlow(@Body(ALL) body: SumBalanceGroupHeightDTO) {
-    const res = await this.bruceService.listInOutByMessage(
-      body.addressId,
-      body.timeRange,
-      body.heightCycle,
-      body.nowHeight
-    );
+    const res = await this.bruceService.listInOutByMessage(body);
     return res;
   }
 

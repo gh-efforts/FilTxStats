@@ -14,9 +14,14 @@ export function getTimeByHeight(
   height: number,
   format: string = 'YYYY-MM-DD HH:mm:ss'
 ): string {
-  const timeStr = dayjs('2023-01-01 00:00:00')
-    .add((height - 2473200) * 30, 'second')
-    .format(format);
+  const timeStr = getTimeByHeightRaw(height).format(format);
+  return timeStr;
+}
+export function getTimeByHeightRaw(height: number): dayjs.Dayjs {
+  const timeStr = dayjs('2023-01-01 00:00:00').add(
+    (height - 2473200) * 30,
+    'second'
+  );
   return timeStr;
 }
 

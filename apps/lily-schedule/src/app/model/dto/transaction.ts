@@ -51,6 +51,9 @@ export class SumBalanceGroupHeightDTO {
   @Rule(RuleType.number().integer().required())
   heightCycle: number;
 
+  @Rule(RuleType.string().allow('height', 'min', 'hour', 'day').optional())
+  unit: string;
+
   @Rule(RuleType.number().integer().optional())
   nowHeight: number;
 }
@@ -75,4 +78,11 @@ export class GetMessagesPageDTO extends QueryParamDTO {
 
   @Rule(RuleType.number().optional())
   gtValue: number;
+}
+
+export enum UnitEnum {
+  height = 'height',
+  min = 'min',
+  hour = 'hour',
+  day = 'day',
 }

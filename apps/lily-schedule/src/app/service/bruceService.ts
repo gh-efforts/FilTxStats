@@ -5,19 +5,18 @@ import {
 } from '@dws/entity';
 import { Config, Init, Inject, Provide, Logger } from '@midwayjs/core';
 import * as dayjs from 'dayjs';
-import { Op, col, fn } from 'sequelize';
+import { Op } from 'sequelize';
 import { BaseService } from '../../core/baseService';
 import { ILogger } from '@midwayjs/logger';
-import { getHeightByTime, getTimeByHeight, transferFilValue } from '@dws/utils';
+import {
+  getHeightByTime,
+  getTimeByHeight,
+  getTimeByHeightRaw,
+  transferFilValue,
+} from '@dws/utils';
 import * as bull from '@midwayjs/bull';
 import _ = require('lodash');
-import {
-  IActorGapFillBody,
-  IBruceTaskBody,
-  ISyncTarget,
-  SyncReqParam,
-  SumBalanceGroupHeightDTO,
-} from '../model/dto/transaction';
+import { SumBalanceGroupHeightDTO, UnitEnum } from '../model/dto/transaction';
 import * as dwsentity from '@dws/entity';
 import * as lilymessageentity from '@lilymessages/entity';
 import { bigMul, bigAdd } from 'happy-node-utils';
@@ -84,13 +83,18 @@ export class BruceService extends BaseService<ActorsEntity> {
   }
 
   // 获取高度对应的utc时间
-  private _getUtcTimeByHeight(
+  _getUtcTimeByHeight(
     height: number,
     format: string = 'YYYY-MM-DD HH:mm:ss'
   ): string {
-    const timeStr = dayjs('2023-01-01 00:00:00')
-      .add((height - 2474160) * 30, 'second')
-      .format(format);
+    const timeStr = this._getUtcTimeByHeightRaw(height).format(format);
+    return timeStr;
+  }
+  private _getUtcTimeByHeightRaw(height: number): dayjs.Dayjs {
+    const timeStr = dayjs('2023-01-01 00:00:00').add(
+      (height - 2474160) * 30,
+      'second'
+    );
     return timeStr;
   }
 
@@ -99,7 +103,7 @@ export class BruceService extends BaseService<ActorsEntity> {
    * 说明同步出现问题
    */
   public async checkActorSyncDelay() {
-    const maxHeight = await this.dwsActorMapping.getModel().findOne({
+    const maxHeight = await this.lilyActorsMapping.getModel().findOne({
       attributes: ['addressId', 'height'],
       order: [['height', 'desc']],
       raw: true,
@@ -112,248 +116,9 @@ export class BruceService extends BaseService<ActorsEntity> {
     );
     if (nowHeight - maxHeight.height > 1 * 2 * 60 * 3) {
       //2小时没更新
-      throw new MyError(`syncActorSyncDelay 同步 actor 落后很多高度`);
+      throw new MyError(`syncActorSyncDelay lily 同步 actor 落后很多高度`);
     }
     return true;
-  }
-
-  /**
-   * 分析交易，拆分任务，放到 bull 队列
-   * @returns
-   */
-  public async startActorBalance(opts: SyncReqParam) {
-    let targets: ISyncTarget[] = opts.targets;
-    if (_.isEmpty(opts)) {
-      //查询交易所地址
-      let exchangeAddresses = await this.exchangeAddressMapping
-        .getModel()
-        .findAll({ raw: true });
-      //先查redis 最新结果
-      //查询当前最新 actor 高度
-      let nowAddrHeight = await this.dwsActorMapping.getModel().findAll({
-        attributes: [[fn('max', col('height')), 'maxHeight']],
-        where: {
-          id: {
-            [Op.in]: exchangeAddresses.map(item => item.addressId),
-          },
-        },
-        group: ['id'],
-      });
-      const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss'));
-      //组合最新地址
-      targets = [];
-      for (let addr of exchangeAddresses) {
-        // let redisHeight = await this.redisUtils.getString(
-        //   `branceBalance:taskHeight:${addr.addressId}`
-        // );
-        let redisHeight = null; //lily有延迟，查最新的一直返回 0
-        let startHeight = redisHeight ? Number(redisHeight) : 0;
-        let dbHeight = 0;
-        if (!startHeight) {
-          //redis 没有读库
-          dbHeight = nowAddrHeight.find(
-            addrHeight => addrHeight.addressId === addr.addressId
-          )?.maxHeight;
-          startHeight = dbHeight;
-        }
-        this.logger.info(
-          `startActorBalance addr:%s,redisH:%s, dbH:%s, startH:%s, nowH:%s`,
-          addr.address,
-          redisHeight,
-          dbHeight,
-          startHeight,
-          nowHeight
-        );
-        targets.push({
-          addressId: addr.addressId,
-          address: addr.address,
-          startHeight,
-          endHeight: nowHeight,
-        });
-      }
-    }
-    this.logger.info(`startActorBalance targets: %j`, targets);
-
-    //将任务推送到queue
-    await this.addToTaskQueue(targets, 'bruceBalance');
-
-    //将最新 height 写入 redis，避免正在执行中； 又被调用添加了重复任务，会导致数据错乱
-    // for (let target of targets) {
-    //   let t = target;
-    //   await this.redisUtils.setValue(
-    //     `branceBalance:taskHeight:${t.addressId}`,
-    //     t.endHeight.toString()
-    //   );
-    // }
-
-    return true;
-  }
-
-  async addToTaskQueue(targets: ISyncTarget[], queueName: string) {
-    //将任务推送到queue
-    const bullQueue = this.bullFramework.ensureQueue(queueName);
-
-    for (let i = 0, ilen = targets.length; i < ilen; i++) {
-      let target = targets[i];
-
-      let { endHeight, startHeight, addressId } = target;
-      //按照 500 分页
-      const len = Math.ceil((endHeight - startHeight) / 500);
-
-      for (let i = 0; i < len; i++) {
-        let starth = i * 500;
-        let endh = Math.min(starth + 500, endHeight);
-        let jobId = `${addressId}_${starth}_${endh}`;
-
-        let param = {
-          startHeight: starth,
-          endHeight: endh,
-          addressId: target.addressId,
-          address: target.address,
-          lastPage: i == ilen - 1, //标记最后一页
-        };
-        await bullQueue.add(param, { priority: endh, jobId }); //高度越高优先级越高
-      }
-      this.logger.info(`addToTaskQueue完成,%s, %j`, queueName, target);
-    });
-    return true;
-  }
-
-  private async getLastestBalance(
-    addressId: string,
-    sheight: number
-  ): Promise<string> {
-    let pre = await this.dwsActorMapping.getModel().findOne({
-      where: {
-        addressId,
-        height: {
-          [Op.lt]: sheight,
-        },
-      },
-      order: [['height', 'desc']],
-      raw: true,
-    });
-    if (pre) {
-      return pre.balance;
-    }
-    return null;
-  }
-
-  /**
-   * 同步lily_actors
-   *
-   * actor 要 fill，前后页存在关联关系,不能够并发
-   * 历史数据（3484079 and 4535279）只能手动导出后，脚本处理转化成 mysql insert导入
-   * 4535280之后数据依靠程序同步
-   */
-  public async syncLilyActors(task: IBruceTaskBody) {
-    let { addressId, startHeight, endHeight, address, lastPage } = task;
-    let st = Date.now();
-    let actors = await this.lilyActorsMapping.getModel().findAll({
-      where: {
-        id: addressId,
-        height: {
-          [Op.between]: [startHeight, endHeight],
-        },
-      },
-      order: [['height', 'asc']],
-      raw: true,
-    });
-    this.logger.info(
-      `syncLilyActors耗时: %s, %s,%s,%s,len=%d`,
-      Date.now() - st,
-      address,
-      startHeight,
-      endHeight,
-      (actors && actors.length) || 0
-    );
-
-    //为空也不能补，不能确定是 lily 没同步到数据，还是 actor 确实没变化
-    if (_.isEmpty(actors)) {
-      return;
-    }
-    let maxHeight = actors[actors.length - 1].height;
-    let fillHeight = lastPage ? maxHeight : endHeight;
-    this.logger.info(
-      `addr:%s,maxHeight:%s, fillheight:%s`,
-      address,
-      maxHeight,
-      fillHeight
-    );
-
-    let resultArr = actors.map(ac => {
-      return {
-        addressId: ac.id,
-        address,
-        height: ac.height,
-        cid: ac.codeCid,
-        balance: ac.balance,
-        fill: 0, //原始数据
-      };
-    });
-    //填充所有 gap， 到最后一条后不能再填充； 因为后面的数据可能理解改变
-    let preb = null;
-    for (let i = startHeight; i <= fillHeight; i++) {
-      //判断该高度是否有数据
-      let matchRow = actors.find(ac => ac.height == i);
-      if (matchRow) {
-        preb = matchRow.balance;
-        continue;
-      }
-      if (!preb) {
-        //需要去库里找最近一条 balance
-        let pre = await this.getLastestBalance(addressId, i);
-        if (!pre) {
-          //库里一条数据没有
-          continue;
-        }
-        preb = pre;
-      }
-      //没有数据，填充
-      resultArr.push({
-        addressId,
-        address,
-        height: i,
-        cid: '',
-        balance: preb,
-        fill: 1, //填充数据
-      });
-    }
-    //先全部写入
-    await this.dwsActorMapping.getModel().bulkCreate(resultArr, {
-      updateOnDuplicate: ['balance'],
-    });
-  }
-
-  /**
-   * 同步lily_messages
-   * @param task
-   */
-  public async syncLilyMessages(task: IBruceTaskBody) {
-    let { address, startHeight, endHeight } = task;
-    let messages = await this.lilyMessagesMapping.getModel().findAll({
-      where: {
-        method: 0,
-        [Op.or]: {
-          from: address,
-          to: address,
-        },
-        height: {
-          [Op.between]: [startHeight, endHeight],
-        },
-      },
-      raw: true,
-    });
-    await this.dwsMessageMapping.getModel().bulkCreate(
-      messages.map(m => {
-        return {
-          ...m,
-        };
-      }),
-      {
-        ignoreDuplicates: true,
-      }
-    );
   }
 
   private _getMessagesWhere(param: any = {}) {
@@ -406,54 +171,101 @@ export class BruceService extends BaseService<ActorsEntity> {
   /**
    * 将高度归属到某个时间区间
    * 如果步长是一天，则查询前一天8点到后一天8点的数据
+   * 如果步长要支持随意值； 实际必须要有固定点，否则每时每刻看历史数据都在变化。
+  现在需要对时间进行区域划分，入参是三个：区域划分数量，区域划分单位，一个给定时间戳 t, 规则如下：
+  如果单位是秒，分，时； 则将最近一天的 8 点视为固定点，往前往后不断划分；
+  如果单位是天；则将最近一个月的第一天 8 点作为固定点，往前往后不断划分；
+  要求计算出 t 所归属的时间区域的起点，性能要好
+  给出 js 代码
+   
    * @param height
    * @param heightCycle
    */
   private getStartPointByHeightCycle(
     height: number,
     heightCycle: number,
+    unit: string,
     isUtc = false
   ) {
-    let date = dayjs(
-      isUtc ? this._getUtcTimeByHeight(height) : getTimeByHeight(height)
-    );
+    let hd = isUtc
+      ? this._getUtcTimeByHeightRaw(height)
+      : getTimeByHeightRaw(height);
+    let timestamp = hd.toDate();
     let ret: number = 0;
-    let start: Date | string = null;
-    switch (heightCycle) {
-      case 1:
-        start = new Date(
-          date.year(),
-          date.month(),
-          date.date(),
-          date.hour(),
-          date.minute(),
-          date.second()
-        );
-        ret = getHeightByTime(start);
-        break; //秒
-      case 2:
-        start = new Date(
-          date.year(),
-          date.month(),
-          date.date(),
-          date.hour(),
-          date.minute()
-        );
-        ret = getHeightByTime(start);
-        break; //分
-      case 120:
-        start = new Date(date.year(), date.month(), date.date(), date.hour());
-        ret = getHeightByTime(start);
-        break; //时
-      case 2880: {
-        start = new Date(date.year(), date.month(), date.date());
-        ret = this._getHeightByUtcTime(start);
-        break; //天
-      }
-      default:
-        throw new MyError(`非法刻度, ${heightCycle}`);
+
+    let fixedPoint;
+    // 计算固定点
+    if (
+      unit == UnitEnum.height ||
+      unit == UnitEnum.min ||
+      unit == UnitEnum.hour
+    ) {
+      fixedPoint = new Date(
+        timestamp.getFullYear(),
+        timestamp.getMonth(),
+        timestamp.getDate(),
+        0,
+        0,
+        0,
+        0
+      );
+    } else if (unit === UnitEnum.day) {
+      fixedPoint = new Date(
+        timestamp.getFullYear(),
+        timestamp.getMonth(),
+        1,
+        0,
+        0,
+        0,
+        0
+      );
+    } else {
+      throw new Error('无效的单位');
     }
 
+    let unitMillis: number;
+    let quantity: number; //用户填写的数字
+    switch (unit) {
+      case UnitEnum.height:
+        unitMillis = 1000 * 30;
+        quantity = heightCycle;
+        break;
+      case UnitEnum.min:
+        unitMillis = 60 * 1000;
+        quantity = heightCycle / 2;
+        break;
+      case UnitEnum.hour:
+        unitMillis = 60 * 60 * 1000;
+        quantity = heightCycle / 120;
+        break;
+      case UnitEnum.day:
+        unitMillis = 24 * 60 * 60 * 1000;
+        quantity = heightCycle / 2880;
+        break;
+      default:
+        throw new Error('无效的单位');
+    }
+
+    // 计算时间差
+    const diffMillis = timestamp.getTime() - fixedPoint.getTime();
+
+    // 计算 t 所归属的时间区域的起点
+    const zoneStart =
+      fixedPoint.getTime() +
+      Math.floor(diffMillis / (quantity * unitMillis)) *
+        (quantity * unitMillis);
+
+    if (isUtc) {
+      ret = this._getHeightByUtcTime(zoneStart);
+    } else {
+      ret = getHeightByTime(zoneStart);
+    }
+    this.logger.info(
+      'startPoint: %s, %s, %d',
+      dayjs(timestamp).format(),
+      dayjs(zoneStart).format(),
+      ret
+    );
     return ret;
   }
 
@@ -467,13 +279,16 @@ export class BruceService extends BaseService<ActorsEntity> {
     heightRange: number[],
     heightCycle: number,
     nowHeight: number,
+    unit: string,
     isUtc = false
   ): number[] {
     let ret: number[] = [];
     let maxHeight = Math.min(heightRange[1], nowHeight);
     let minHeight = heightRange[0];
     while (minHeight <= maxHeight) {
-      ret.push(this.getStartPointByHeightCycle(minHeight, heightCycle, isUtc));
+      ret.push(
+        this.getStartPointByHeightCycle(minHeight, heightCycle, unit, isUtc)
+      );
       minHeight += heightCycle;
     }
     return ret;
@@ -509,12 +324,13 @@ export class BruceService extends BaseService<ActorsEntity> {
    * 统计净流入流出
    * 接口有点慢，数据在几十万条的级别
    */
-  async listInOutByMessage(
-    addressIds: string[],
-    timeRange: string[],
-    heightCycle: number, //步长
-    nowHeight: number //当前高度
-  ) {
+  async listInOutByMessage(body: SumBalanceGroupHeightDTO) {
+    let addressIds = body.addressId;
+    let timeRange = body.timeRange;
+    let heightCycle = body.heightCycle; //步长
+    let nowHeight = body.nowHeight; //当前高度
+    let unit = body.unit;
+
     const heightRange = [
       getHeightByTime(timeRange[0]),
       getHeightByTime(timeRange[1]),
@@ -544,6 +360,7 @@ export class BruceService extends BaseService<ActorsEntity> {
       let rangeHeight = this.getStartPointByHeightCycle(
         height,
         heightCycle,
+        unit,
         true
       );
       if (addressSet.has(from) && !addressSet.has(to)) {
@@ -560,7 +377,13 @@ export class BruceService extends BaseService<ActorsEntity> {
       }
     }
     //组装结果返回
-    let kds = this.getKeDuHeights(heightRange, heightCycle, nowHeight, true);
+    let kds = this.getKeDuHeights(
+      heightRange,
+      heightCycle,
+      nowHeight,
+      unit,
+      true
+    );
     let arr = kds.map(kd => {
       return {
         height: kd,
@@ -903,8 +726,14 @@ export class BruceService extends BaseService<ActorsEntity> {
     return map;
   }
 
+  /**
+   * 查余额
+   * 内存中进行数据补齐
+   * @param body
+   * @returns
+   */
   async sumBalanceGroupHeightByCode(body: SumBalanceGroupHeightDTO) {
-    const { addressId, timeRange, heightCycle } = body;
+    const { addressId, timeRange, heightCycle, unit } = body;
     // 将时间区间转换成高度区间
     const heightRange = [
       getHeightByTime(timeRange[0]),
@@ -915,7 +744,8 @@ export class BruceService extends BaseService<ActorsEntity> {
     let keDus = await this.getKeDuHeights(
       heightRange,
       heightCycle,
-      getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss'))
+      getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss')),
+      unit
     );
 
     let allDtMapArr = await Promise.all(
