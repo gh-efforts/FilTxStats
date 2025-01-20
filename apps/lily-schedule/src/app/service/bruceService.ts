@@ -190,7 +190,7 @@ export class BruceService extends BaseService<ActorsEntity> {
     let hd = isUtc
       ? this._getUtcTimeByHeightRaw(height)
       : getTimeByHeightRaw(height);
-    let timestamp = hd.toDate();
+    let timestamp = hd.toDate(); //JavaScript 的 Date 对象本身没有内置的时区概念。它内部存储的是一个 UTC 时间戳,时区的概念主要在将 Date 对象转换为字符串时体现，因为转换过程会根据运行环境的本地时区设置进行调整
     let ret: number = 0;
 
     let fixedPoint;
@@ -260,8 +260,9 @@ export class BruceService extends BaseService<ActorsEntity> {
       ret = getHeightByTime(zoneStart);
     }
     this.logger.info(
-      'startPoint: %s, %s, %d',
+      'startPoint: %s, %d, %s, %d',
       dayjs(timestamp).format(),
+      height,
       dayjs(zoneStart).format(),
       ret
     );
@@ -573,10 +574,8 @@ export class BruceService extends BaseService<ActorsEntity> {
     const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
     // 计算要查询的高度区间
     const heightRange = [
-      getHeightByTime(yesterday + ' 08:00:00'),
-      getHeightByTime(today + ' 07:59:59'),
-      // getHeightByTime(yesterday + ' 00:00:00'),
-      // getHeightByTime(today + ' 00:00:00'),
+      getHeightByTime(yesterday + ' 08:00:01'),
+      getHeightByTime(today + ' 08:00:00'),
     ];
 
     // 获取交易所列表
@@ -627,12 +626,12 @@ export class BruceService extends BaseService<ActorsEntity> {
     }
 
     this.logger.info(
-      `北京时间 ${yesterday} 08:00:00 ~ ${today} 07:59:59\n每日净值增量提醒, 当前时间: ${today}, 高度区间: ${heightRange}, content 内容: ${content}, webhook: ${this.larkConfig.larkToBruceUrl}`
+      `北京时间 ${yesterday} 08:00:01 ~ ${today} 08:00:00\n每日净值增量提醒, 当前时间: ${today}, 高度区间: ${heightRange}, content 内容: ${content}, webhook: ${this.larkConfig.larkToBruceUrl}`
     );
 
     if (content) {
       content =
-        `北京时间 ${yesterday} 08:00:00 ~ ${today} 07:59:59\n\n` + content;
+        `北京时间 ${yesterday} 08:00:01 ~ ${today} 08:00:00\n\n` + content;
 
       this.utils.httpRequest({
         url: this.larkConfig.larkToBruceUrl,
