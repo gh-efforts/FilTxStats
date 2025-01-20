@@ -259,13 +259,13 @@ export class BruceService extends BaseService<ActorsEntity> {
     } else {
       ret = getHeightByTime(zoneStart);
     }
-    this.logger.info(
-      'startPoint: %s, %d, %s, %d',
-      dayjs(timestamp).format(),
-      height,
-      dayjs(zoneStart).format(),
-      ret
-    );
+    // this.logger.info(
+    //   'startPoint: %s, %d, %s, %d',
+    //   dayjs(timestamp).format(),
+    //   height,
+    //   dayjs(zoneStart).format(),
+    //   ret
+    // );
     return ret;
   }
 
