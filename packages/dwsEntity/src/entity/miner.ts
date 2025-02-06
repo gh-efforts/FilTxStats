@@ -1,4 +1,6 @@
+import { Model, ModelStatic, CreateOptions, Attributes } from 'sequelize';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { HookReturn } from 'sequelize/types/hooks';
 
 @Table({
   tableName: 'miner',
@@ -84,4 +86,22 @@ export class MinerEntity extends Model {
     field: 'reward_end_at',
   })
   rewardEndAt: string;
+
+  /**
+   * miner 创建成功之后
+   * @param miner
+   */
+  static afterCreate(miner: MinerEntity) {}
+
+  /**
+   * miner 更新成功之后
+   * @param miner
+   */
+  static afterUpdate(miner: MinerEntity) {}
+
+  /**
+   * miner 删除成功之后
+   * @param miner
+   */
+  static afterDestroy(miner: MinerEntity) {}
 }
