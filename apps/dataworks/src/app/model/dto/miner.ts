@@ -62,6 +62,9 @@ export class UpdateMinerTypeDTO {
 
   @Rule(RuleType.number().integer().required())
   typeId: number;
+
+  @Rule(RuleType.number().integer().optional())
+  sectorSize: number;
 }
 
 export class AddMinerTypeDTO {

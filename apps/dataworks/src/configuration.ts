@@ -7,6 +7,7 @@ import {
   Configuration,
   ILifeCycle,
   IMidwayContainer,
+  Inject,
   Logger,
 } from '@midwayjs/core';
 import * as crossDomain from '@midwayjs/cross-domain';
@@ -25,9 +26,11 @@ import { RequestIdMiddleware } from './middleware/requestId';
 // import { JwtMiddleware } from './middleware/jwt';
 import * as dwsEntity from '@dws/entity';
 import * as lilyEntity from '@lily/entity';
+import * as insightEntity from '@insight/entity';
 import { NotFoundFilter } from './filter/notfound';
 
 import * as bullBoard from '@midwayjs/bull-board';
+import { SyncInsightMinerService } from './app/service/syncInsightMiner';
 
 const entity = entity => {
   const arr = [];
@@ -53,6 +56,7 @@ const entity = entity => {
     jwt,
     ...entity(dwsEntity),
     ...entity(lilyEntity),
+    ...entity(insightEntity),
   ],
 })
 export class ContainerLifeCycle implements ILifeCycle {
@@ -60,6 +64,8 @@ export class ContainerLifeCycle implements ILifeCycle {
   app: koa.Application;
   @Logger()
   readonly logger: IMidwayLogger;
+  @Inject()
+  syncInsightMinerService: SyncInsightMinerService;
 
   async onReady(applicationContext: IMidwayContainer): Promise<void> {
     this.app.useMiddleware([
@@ -69,6 +75,9 @@ export class ContainerLifeCycle implements ILifeCycle {
       // JwtMiddleware,
     ]);
     this.app.useFilter([NotFoundFilter]);
+
+    //初始化事件监听
+    this.syncInsightMinerService.initListener();
   }
 
   async onServerReady(container: IMidwayContainer): Promise<void> {}

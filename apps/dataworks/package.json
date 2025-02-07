@@ -10,6 +10,7 @@
     "@filscan/http": "*",
     "@lark/core": "*",
     "@lily/entity": "*",
+    "@insight/entity": "*",
     "@lotus/http": "*",
     "@lanjing/http": "*",
     "@midwayjs/bootstrap": "^3.10.10",

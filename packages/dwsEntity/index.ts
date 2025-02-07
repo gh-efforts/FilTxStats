@@ -51,6 +51,8 @@ import { MessagesMapping } from './src/mapping/messages';
 import { GlobalConfigMapping } from './src/mapping/globalConfig';
 import { GasDetailMapping } from './src/mapping/gasDetail';
 
+import ee, { MINER_CREATED, MINER_DELETED, MINER_UPDATED } from './src/ee/ee';
+
 export {
   DerivedGasOutputsEntity,
   DerivedGasOutputsMapping,
@@ -102,4 +104,8 @@ export {
   GlobalConfigMapping,
   GasDetailEntity,
   GasDetailMapping,
+  ee,
+  MINER_CREATED,
+  MINER_DELETED,
+  MINER_UPDATED,
 };

@@ -1,6 +1,5 @@
-import { Model, ModelStatic, CreateOptions, Attributes } from 'sequelize';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
-import { HookReturn } from 'sequelize/types/hooks';
+import ee, { MINER_CREATED, MINER_DELETED, MINER_UPDATED } from '../ee/ee';
 
 @Table({
   tableName: 'miner',
@@ -20,6 +19,30 @@ import { HookReturn } from 'sequelize/types/hooks';
       fields: [{ name: 'miner' }, { name: 'address' }],
     },
   ],
+  hooks: {
+    /**
+     * miner 各种钩子
+     * 用来同步 insight 的数据
+     * @param miner
+     */
+
+    afterCreate: (ins: MinerEntity, options?: any) => {
+      console.log('call afterCreateCb');
+      ee.emit(MINER_CREATED, ins);
+    },
+    afterUpsert: (attrs: [MinerEntity, boolean | null], fn?: unknown) => {
+      console.log('call afterUpsertCb');
+      ee.emit(MINER_CREATED, attrs && attrs[0]);
+    },
+    afterUpdate: (ins: MinerEntity, options?: any) => {
+      console.log('call afterUpdateCb');
+      ee.emit(MINER_UPDATED, ins);
+    },
+    afterDestroy: (ins: MinerEntity, options?: any) => {
+      console.log('call afterDestroyCb');
+      ee.emit(MINER_DELETED, ins);
+    },
+  },
 })
 export class MinerEntity extends Model {
   @Column({
@@ -86,22 +109,4 @@ export class MinerEntity extends Model {
     field: 'reward_end_at',
   })
   rewardEndAt: string;
-
-  /**
-   * miner 创建成功之后
-   * @param miner
-   */
-  static afterCreate(miner: MinerEntity) {}
-
-  /**
-   * miner 更新成功之后
-   * @param miner
-   */
-  static afterUpdate(miner: MinerEntity) {}
-
-  /**
-   * miner 删除成功之后
-   * @param miner
-   */
-  static afterDestroy(miner: MinerEntity) {}
 }

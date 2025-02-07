@@ -43,6 +43,14 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
         port: +process.env.PG_DATABASE_PORT,
         logging: false,
       },
+      insightReport: {
+        database: process.env.INSIGHT_DATABASE_DATABASE,
+        username: process.env.INSIGHT_DATABASE_USERNAME,
+        password: process.env.INSIGHT_DATABASE_PASSWORD,
+        host: process.env.INSIGHT_DATABASE_HOST,
+        port: +process.env.INSIGHT_DATABASE_PORT,
+        logging: false,
+      },
     },
   };
 
