@@ -34,7 +34,7 @@ export class TransactionTaskProcessor implements IProcessor {
   }
 
   async execute(params: { isHistory: boolean; transactionIds: number[] }) {
-    if (process.env.REAL_ENV !== 'local') {
+    if (process.env.REAL_ENV !== 'prod') {
       this.logger.info(
         `${process.env.REAL_ENV}环境，不执行任务 transactionTask`
       );
