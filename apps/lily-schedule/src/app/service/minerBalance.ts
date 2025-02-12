@@ -4,7 +4,8 @@ import {
   MinerMapping,
   MinerNodeMapping,
 } from '@dws/entity';
-import { LilyMapping } from '@lily/entity';
+import * as lilymessages from '@lilymessages/entity';
+
 import { LotusSdk } from '@lotus/http';
 import * as bull from '@midwayjs/bull';
 import { Config, ILogger, Init, Inject, Logger, Provide } from '@midwayjs/core';
@@ -44,7 +45,7 @@ export class MinerBalanceService extends BaseService<MinerBalanceEntity> {
   lotus: LotusSdk;
 
   @Inject()
-  lilyMapping: LilyMapping;
+  lilyMapping: lilymessages.LilyMapping;
 
   @Logger()
   logger: ILogger;
@@ -76,6 +77,7 @@ export class MinerBalanceService extends BaseService<MinerBalanceEntity> {
     const group = _.groupBy(minerNode, 'minerName');
     const limit = pLimit(5);
     for (const miner in group) {
+      this.logger.info('syncMinerBalance step1 miner=%s', miner);
       const nodes = group[miner].map(item => {
         return {
           name: item.name,
@@ -96,29 +98,13 @@ export class MinerBalanceService extends BaseService<MinerBalanceEntity> {
           balance: 0,
         }
       );
+      this.logger.info('syncMinerBalance step2 miner=%s', miner);
 
       const result = await Promise.all(
         nodes.map(node => {
           return limit(() =>
             this.lilyMapping.getMinerBalance(node.name).then(async res => {
-              let balance: string;
-              if (!res) {
-                //lily没查到，有可能矿工数据比较老旧;
-                let chainRet = await this.lotus.stateGetActor(node.name);
-                balance = (chainRet && chainRet.Balance) || '0';
-                // this.logger.info(
-                //   'lotus补齐balance,name=%s,balace=%s',
-                //   node.name,
-                //   balance
-                // );
-              } else {
-                balance = (res?.balance || 0).toString();
-                // this.logger.info(
-                //   'lily查出balance,name=%s,balace=%s',
-                //   node.name,
-                //   balance
-                // );
-              }
+              let balance = (res?.balance || 0).toString();
               return {
                 miner: node.name,
                 type: node.type,
@@ -136,6 +122,8 @@ export class MinerBalanceService extends BaseService<MinerBalanceEntity> {
         controller: JSON.stringify(result.filter(item => item.type === 3)),
         beneficiary: result.get('type', 4)?.balance || 0,
       };
+      this.logger.info('syncMinerBalance step3 miner=%j', object);
+
       await this.mapping.upsertMinerBalance(object, {
         fields: ['balance', 'owner', 'worker', 'controller', 'beneficiary'],
       });
