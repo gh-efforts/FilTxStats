@@ -36,40 +36,38 @@ export class TransactionTaskProcessor implements IProcessor {
   async execute(params: { isHistory: boolean; transactionIds: number[] }) {
     const { job } = this.ctx;
     try {
-      if (params.isHistory) {
-        //历史
-        this.logger.info('transactionTask history, %s', params.isHistory);
-        await this.service.syncTransaction();
-      } else if (params.transactionIds) {
-        //特定某些任务
-        let tasks = await this.service.findTransactionSyncStatusByIds(
-          params.transactionIds
-        );
-        this.logger.info(
-          'transactionTask transactionIds, %s',
-          params.transactionIds
-        );
-        if (tasks && tasks.length > 0) {
-          for (let task of tasks) {
-            return this.service.runJob('transaction', task);
-          }
-        }
-      } else {
-        //定时跑最新
-        const transactionTask = await this.service.getTransactionSyncStatus();
-        this.logger.info('transactionTask, %j', transactionTask);
-        const unfinishedTask = transactionTask.filter(
-          item => item.status === -1
-        );
-        unfinishedTask.map(task => {
-          return this.service.runJob('transaction', task);
-        });
-
-        const finishedTasks = transactionTask.filter(item => item.status === 2);
-
-        // 同步最新交易
-        await this.service.syncLastTransaction(finishedTasks);
-      }
+      // if (params.isHistory) {
+      //   //历史
+      //   this.logger.info('transactionTask history, %s', params.isHistory);
+      //   await this.service.syncTransaction();
+      // } else if (params.transactionIds) {
+      //   //特定某些任务
+      //   let tasks = await this.service.findTransactionSyncStatusByIds(
+      //     params.transactionIds
+      //   );
+      //   this.logger.info(
+      //     'transactionTask transactionIds, %s',
+      //     params.transactionIds
+      //   );
+      //   if (tasks && tasks.length > 0) {
+      //     for (let task of tasks) {
+      //       return this.service.runJob('transaction', task);
+      //     }
+      //   }
+      // } else {
+      //   //定时跑最新
+      //   const transactionTask = await this.service.getTransactionSyncStatus();
+      //   this.logger.info('transactionTask, %j', transactionTask);
+      //   const unfinishedTask = transactionTask.filter(
+      //     item => item.status === -1
+      //   );
+      //   unfinishedTask.map(task => {
+      //     return this.service.runJob('transaction', task);
+      //   });
+      //   const finishedTasks = transactionTask.filter(item => item.status === 2);
+      //   // 同步最新交易
+      //   await this.service.syncLastTransaction(finishedTasks);
+      // }
       this.logger.info('========== Transaction success ===========');
     } catch (error) {
       this.logger.error(error);

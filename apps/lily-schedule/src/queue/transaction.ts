@@ -33,13 +33,13 @@ export class TransactionProcessor implements IProcessor {
 
   async execute(params: TransactionSyncStatusEntity) {
     const { job } = this.ctx;
-    const { type } = params;
+    // const { type } = params;
     try {
-      if (type === 1) {
-        await this.service._getDerivedGasTransactionsAndSave(params);
-      } else {
-        await this.service._getVmMessagesTransactionsAndSave(params);
-      }
+      // if (type === 1) {
+      //   await this.service._getDerivedGasTransactionsAndSave(params);
+      // } else {
+      //   await this.service._getVmMessagesTransactionsAndSave(params);
+      // }
     } catch (error) {
       this.logger.error(error);
       const attemptsMade = job.attemptsMade + 1;
