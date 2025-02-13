@@ -39,21 +39,18 @@ export class MinerBalanceEntity extends Model {
 
   @Column({
     type: DataType.DECIMAL(38, 0),
-    allowNull: false,
     comment: 'Miner 账户余额',
   })
   balance: number;
 
   @Column({
     type: DataType.DECIMAL(38, 0),
-    allowNull: false,
     comment: 'owner 余额',
   })
   owner: number;
 
   @Column({
     type: DataType.DECIMAL(38, 0),
-    allowNull: false,
     comment: 'worker 余额',
   })
   worker: number;
@@ -67,7 +64,6 @@ export class MinerBalanceEntity extends Model {
 
   @Column({
     type: DataType.DECIMAL(38, 0),
-    allowNull: false,
     comment: 'benf 余额',
   })
   beneficiary: number;

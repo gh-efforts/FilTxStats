@@ -12,6 +12,10 @@ import { Config, ILogger, Init, Inject, Logger, Provide } from '@midwayjs/core';
 import * as _ from 'lodash';
 import * as pLimit from 'p-limit';
 import { BaseService } from '../../core/baseService';
+import { LilyMapping } from '@lilymessages/entity';
+import dayjs = require('dayjs');
+import { getHeightByTime, getTimeByHeight } from '@dws/utils';
+// import { LilyMapping } from '@lily/entity';
 
 Array.prototype.get = function <T>(key: string, value: any): T | undefined {
   return this.find(item => {
@@ -72,7 +76,8 @@ export class MinerBalanceService extends BaseService<MinerBalanceEntity> {
   }
 
   async syncMinerBalance() {
-    const miners = await this.getMinerIds();
+    // const miners = await this.getMinerIds();
+    let miners = ['f03080854'];
     const minerNode = await this.getMinerNode(miners);
     const group = _.groupBy(minerNode, 'minerName');
     const limit = pLimit(5);
@@ -98,19 +103,44 @@ export class MinerBalanceService extends BaseService<MinerBalanceEntity> {
           balance: 0,
         }
       );
-      this.logger.info('syncMinerBalance step2 miner=%s', miner);
+      // 获取当前时间的高度
+      const now = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      const nowHeight = getHeightByTime(now);
+      let startHeight = nowHeight - 2 * 60 * 24 * 100; //最近 100 天内如果没有，就不更新了
+      this.logger.info(
+        'syncMinerBalance step2 miner=%s, nodes.length=%d, startHeight=%d, startTime=%s',
+        miner,
+        nodes.length,
+        startHeight,
+        getTimeByHeight(startHeight)
+      );
 
       const result = await Promise.all(
         nodes.map(node => {
           return limit(() =>
-            this.lilyMapping.getMinerBalance(node.name).then(async res => {
-              let balance = (res?.balance || 0).toString();
-              return {
-                miner: node.name,
-                type: node.type,
-                balance,
-              };
-            })
+            this.lilyMapping
+              .getMinerBalance(node.name, startHeight)
+              .then(async res => {
+                if (!res) {
+                  this.logger.info(
+                    'syncMinerBalance step2_1 lilynotfound miner=%s,type=%s',
+                    miner,
+                    node.type
+                  );
+                  return {
+                    miner: node.name,
+                    type: node.type,
+                    needUpdate: false, //lily 查不到说明最近两三个月没有余额变化，大概率是老节点，不更新了
+                  };
+                }
+                let balance = (res?.balance || 0).toString();
+                return {
+                  miner: node.name,
+                  type: node.type,
+                  balance,
+                  needUpdate: true,
+                };
+              })
           );
         })
       );
