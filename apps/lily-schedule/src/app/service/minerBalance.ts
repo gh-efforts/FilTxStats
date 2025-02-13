@@ -76,8 +76,7 @@ export class MinerBalanceService extends BaseService<MinerBalanceEntity> {
   }
 
   async syncMinerBalance() {
-    // const miners = await this.getMinerIds();
-    let miners = ['f03080854'];
+    const miners = await this.getMinerIds();
     const minerNode = await this.getMinerNode(miners);
     const group = _.groupBy(minerNode, 'minerName');
     const limit = pLimit(5);
