@@ -131,13 +131,6 @@ export class MinerController {
     });
   }
 
-  @Post('/sync_miner_balance', {
-    summary: '同步 miner 质押数据',
-  })
-  async syncMinerBalance() {
-    return this.service.runJob('minerBalance');
-  }
-
   @Post('/update', { summary: '更新 miner' })
   async updateMiner(@Body(ALL) params: MinerDTO.UpdateMinerTypeDTO) {
     return this.service.update(params);

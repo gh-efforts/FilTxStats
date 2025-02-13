@@ -6,9 +6,9 @@ import { MinerBalanceService } from '../app/service/minerBalance';
 import { LarkSdk } from '@lark/core';
 
 @Processor('minerBalance', {
-  repeat: {
-    cron: '*/20 * * * *',
-  },
+  // repeat: {      //暴露接口给中台进行 定时调用
+  //   cron: '*/55 * * * *',
+  // },
   removeOnComplete: true,
   removeOnFail: true,
   attempts: 0,
