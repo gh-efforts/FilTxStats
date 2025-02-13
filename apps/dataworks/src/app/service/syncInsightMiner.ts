@@ -58,23 +58,17 @@ export class SyncInsightMinerService {
     ee.on(MINER_UPDATED, async (miner: dwsEntity.MinerEntity) => {
       this.logger.info('receive update %s', miner.miner);
       try {
-        let changed = (miner as any)._changed as Set<string>;
-        if (
-          changed.has('dataType') ||
-          changed.has('typeId') ||
-          changed.has('sectorSize')
-        ) {
-          await this.insightMinerMapping.getModel().update(
+        if (miner.dataType && miner.typeId && miner.sectorSize) {
+          await this.insightMinerMapping.getModel().upsert(
             {
               sectorSize: BigNumber(miner.sectorSize)
                 .dividedBy(1024 * 1024 * 1024)
                 .toString(),
               type: this.transferMinerType(miner.dataType, miner.typeId),
+              minerName: miner.miner,
             },
             {
-              where: {
-                minerName: miner.miner,
-              },
+              fields: ['miner_name'],
             }
           );
         }
@@ -118,9 +112,9 @@ insight：
   'CLOUD_UNION',  //不会有了
   'UNION_DATACAP',
   'DATALINE' //不会有了
-  ) 
+  )
 
-   * @param type 
+   * @param type
    */
   private transferMinerType(dataType: number, typeId: number) {
     switch (typeId) {

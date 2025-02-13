@@ -1,5 +1,5 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
-import ee, { MINER_CREATED, MINER_DELETED, MINER_UPDATED } from '../ee/ee';
+// import ee, { MINER_CREATED, MINER_DELETED, MINER_UPDATED } from '../ee/ee';
 
 @Table({
   tableName: 'miner',
@@ -19,30 +19,30 @@ import ee, { MINER_CREATED, MINER_DELETED, MINER_UPDATED } from '../ee/ee';
       fields: [{ name: 'miner' }, { name: 'address' }],
     },
   ],
-  hooks: {
-    /**
-     * miner 各种钩子
-     * 用来同步 insight 的数据
-     * @param miner
-     */
+  // hooks: {
+  //   /**
+  //    * miner 各种钩子
+  //    * 用来同步 insight 的数据
+  //    * @param miner
+  //    */
 
-    afterCreate: (ins: MinerEntity, options?: any) => {
-      console.log('call afterCreateCb');
-      ee.emit(MINER_CREATED, ins);
-    },
-    afterUpsert: (attrs: [MinerEntity, boolean | null], fn?: unknown) => {
-      console.log('call afterUpsertCb');
-      ee.emit(MINER_CREATED, attrs && attrs[0]);
-    },
-    afterUpdate: (ins: MinerEntity, options?: any) => {
-      console.log('call afterUpdateCb');
-      ee.emit(MINER_UPDATED, ins);
-    },
-    afterDestroy: (ins: MinerEntity, options?: any) => {
-      console.log('call afterDestroyCb');
-      ee.emit(MINER_DELETED, ins);
-    },
-  },
+  //   afterCreate: (ins: MinerEntity, options?: any) => {
+  //     console.log('call afterCreateCb');
+  //     ee.emit(MINER_CREATED, ins);
+  //   },
+  //   afterUpsert: (attrs: [MinerEntity, boolean | null], fn?: unknown) => {
+  //     console.log('call afterUpsertCb');
+  //     ee.emit(MINER_CREATED, attrs && attrs[0]);
+  //   },
+  //   afterUpdate: (ins: MinerEntity, options?: any) => {
+  //     console.log('call afterUpdateCb');
+  //     ee.emit(MINER_UPDATED, ins);
+  //   },
+  //   afterDestroy: (ins: MinerEntity, options?: any) => {
+  //     console.log('call afterDestroyCb');
+  //     ee.emit(MINER_DELETED, ins);
+  //   },
+  // },
 })
 export class MinerEntity extends Model {
   @Column({

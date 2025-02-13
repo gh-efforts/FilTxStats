@@ -3,6 +3,8 @@ import {
   MinerMapping,
   MinerSnapshotMapping,
   MinerTypeMapping,
+  ee,
+  MINER_UPDATED,
 } from '@dws/entity';
 import { LilyMapping } from '@lily/entity';
 import { LotusSdk } from '@lotus/http';
@@ -156,7 +158,7 @@ export class MinerService extends BaseService<MinerEntity> {
   }
 
   async update(params: UpdateMinerTypeDTO) {
-    const miner = await this.mapping
+    let miner = await this.mapping
       .getModel()
       .findOne({ where: { miner: params.miner } });
 
@@ -164,7 +166,9 @@ export class MinerService extends BaseService<MinerEntity> {
       return true;
     }
 
-    await miner.update(params);
+    miner = await miner.update(params);
+
+    ee.emit(MINER_UPDATED, miner);
   }
 
   async remove(params: RemoveMinerDTO) {
