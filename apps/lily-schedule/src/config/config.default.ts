@@ -95,6 +95,22 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
         },
         entities: entity(lilyEntity),
       },
+      lilyMessages: {
+        dialect: 'postgres',
+        dialectOptions: {
+          // 此处配置将直接传给数据库
+          connectTimeout: 30000, // 单次查询连接超时时间
+          dateStrings: true, // 不会返回UTC格式时间
+          typeCast: true, // 驼峰命名
+          bigNumberStrings: true, // bigInt和decimal 以字符串返回
+        },
+        entities: entity(lilyMessagesEntity),
+        pool: {
+          max: 50,
+          min: 5,
+          acquire: 60000, // 获取连接的最大等待时间（毫秒）
+        },
+      },
     },
     defaultDataSourceName: 'default',
   };

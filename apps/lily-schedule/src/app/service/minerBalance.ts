@@ -12,10 +12,10 @@ import { Config, ILogger, Init, Inject, Logger, Provide } from '@midwayjs/core';
 import * as _ from 'lodash';
 import * as pLimit from 'p-limit';
 import { BaseService } from '../../core/baseService';
-import { LilyMapping } from '@lilymessages/entity';
+// import { LilyMapping } from '@lilymessages/entity';
 import dayjs = require('dayjs');
 import { getHeightByTime, getTimeByHeight } from '@dws/utils';
-// import { LilyMapping } from '@lily/entity';
+import { LilyMapping } from '@lily/entity';
 
 Array.prototype.get = function <T>(key: string, value: any): T | undefined {
   return this.find(item => {

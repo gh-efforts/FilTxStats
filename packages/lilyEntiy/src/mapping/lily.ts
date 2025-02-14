@@ -395,7 +395,7 @@ export class LilyMapping extends LilyService {
     };
   }
 
-  async getMinerBalance(miner: string) {
+  async getMinerBalance(miner: string, startHeight?: number) {
     const SQL = `
       SELECT 
         id as miner,
@@ -404,6 +404,7 @@ export class LilyMapping extends LilyService {
         actors 
       WHERE
         id = ? 
+        ${startHeight ? `AND height >=${startHeight}` : ''}
       ORDER BY
         height DESC 
         LIMIT 1
