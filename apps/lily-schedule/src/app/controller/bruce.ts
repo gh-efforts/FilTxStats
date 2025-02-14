@@ -3,7 +3,9 @@ import {
   Body,
   Controller,
   Get,
+  ILogger,
   Inject,
+  Logger,
   Post,
   Query,
 } from '@midwayjs/core';
@@ -17,6 +19,9 @@ import { RedisService } from '@midwayjs/redis';
 
 @Controller('/f')
 export class BruceController {
+  @Logger()
+  logger: ILogger;
+
   @Inject()
   bruceService: BruceService;
 
@@ -46,42 +51,56 @@ export class BruceController {
 
   @Post('/page/messages')
   async getMessagesPage(@Body(ALL) body: GetMessagesPageDTO) {
-    const res = await this.bruceService.getMessagesPage(body);
+    let res;
+    try {
+      res = await this.bruceService.getMessagesPage(body);
+    } catch (e) {
+      this.logger.warn(e);
+    }
     return res;
   }
 
   @Post('/list/in_out_flow')
   async listInOutFlow(@Body(ALL) body: SumBalanceGroupHeightDTO) {
-    const res = await this.bruceService.listInOutByMessage(body);
+    let res;
+    try {
+      res = await this.bruceService.listInOutByMessage(body);
+    } catch (e) {
+      this.logger.warn(e);
+    }
     return res;
   }
 
   @Post('/monitor_big_messages')
   async monitorBigMessages() {
-    const res = await this.bruceService.monitorBigMessages();
+    let res;
+    try {
+      res = await this.bruceService.monitorBigMessages();
+    } catch (e) {
+      this.logger.warn(e);
+    }
     return res;
   }
 
   @Post('/monitor_daily_total')
   async monitorDailyTotal() {
-    const res = await this.bruceService.monitorDailyTotal();
+    let res;
+    try {
+      res = await this.bruceService.monitorDailyTotal();
+    } catch (e) {
+      this.logger.warn(e);
+    }
     return res;
-  }
-
-  @Get('/test/calculate/jing', {
-    summary: '测试用，计算某个高度范围内净流入量',
-  })
-  async calInOutByRange(
-    @Query('sh') sh: number,
-    @Query('eh') eh: number,
-    @Query('addrstr') addstr: string
-  ) {
-    return await this.bruceService.calInOutByRange(sh, eh, addstr.split(','));
   }
 
   @Post('/sum_balance_group_height')
   async sumBalanceGroupHeightByCode(@Body(ALL) body: SumBalanceGroupHeightDTO) {
-    const res = await this.bruceService.sumBalanceGroupHeightByCode(body);
+    let res;
+    try {
+      res = await this.bruceService.sumBalanceGroupHeightByCode(body);
+    } catch (e) {
+      this.logger.warn(e);
+    }
     return res;
   }
 }
