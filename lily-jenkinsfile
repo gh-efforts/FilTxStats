@@ -5,8 +5,8 @@ pipeline{
         node {label 'nodejs'}
     }
     environment {
-        DOCKER_CREDENTIAL_ID = 'huaweidocker'
-        DOCKER_REGISTRY = 'swr.ap-southeast-1.myhuaweicloud.com'
+        DOCKER_CREDENTIAL_ID = 'byteplusdocker'
+        DOCKER_REGISTRY = 'byteark-cn-hongkong.cr.bytepluses.com'
         DOCKER_NAMESPACE = 'gh'
         APP_NAME = 'lily-schedule'
     }
@@ -45,7 +45,7 @@ pipeline{
                             kubeconfig = 'demo-kubeconfig'
                             envir = BRANCH_NAME.substring(14)
                         } else {
-                            input(message: '@admin @harrison', submitter: 'admin, harrison')
+                            input(message: '@admin @derek', submitter: 'admin, derek')
                             kubeconfig = 'kubeconfig-cce'
                             envir = 'prod'
                         }
@@ -144,8 +144,8 @@ pipeline{
                     sh 'sonar-scanner \
                       -Dsonar.projectKey=$APP_NAME \
                       -Dsonar.sources=. \
-                      -Dsonar.host.url=http://172.29.64.2:4095 \
-                      -Dsonar.login=c636aa552888af8abe7678782359b5383a6feacc'
+                      -Dsonar.host.url=http://sonarqube-sonarqube.kubesphere-devops-system.svc:9000/  \
+                      -Dsonar.login=7371d0df8d7d1e7740791c0ca547e89337e05acf'
                 }
             }
         }
