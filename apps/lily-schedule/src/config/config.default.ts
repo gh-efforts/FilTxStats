@@ -117,11 +117,19 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
 
   config.koa = {
     contextLoggerFormat: info => {
-      //上下文日志配置，有ctx
-      const ctx = info.ctx || {};
-      return `${info.timestamp} ${info.LEVEL} ${info.pid} [${ctx.reqId} - ${
-        Date.now() - ctx.startTime
-      }ms ${ctx.method} ${ctx.url}] ${info.message}`;
+      const { ctx, timestamp, LEVEL: level, pid, message } = info;
+      const { startTime, method, url, reqId } = ctx;
+      const obj = {
+        timestamp,
+        level,
+        pid,
+        message,
+        reqId,
+        startTime,
+        method,
+        url,
+      };
+      return JSON.stringify(obj);
     },
     port: 7002,
     globalPrefix: '/api',
@@ -136,24 +144,22 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
       consoleLevel: process.env.REAL_ENV == 'prod' ? 'warn' : 'info',
     },
     clients: {
-      // default: {
-      //   fileLogName: 'insight',
-      //   level: 'info',
-      //   consoleLevel: 'warn',
-      // },
       appLogger: {
-        //应用日志没有 ctx，只有上下文日志才有
         enableJSON: true,
-        enableFile: true,
-        enableConsole: process.env.NODE_ENV != 'prod',
+        enableFile: false,
         jsonFormat: (info, meta) => {
           const { timestamp, message } = info;
-          const { pid, level } = meta;
+          const { ctx, pid, level } = meta;
+          const { reqId, startTime, method, url } = ctx || {};
           const obj = {
             timestamp,
             level,
             pid,
             message,
+            reqId,
+            startTime,
+            method,
+            url,
           };
           return obj;
         },
