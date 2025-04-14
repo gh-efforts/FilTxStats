@@ -52,6 +52,8 @@ import { GlobalConfigMapping } from './src/mapping/globalConfig';
 import { GasDetailMapping } from './src/mapping/gasDetail';
 
 import ee, { MINER_CREATED, MINER_DELETED, MINER_UPDATED } from './src/ee/ee';
+import { DailyCacheMapping } from './src/mapping/dailyCache';
+import { DailyCacheEntity } from './src/entity/dailyCache';
 
 export {
   DerivedGasOutputsEntity,
@@ -108,4 +110,6 @@ export {
   MINER_CREATED,
   MINER_DELETED,
   MINER_UPDATED,
+  DailyCacheEntity,
+  DailyCacheMapping,
 };

@@ -1,0 +1,15 @@
+{
+  "keep": {
+    "days": true,
+    "amount": 31
+  },
+  "auditLog": "/Users/xz/Documents/dws/apps/da-web/logs/da-web/.audit/.0f3d399c217b615a7ba5874f6705a652a599f684-audit.json",
+  "files": [
+    {
+      "date": 1740649281828,
+      "name": "/Users/xz/Documents/dws/apps/da-web/logs/da-web/insight.2025-02-27",
+      "hash": "a35e3f47e6d76bc6ba8beef4fadf6b80"
+    }
+  ],
+  "hashType": "md5"
+}

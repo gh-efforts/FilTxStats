@@ -16,6 +16,7 @@ import {
   SumBalanceGroupHeightDTO,
 } from '../model/dto/transaction';
 import { RedisService } from '@midwayjs/redis';
+import { DailyCacheService } from '../service/dailyCacheService';
 
 @Controller('/f')
 export class BruceController {
@@ -24,6 +25,9 @@ export class BruceController {
 
   @Inject()
   bruceService: BruceService;
+
+  @Inject()
+  dailyCacheService: DailyCacheService;
 
   @Inject()
   bullFramework: bull.Framework;
@@ -64,7 +68,20 @@ export class BruceController {
   async listInOutFlow(@Body(ALL) body: SumBalanceGroupHeightDTO) {
     let res;
     try {
-      res = await this.bruceService.listInOutByMessage(body);
+      // res = await this.bruceService.listInOutByMessage(body);
+      res = await this.dailyCacheService.listInOutByMessage(body);
+    } catch (e) {
+      this.logger.warn(e);
+    }
+    return res;
+  }
+
+  @Post('/sum_balance_group_height')
+  async sumBalanceGroupHeightByCode(@Body(ALL) body: SumBalanceGroupHeightDTO) {
+    let res;
+    try {
+      // res = await this.bruceService.sumBalanceGroupHeightByCode(body);
+      res = await this.dailyCacheService.sumBalanceGroupHeightByCode(body);
     } catch (e) {
       this.logger.warn(e);
     }
@@ -87,17 +104,6 @@ export class BruceController {
     let res;
     try {
       res = await this.bruceService.monitorDailyTotal();
-    } catch (e) {
-      this.logger.warn(e);
-    }
-    return res;
-  }
-
-  @Post('/sum_balance_group_height')
-  async sumBalanceGroupHeightByCode(@Body(ALL) body: SumBalanceGroupHeightDTO) {
-    let res;
-    try {
-      res = await this.bruceService.sumBalanceGroupHeightByCode(body);
     } catch (e) {
       this.logger.warn(e);
     }

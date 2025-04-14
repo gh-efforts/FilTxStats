@@ -25,6 +25,7 @@ import BigNumber from 'bignumber.js';
 import { LilyMessagesMapping } from '../mapping/lilyMessages';
 
 import * as utc from 'dayjs/plugin/utc';
+import { InOutMessageVO, SumBalanceGroupHeightVO } from '../model/vo/bruce';
 dayjs.extend(utc);
 
 @Provide()
@@ -344,14 +345,16 @@ export class BruceService extends BaseService<ActorsEntity> {
    * 统计净流入流出
    * 接口有点慢，数据在几十万条的级别
    */
-  async listInOutByMessage(body: SumBalanceGroupHeightDTO) {
+  async listInOutByMessage(
+    body: SumBalanceGroupHeightDTO
+  ): Promise<InOutMessageVO[]> {
     let addressIds = body.addressId;
     let timeRange = body.timeRange;
     let heightCycle = body.heightCycle; //步长
     let nowHeight = body.nowHeight; //当前高度
     let unit = body.unit;
 
-    const heightRange = [
+    const heightRange = body.heightRange || [
       getHeightByTime(timeRange[0]),
       getHeightByTime(timeRange[1]),
     ];
@@ -404,14 +407,19 @@ export class BruceService extends BaseService<ActorsEntity> {
       unit,
       true
     );
-    let arr = kds.map(kd => {
-      return {
-        height: kd,
-        time: getTimeByHeight(kd),
-        in: inMap.get(kd) || '0',
-        out: outMap.get(kd) || '0',
-      };
-    });
+    let arr = kds
+      .filter(kd => {
+        return inMap.has(kd) || outMap.has(kd);
+      })
+      .map(kd => {
+        let vo: InOutMessageVO = {
+          height: kd,
+          time: getTimeByHeight(kd),
+          in: inMap.get(kd)?.toNumber() || 0,
+          out: outMap.get(kd)?.toNumber() || 0,
+        };
+        return vo;
+      });
     this.logger.info(`listInOutByMessage js duration: %d`, Date.now() - st);
     return arr;
   }
@@ -750,10 +758,12 @@ export class BruceService extends BaseService<ActorsEntity> {
    * @param body
    * @returns
    */
-  async sumBalanceGroupHeightByCode(body: SumBalanceGroupHeightDTO) {
+  async sumBalanceGroupHeightByCode(
+    body: SumBalanceGroupHeightDTO
+  ): Promise<SumBalanceGroupHeightVO[]> {
     const { addressId, timeRange, heightCycle, unit } = body;
     // 将时间区间转换成高度区间
-    const heightRange = [
+    const heightRange = body.heightRange || [
       getHeightByTime(timeRange[0]),
       getHeightByTime(timeRange[1]),
     ];
@@ -767,10 +777,15 @@ export class BruceService extends BaseService<ActorsEntity> {
       true
     );
 
+    let st = Date.now();
     let allDtMapArr = await Promise.all(
       addressId.map(it => {
         return this._getAddressIdBalance(it, heightRange);
       })
+    );
+    this.logger.info(
+      `sumBalanceGroupHeightByCode sql duration: %d`,
+      Date.now() - st
     );
 
     let allDtMap = allDtMapArr.reduce((acc, curr) => {

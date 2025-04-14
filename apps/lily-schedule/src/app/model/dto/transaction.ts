@@ -48,6 +48,8 @@ export class SumBalanceGroupHeightDTO {
   @Rule(RuleType.array().items(RuleType.string()).length(2).required())
   timeRange: string[];
 
+  heightRange?: number[];
+
   @Rule(RuleType.number().integer().required())
   heightCycle: number;
 
@@ -85,4 +87,12 @@ export enum UnitEnum {
   min = 'min',
   hour = 'hour',
   day = 'day',
+}
+
+export class RefreshDailyCacheDTO {
+  @Rule(RuleType.string().required())
+  dataKey: string;
+
+  @Rule(RuleType.array().items(RuleType.string()).length(2).required())
+  timeRange: string[];
 }

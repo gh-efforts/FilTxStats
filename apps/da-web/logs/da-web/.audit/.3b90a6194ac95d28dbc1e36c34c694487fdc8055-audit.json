@@ -1,0 +1,15 @@
+{
+  "keep": {
+    "days": true,
+    "amount": 31
+  },
+  "auditLog": "/Users/xz/Documents/dws/apps/da-web/logs/da-web/.audit/.3b90a6194ac95d28dbc1e36c34c694487fdc8055-audit.json",
+  "files": [
+    {
+      "date": 1740649281826,
+      "name": "/Users/xz/Documents/dws/apps/da-web/logs/da-web/midway-app.log.2025-02-27",
+      "hash": "a81ce65e4f4bd4745873a1b1cd554a74"
+    }
+  ],
+  "hashType": "md5"
+}
