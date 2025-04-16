@@ -138,7 +138,7 @@ export class DailyCacheService {
       }
 
       ret = cache.map(c => c.dataJson as SumBalanceGroupHeightVO);
-      //判断高度范围是否有超出，有超出部分走查询,然后和缓存拼接
+      //判断高度范围是否有超出，有超出全量刷新缓存，因为余额不能仅仅按一天两天增量查询
       let maxCacheHeight = cache[cache.length - 1].dataHeight;
       if (this.isH1BigH2ByDay(heightRange[1], maxCacheHeight)) {
         this.logger.info(
@@ -148,7 +148,6 @@ export class DailyCacheService {
           maxCacheHeight
         );
         body.heightRange = heightRange;
-        body.heightRange[0] = cache[cache.length - 1].dataHeight;
         let newRows = await this.bruceService.sumBalanceGroupHeightByCode(body);
         this.logger.info(
           `cache overrange, dataKey=%s,heightRange=%j,newRow=%d`,
@@ -157,7 +156,7 @@ export class DailyCacheService {
           newRows && newRows.length
         );
         await this.setCache<SumBalanceGroupHeightVO>(dataKey, newRows);
-        ret = ret.concat(newRows);
+        ret = newRows;
       }
       this.logger.info(`cache hit, dataKey=%s`, dataKey);
       return ret;
