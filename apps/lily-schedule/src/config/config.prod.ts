@@ -1,4 +1,4 @@
-import { MidwayAppInfo, MidwayConfig } from '@midwayjs/core';
+import { MidwayAppInfo, MidwayConfig } from "@midwayjs/core";
 
 export default (appInfo: MidwayAppInfo): MidwayConfig => {
   const config = {} as MidwayConfig;
@@ -11,17 +11,6 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
       host: process.env.REDIS_CLIENT_HOST,
       db: +process.env.REDIS_CLIENT_DB,
       password: process.env.REDIS_CLIENT_PASSWORD,
-    },
-  };
-
-  config.bull = {
-    defaultQueueOptions: {
-      redis: {
-        port: +process.env.REDIS_CLIENT_PORT,
-        host: process.env.REDIS_CLIENT_HOST,
-        db: +process.env.REDIS_CLIENT_DB,
-        password: process.env.REDIS_CLIENT_PASSWORD,
-      },
     },
   };
 
@@ -50,35 +39,17 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     secret: process.env.JWT_SECRET,
   };
 
-  config.logaConfig = {
-    url: process.env.LOGA_URL,
-    token: process.env.LOGA_TOEKN,
-  };
-
-  config.pixiuConfig = {
-    url: process.env.PIXIU_URL,
-  };
-
-  config.galaxyConfig = {
-    url: process.env.GALAXY_URL,
-  };
-
   config.midwayLogger = {
     clients: {
       appLogger: {
-        level: 'info',
-        consoleLevel: 'info',
+        level: "info",
+        consoleLevel: "info",
       },
     },
   };
 
-  config.lotusConfig = {
-    url: process.env.LOGA_URL,
-    token: process.env.LOGA_TOEKN,
-  };
-
   config.koa = {
-    contextLoggerFormat: info => {
+    contextLoggerFormat: (info) => {
       let { ctx, timestamp, LEVEL: level, pid, message } = info;
       ctx = ctx || {};
       const { startTime, method, url, reqId } = ctx;
@@ -94,31 +65,6 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
       };
       return JSON.stringify(obj);
     },
-  };
-
-  config.cronWhiteIP = process.env.CRON_WHITE_IP;
-
-  config.qiNiuYunConfig = {
-    email: process.env.QINIUYUN_EMAIL,
-    password: process.env.QINIUYUN_PASSWORD,
-  };
-
-  config.bull = {
-    defaultQueueOptions: {
-      redis: {
-        port: +process.env.REDIS_CLIENT_PORT,
-        host: process.env.REDIS_CLIENT_HOST,
-        db: +process.env.REDIS_CLIENT_DB,
-        password: process.env.REDIS_CLIENT_PASSWORD,
-      },
-      prefix: '{midway-bull}',
-    },
-    clearRepeatJobWhenStart: true,
-    defaultConcurrency: 10,
-  };
-
-  config.larkConfig = {
-    larkToBruceUrl: process.env.LARK_TO_BRUCE_URL,
   };
 
   return config;

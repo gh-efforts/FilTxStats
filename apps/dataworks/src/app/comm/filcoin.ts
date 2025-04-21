@@ -1,3 +1,0 @@
-export enum FILCACHEKEY {
-  MINERINFO = 'MINERINFO:KEY:',
-}

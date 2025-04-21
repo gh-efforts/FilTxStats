@@ -1,37 +1,34 @@
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 dotenv.config();
 
-import * as bull from '@midwayjs/bull';
 import {
   App,
   Configuration,
   ILifeCycle,
   IMidwayContainer,
   Logger,
-} from '@midwayjs/core';
-import * as crossDomain from '@midwayjs/cross-domain';
-import * as jwt from '@midwayjs/jwt';
-import * as koa from '@midwayjs/koa';
-import { IMidwayLogger } from '@midwayjs/logger';
-import * as redis from '@midwayjs/redis';
-import * as sequlize from '@midwayjs/sequelize';
-import * as swagger from '@midwayjs/swagger';
-import * as validate from '@midwayjs/validate';
-import { join } from 'path';
-
-import * as dwsEntity from '@dws/entity';
-import * as lilyEntity from '@lily/entity';
-import { NotFoundFilter } from './filter/notfound';
-import { AccessLogMiddleware } from './middleware/accessLog';
-import { FormatMiddleware } from './middleware/format';
+} from "@midwayjs/core";
+import * as crossDomain from "@midwayjs/cross-domain";
+import * as jwt from "@midwayjs/jwt";
+import * as koa from "@midwayjs/koa";
+import { IMidwayLogger } from "@midwayjs/logger";
+import * as redis from "@midwayjs/redis";
+import * as sequlize from "@midwayjs/sequelize";
+import * as swagger from "@midwayjs/swagger";
+import * as validate from "@midwayjs/validate";
+import { join } from "path";
+import * as dwsEntity from "@dws/entity";
+import * as lilyEntity from "@lily/entity";
+import { NotFoundFilter } from "./filter/notfound";
+import { AccessLogMiddleware } from "./middleware/accessLog";
+import { FormatMiddleware } from "./middleware/format";
 // import { JwtMiddleware } from './middleware/jwt';
-import { RequestIdMiddleware } from './middleware/requestId';
-import * as bullBoard from '@midwayjs/bull-board';
+import { RequestIdMiddleware } from "./middleware/requestId";
 
-const entity = entity => {
+const entity = (entity) => {
   const arr = [];
-  Object.keys(entity).map(key => {
-    if (new RegExp('Mapping').test(key)) {
+  Object.keys(entity).map((key) => {
+    if (new RegExp("Mapping").test(key)) {
       arr.push(entity[key]);
     }
   });
@@ -39,14 +36,12 @@ const entity = entity => {
 };
 
 @Configuration({
-  importConfigs: [join(__dirname, './config')],
+  importConfigs: [join(__dirname, "./config")],
   conflictCheck: true,
   imports: [
     crossDomain,
     koa,
-    bull,
-    { component: bullBoard, enabledEnvironment: ['local'] },
-    { component: swagger, enabledEnvironment: ['local'] },
+    { component: swagger, enabledEnvironment: ["local"] },
     redis,
     validate,
     sequlize,
@@ -69,8 +64,6 @@ export class ContainerLifeCycle implements ILifeCycle {
       // JwtMiddleware,
     ]);
     this.app.useFilter([NotFoundFilter]);
-
-    // console.log(this.app.getConfig('sequelize'));
   }
 
   async onServerReady(container: IMidwayContainer): Promise<void> {}

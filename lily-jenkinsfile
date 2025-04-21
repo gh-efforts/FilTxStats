@@ -68,26 +68,9 @@ pipeline{
             }
             steps {
                 container ('nodejs') {
-                    git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
+                    git(url: 'https://*.*.com/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
                     sh 'sed -i "s/cryptomint_HHJKKK/$APP_NAME/g" lark.sh'
                     sh "bash lark.sh $envir"
-                }
-        stage('Build') {
-            when {
-                branch pattern: 'lily-schedule-test|lily-schedule-master', comparator: "REGEXP"
-            }
-            steps {
-                script {
-                    container ('nodejs') {
-                        def tag_name = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-                        sh "echo $tag_name > tag_name.txt"
-                        image_name = "$DOCKER_REGISTRY/$DOCKER_NAMESPACE/$APP_NAME-$BRANCH_NAME:$tag_name"
-                        sh "docker build -f apps/lily-schedule/DockerFile -t $image_name ."
-                        withCredentials([usernamePassword(passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME', credentialsId: "$DOCKER_CREDENTIAL_ID",)]) {
-                            sh 'echo "$DOCKER_PASSWORD" | docker login $DOCKER_REGISTRY -u "$DOCKER_USERNAME" --password-stdin'
-                            sh "docker push $image_name"
-                        }
-                    }
                 }
             }
         }
@@ -129,9 +112,9 @@ pipeline{
             }
             steps {
                 container ('nodejs') {
-                    git(url: 'https://gitlab.diancun.net/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
-                    sh 'sed -i "s/cryptomint_HHJKKK/$APP_NAME/g" lark.sh'
-                    sh 'bash lark.sh $envir'
+                    git(url: 'https://*.*.com/cryptomint.space/code-depoly.git', credentialsId: 'gitlab-ce', branch: 'master', changelog: true, poll: false)
+                    sh 'sed -i "s/cryptomint_HHJKKK/$APP_NAME/g" lark.sh'                   
+                    sh 'bash lark.sh prod'
                 }
             }
         }

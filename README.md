@@ -1,86 +1,92 @@
-### 简介
+# FilTxStats
 
-### 待办事项
+### Project Summary
+This is a data monitoring dashboard for filcoin miner, which can batch monitor the balance changes, net inflows, net outflows, detailed transaction data of miner of a batch of nodes; 
 
-- [x] 项目框架搭建 01.12-01.13
+key feature:
+- The supported time dimension exceeds the maximum of over one year and the minimum can be detailed to one filcoin epoch. 
+- It is capable of automatically accumulating and calculating the data of multiple selected nodes.
+- To achieve a query speed of less than 500ms, the table data is reduced by creating database triggers shim big table, and the existing queries are accelerated by establishing caches. Two methods are used to realize the rapid calculation of data at the level of 500k rows
 
-- [x] 矿工管理（CRUD）01.29-01.30
 
-- [x] 节点业务属性（CRUD）01.29-01.30
+### Demo
+![Demo Image](image/20250421-173209.jpeg) 
 
-- [x] 节点统计（所有节点，遍历 lotus 接口）01.31-02.03
 
-- [x] 节点列表（节点分页，遍历 lotus 接口）01.31-02.03
+### Data Source
+Our data read from the lily database. We obtain transaction data from the messages table and balance data from the actors table
 
-- [x] 节点的 owner、worker、control 地址（节点分页，遍历 lotus 接口）02.06-02.08
 
-- [x] 业务地址（从 bank_monitor 中把业务地址导过来，钱包地址分页展示、统计所有钱包地址余额）02.09-02.10
-
-- [x] 资金流转（lily 数据库查询、长短地址转换接口）02.13-02.17
-
-- [x] 明细表（lily 数据库查询）02.20-02.21
-
-- [x] 下载功能 02.22-02.24
-
-- [x] 前后端联调 02.27-03.03
-
-### Apps and Packages
-
-- `insight`: a [Midwayjs](http://www.midwayjs.org/) server，向千里眼提供接口服务
-- `insight-entity`: insight 服务数据库的 entity 文件
-- `lily-entity`: lily 数据库的 entity 文件
-
-### Script
-
-- `dev_mode`: 将`packages`中的包的 package.json 文件的 main 与 types 字段指向 ts 文件。用于本地开发
-- `build_mode`: 将`packages`中的包的 package.json 文件的 main 与 types 字段指向 js 文件。用于构建部署
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd data-warehouse
-npm run build_mode
-npm run build
-```
 
 ### Develop
 
-To develop all apps and packages, run the following command:
+1. Install node.js. A version larger than v16 is better.
+2. Clone project
+3. Create a mysql database
+  ```sql
+  CREATE TABLE `exchange_address` (
+    `id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'pk id',
+    `exchange` varchar(255) NOT NULL COMMENT 'virtual currency exchange name',
+    `address_name` varchar(255) NOT NULL COMMENT 'address tag name',
+    `address_id` varchar(32) NOT NULL COMMENT 'address id',
+    `address` varchar(128) NOT NULL COMMENT 'address',
+    `type` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT 'wallet type 1=>collect wallet；2=>cold wallet',
+    `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `idx_address_id` (`address_id`) USING BTREE,
+    KEY `idx_address` (`address`(32)) USING BTREE
+  ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COMMENT='Virtual currency exchange address';
 
-```
-cd data-warehouse
-npm run dev_mode
-npm run dev
-```
+  CREATE TABLE `global_config` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) NOT NULL COMMENT 'config name',
+  `value` varchar(255) NOT NULL DEFAULT '' COMMENT 'config value',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='global config';
 
-### 打包服务为 docker 镜像
+  ```
+4. Search for or build a lily data sources by yourself
+5. Create a .env config in location:  apps/lily-schedule/.env
+  ```properties
+  REAL_ENV='local'
 
-在根目录下运行
+  # mysql
+  DATABASE_HOST='mysql host'
+  DATABASE_PORT=3306
+  DATABASE_USERNAME=''
+  DATABASE_PASSWORD=''
+  DATABASE_DATABASE=''
+
+  # lily
+  PG_DATABASE_HOST='lily host'
+  PG_DATABASE_PORT=5432
+  PG_DATABASE_USERNAME=''
+  PG_DATABASE_PASSWORD=''
+  PG_DATABASE_DATABASE=''
+
+
+  # redis
+  REDIS_CLIENT_PORT=6379
+  REDIS_CLIENT_HOST='127.0.0.1'
+  REDIS_CLIENT_PASSWORD=''
+  REDIS_CLIENT_DB=0
+
+  # lark robot url
+  LARK_TO_BRUCE_URL=''
+  ```
+6. Go to apps/lily-schedule and run this project
+  ```shell
+  npm run dev
+  ```
+
+### Deploy
+
+run docker build in app root directory
 
 ```shell
-docker build -f ./apps/insight/DockerFile -t insight:1.0.0 .
-```
 
-### 目录视图
+docker build -f ./apps/lily-schedule/DockerFile -t filtxstats:1.0.0 .
 
-```js
-data-warehouse
-├─ .eslintrc.json
-├─ .gitignore
-├─ .prettierrc.js
-├─ README.md
-├─ apps
-│  └─ insight        // 主服务，向前端提供接口服务
-├─ package-lock.json
-├─ package.json
-├─ packages
-│  ├─ insight-entity // insight 服务数据库的 entity 文件
-│  └─ lily-entity    // lily 数据库的 entity 文件
-│  └─ loga           // 封装所有调用loga服务的请求
-├─ script
-│  └─ dev_mode.js
-│  └─ build_mode.js
-└─ turbo.json
 ```

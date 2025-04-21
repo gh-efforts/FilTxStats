@@ -1,4 +1,4 @@
-import { MidwayConfig, MidwayAppInfo } from '@midwayjs/core';
+import { MidwayConfig, MidwayAppInfo } from "@midwayjs/core";
 
 export default (appInfo: MidwayAppInfo): MidwayConfig => {
   const config = {} as MidwayConfig;
@@ -11,17 +11,6 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
       host: process.env.REDIS_CLIENT_HOST,
       db: +process.env.REDIS_CLIENT_DB,
       password: process.env.REDIS_CLIENT_PASSWORD,
-    },
-  };
-
-  config.bull = {
-    defaultQueueOptions: {
-      redis: {
-        port: +process.env.REDIS_CLIENT_PORT,
-        host: process.env.REDIS_CLIENT_HOST,
-        db: +process.env.REDIS_CLIENT_DB,
-        password: process.env.REDIS_CLIENT_PASSWORD,
-      },
     },
   };
 
@@ -50,42 +39,18 @@ export default (appInfo: MidwayAppInfo): MidwayConfig => {
     secret: process.env.JWT_SECRET,
   };
 
-  config.logaConfig = {
-    url: process.env.LOGA_URL,
-    token: process.env.LOGA_TOEKN,
-  };
-
-  config.pixiuConfig = {
-    url: process.env.PIXIU_URL,
-  };
-
-  config.galaxyConfig = {
-    url: process.env.GALAXY_URL,
-  };
-
   config.midwayLogger = {
     clients: {
       default: {
-        fileLogName: 'insight',
-        level: 'info',
-        consoleLevel: 'info',
+        fileLogName: "insight",
+        level: "info",
+        consoleLevel: "info",
       },
       appLogger: {
         enableJSON: false,
         enableFile: true,
       },
     },
-  };
-
-  config.cronWhiteIP = process.env.CRON_WHITE_IP;
-
-  config.qiNiuYunConfig = {
-    email: process.env.QINIUYUN_EMAIL,
-    password: process.env.QINIUYUN_PASSWORD,
-  };
-
-  config.larkConfig = {
-    larkToBruceUrl: process.env.LARK_TO_BRUCE_URL,
   };
 
   return config;

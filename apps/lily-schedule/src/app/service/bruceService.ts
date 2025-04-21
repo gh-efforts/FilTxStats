@@ -2,30 +2,27 @@ import {
   ActorsEntity,
   ExchangeAddressMapping,
   GlobalConfigMapping,
-} from '@dws/entity';
-import { Config, Init, Inject, Provide, Logger } from '@midwayjs/core';
-import * as dayjs from 'dayjs';
-import { Op } from 'sequelize';
-import { BaseService } from '../../core/baseService';
-import { ILogger } from '@midwayjs/logger';
+} from "@dws/entity";
+import { Config, Init, Inject, Provide, Logger } from "@midwayjs/core";
+import * as dayjs from "dayjs";
+import { Op } from "sequelize";
+import { BaseService } from "../../core/baseService";
+import { ILogger } from "@midwayjs/logger";
 import {
   getHeightByTime,
   getTimeByHeight,
   getTimeByHeightRaw,
   transferFilValue,
-} from '@dws/utils';
-import * as bull from '@midwayjs/bull';
-import _ = require('lodash');
-import { SumBalanceGroupHeightDTO, UnitEnum } from '../model/dto/transaction';
-import * as dwsentity from '@dws/entity';
-import * as lilymessageentity from '@lilymessages/entity';
-import { bigMul, bigAdd } from 'happy-node-utils';
-import MyError from '../comm/myError';
-import BigNumber from 'bignumber.js';
-import { LilyMessagesMapping } from '../mapping/lilyMessages';
-
-import * as utc from 'dayjs/plugin/utc';
-import { InOutMessageVO, SumBalanceGroupHeightVO } from '../model/vo/bruce';
+} from "@dws/utils";
+import _ = require("lodash");
+import { SumBalanceGroupHeightDTO, UnitEnum } from "../model/dto/transaction";
+import * as lilyEntity from "@lily/entity";
+import { bigMul, bigAdd } from "happy-node-utils";
+import MyError from "../comm/myError";
+import BigNumber from "bignumber.js";
+import * as utc from "dayjs/plugin/utc";
+import { InOutMessageVO, SumBalanceGroupHeightVO } from "../model/vo/bruce";
+import { LilyService } from "../../core/lily";
 dayjs.extend(utc);
 
 @Provide()
@@ -37,33 +34,18 @@ export class BruceService extends BaseService<ActorsEntity> {
   exchangeAddressMapping: ExchangeAddressMapping;
 
   @Inject()
-  dwsActorMapping: dwsentity.ActorsMapping;
+  lilyActorsMapping: lilyEntity.ActorsMapping;
 
   @Inject()
-  dwsMessageMapping: dwsentity.MessagesMapping;
-
-  @Inject()
-  lilyActorsMapping: lilyentity.ActorsMapping;
-
-  @Inject()
-  lilyMessagesMapping: lilyentity.MessagesMapping;
-
-  @Inject()
-  bullFramework: bull.Framework;
+  lilyMessagesMapping: lilyEntity.MessagesMapping;
 
   @Inject()
   globalConfigMapping: GlobalConfigMapping;
 
   @Inject()
-  lilyMapping: LilyMessagesMapping;
+  lilyService: LilyService;
 
-  @Config('lotusConfig')
-  lotusConfig: {
-    url: string;
-    token: string;
-  };
-
-  @Config('larkConfig')
+  @Config("larkConfig")
   larkConfig: {
     larkToBruceUrl: string;
   };
@@ -78,7 +60,7 @@ export class BruceService extends BaseService<ActorsEntity> {
   private _getHeightByUtcTime(timeStr: string | Date) {
     const height =
       Math.floor(
-        dayjs(timeStr).diff(dayjs('2023-01-01 00:00:00'), 'second') / 30
+        dayjs(timeStr).diff(dayjs("2023-01-01 00:00:00"), "second") / 30
       ) + 2474160;
     return height;
   }
@@ -86,15 +68,15 @@ export class BruceService extends BaseService<ActorsEntity> {
   // 获取高度对应的utc时间
   _getUtcTimeByHeight(
     height: number,
-    format: string = 'YYYY-MM-DD HH:mm:ss'
+    format: string = "YYYY-MM-DD HH:mm:ss"
   ): string {
     const timeStr = this._getUtcTimeByHeightRaw(height).format(format);
     return timeStr;
   }
   private _getUtcTimeByHeightRaw(height: number): dayjs.Dayjs {
-    const timeStr = dayjs('2023-01-01 00:00:00').add(
+    const timeStr = dayjs("2023-01-01 00:00:00").add(
       (height - 2474160) * 30,
-      'second'
+      "second"
     );
     return timeStr;
   }
@@ -105,13 +87,13 @@ export class BruceService extends BaseService<ActorsEntity> {
    */
   public async checkActorSyncDelay() {
     const maxHeight = await this.lilyActorsMapping.getModel().findOne({
-      attributes: ['addressId', 'height'],
-      order: [['height', 'desc']],
+      attributes: ["addressId", "height"],
+      order: [["height", "desc"]],
       raw: true,
     });
-    const nowHeight = getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss'));
+    const nowHeight = getHeightByTime(dayjs().format("YYYY-MM-DD HH:mm:ss"));
     this.logger.info(
-      'checkActorSyncDelay, maxHeight:%s, nowHeight:%s',
+      "checkActorSyncDelay, maxHeight:%s, nowHeight:%s",
       nowHeight,
       maxHeight.height
     );
@@ -221,7 +203,7 @@ export class BruceService extends BaseService<ActorsEntity> {
         0
       );
     } else {
-      throw new Error('无效的单位');
+      throw new Error("无效的单位");
     }
 
     let unitMillis: number;
@@ -244,7 +226,7 @@ export class BruceService extends BaseService<ActorsEntity> {
         quantity = heightCycle / 2880;
         break;
       default:
-        throw new Error('无效的单位');
+        throw new Error("无效的单位");
     }
 
     // 计算时间差
@@ -324,7 +306,7 @@ export class BruceService extends BaseService<ActorsEntity> {
     // );
     // let ret: any[] = sret;
     let ret = await this.lilyMessagesMapping.getModel().findAll({
-      attributes: ['from', 'to', 'value', 'height'],
+      attributes: ["from", "to", "value", "height"],
       where: {
         height: {
           [Op.between]: heightRange,
@@ -335,7 +317,7 @@ export class BruceService extends BaseService<ActorsEntity> {
           to: addressIds,
         },
       },
-      order: [['height', 'desc']],
+      order: [["height", "desc"]],
       raw: true,
     });
     return ret;
@@ -408,10 +390,10 @@ export class BruceService extends BaseService<ActorsEntity> {
       true
     );
     let arr = kds
-      .filter(kd => {
+      .filter((kd) => {
         return inMap.has(kd) || outMap.has(kd);
       })
-      .map(kd => {
+      .map((kd) => {
         let vo: InOutMessageVO = {
           height: kd,
           time: getTimeByHeight(kd),
@@ -434,8 +416,8 @@ export class BruceService extends BaseService<ActorsEntity> {
       where,
       limit,
       offset: offset > 0 ? offset : 0,
-      order: [['height', 'desc']],
-      attributes: ['cid', 'height', 'from', 'to', 'method', 'value'],
+      order: [["height", "desc"]],
+      attributes: ["cid", "height", "from", "to", "method", "value"],
     });
     return res;
   }
@@ -445,7 +427,7 @@ export class BruceService extends BaseService<ActorsEntity> {
     const [config, addressObj] = await Promise.all([
       this.globalConfigMapping
         .getModel()
-        .findOne({ where: { name: 'Bruce监控' } }),
+        .findOne({ where: { name: "Bruce监控" } }),
       this.exchangeAddressMapping.getObj(),
     ]);
 
@@ -457,7 +439,7 @@ export class BruceService extends BaseService<ActorsEntity> {
       JSON.parse(config.value);
 
     // 获取当前时间的高度
-    const now = dayjs().format('YYYY-MM-DD HH:mm:ss');
+    const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
     const nowHeight = getHeightByTime(now);
 
     // 计算要查询的高度区间
@@ -477,7 +459,7 @@ export class BruceService extends BaseService<ActorsEntity> {
       .getModel()
       .findAll({ where });
 
-    let content = '';
+    let content = "";
     for (const message of messages) {
       const value = transferFilValue(message.value);
 
@@ -494,8 +476,8 @@ export class BruceService extends BaseService<ActorsEntity> {
         value,
         1
       ).toFormat(0, {
-        decimalSeparator: '.',
-        groupSeparator: ',',
+        decimalSeparator: ".",
+        groupSeparator: ",",
         groupSize: 3,
       })} FIL\n`;
     }
@@ -509,9 +491,9 @@ export class BruceService extends BaseService<ActorsEntity> {
     if (content) {
       this.utils.httpRequest({
         url: this.larkConfig.larkToBruceUrl,
-        method: 'POST',
+        method: "POST",
         data: this._larkCardTemplate({
-          title: '大额交易流入提醒',
+          title: "大额交易流入提醒",
           content,
         }),
       });
@@ -539,10 +521,7 @@ export class BruceService extends BaseService<ActorsEntity> {
    * 累加拆分 in out
    * @param ret
    */
-  private _plusInOut(
-    ret: lilymessageentity.MessagesEntity[],
-    addressArr: string[]
-  ) {
+  private _plusInOut(ret: lilyEntity.MessagesEntity[], addressArr: string[]) {
     let inv: BigNumber = new BigNumber(0);
     let out: BigNumber = new BigNumber(0);
     let addressSet: Set<string> = new Set(addressArr);
@@ -573,38 +552,38 @@ export class BruceService extends BaseService<ActorsEntity> {
   async monitorDailyTotal() {
     const config = await this.globalConfigMapping
       .getModel()
-      .findOne({ where: { name: 'Bruce监控' } });
+      .findOne({ where: { name: "Bruce监控" } });
 
     const { dailyTotal }: { dailyTotal: number } = JSON.parse(config.value);
 
     // 获取当前时间的高度
-    const today = dayjs().format('YYYY-MM-DD');
-    const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+    const today = dayjs().format("YYYY-MM-DD");
+    const yesterday = dayjs().subtract(1, "day").format("YYYY-MM-DD");
     // 计算要查询的高度区间
     const heightRange = [
-      getHeightByTime(yesterday + ' 08:00:01'),
-      getHeightByTime(today + ' 08:00:00'),
+      getHeightByTime(yesterday + " 08:00:01"),
+      getHeightByTime(today + " 08:00:00"),
     ];
 
     // 获取交易所列表
     const exchangeList = await this.exchangeAddressMapping.getModel().findAll();
-    let binanAddrs = exchangeList.filter(e => e.exchange == '币安');
-    let okxAddrs = exchangeList.filter(e => e.exchange == 'OKX');
-    let allAddr = exchangeList.map(e => e.address);
+    let binanAddrs = exchangeList.filter((e) => e.exchange == "币安");
+    let okxAddrs = exchangeList.filter((e) => e.exchange == "OKX");
+    let allAddr = exchangeList.map((e) => e.address);
 
     //查询交易
     let ret = await this._listAllMsg(heightRange, allAddr);
     let binanJing = this._plusInOut(
       ret,
-      binanAddrs.map(e => e.address)
+      binanAddrs.map((e) => e.address)
     );
     let okxJing = this._plusInOut(
       ret,
-      okxAddrs.map(e => e.address)
+      okxAddrs.map((e) => e.address)
     );
 
     // 遍历交易所
-    let content = '';
+    let content = "";
 
     // 如果净值超过dailyTotal，则加入content
     const binanFil = transferFilValue(
@@ -615,8 +594,8 @@ export class BruceService extends BaseService<ActorsEntity> {
         transferFilValue(binanJing.jing.toString()),
         1
       ).toFormat(0, {
-        decimalSeparator: '.',
-        groupSeparator: ',',
+        decimalSeparator: ".",
+        groupSeparator: ",",
         groupSize: 3,
       })} FIL\n`;
     }
@@ -627,8 +606,8 @@ export class BruceService extends BaseService<ActorsEntity> {
         transferFilValue(okxJing.jing.toString()),
         1
       ).toFormat(0, {
-        decimalSeparator: '.',
-        groupSeparator: ',',
+        decimalSeparator: ".",
+        groupSeparator: ",",
         groupSize: 3,
       })} FIL\n`;
     }
@@ -643,9 +622,9 @@ export class BruceService extends BaseService<ActorsEntity> {
 
       this.utils.httpRequest({
         url: this.larkConfig.larkToBruceUrl,
-        method: 'POST',
+        method: "POST",
         data: this._larkCardTemplate({
-          title: '每日净值增量提醒',
+          title: "每日净值增量提醒",
           content,
         }),
       });
@@ -654,9 +633,9 @@ export class BruceService extends BaseService<ActorsEntity> {
     return true;
   }
 
-  private _larkCardTemplate({ title, template = 'red', content = '' }) {
+  private _larkCardTemplate({ title, template = "red", content = "" }) {
     const cardTemplate = {
-      msg_type: 'interactive',
+      msg_type: "interactive",
       card: {
         config: {
           wide_screen_mode: true,
@@ -664,16 +643,16 @@ export class BruceService extends BaseService<ActorsEntity> {
         header: {
           template: template,
           title: {
-            tag: 'plain_text',
+            tag: "plain_text",
             content: title,
           },
         },
         elements: [
           {
-            tag: 'div',
+            tag: "div",
             text: {
               content: content,
-              tag: 'lark_md',
+              tag: "lark_md",
             },
           },
         ],
@@ -685,7 +664,7 @@ export class BruceService extends BaseService<ActorsEntity> {
   // 获取地址的余额（补足缺失高度的余额）
   private async _getAddressIdBalance(id: string, heightRange: number[]) {
     // 获取高度区间内的actors数据
-    let actors: { id; height; balance }[] = await this.lilyMapping.query(
+    let actors: { id; height; balance }[] = await this.lilyService.query(
       `SELECT
         "id",
         "height",
@@ -708,7 +687,7 @@ export class BruceService extends BaseService<ActorsEntity> {
     }
 
     if (Number(actors[0].height) !== heightRange[0]) {
-      let actor: { id; height; balance }[] = await this.lilyMapping.query(
+      let actor: { id; height; balance }[] = await this.lilyService.query(
         `SELECT
           "id",
           "height",
@@ -772,14 +751,14 @@ export class BruceService extends BaseService<ActorsEntity> {
     let keDus = await this.getKeDuHeights(
       heightRange,
       heightCycle,
-      getHeightByTime(dayjs().format('YYYY-MM-DD HH:mm:ss')),
+      getHeightByTime(dayjs().format("YYYY-MM-DD HH:mm:ss")),
       unit,
       true
     );
 
     let st = Date.now();
     let allDtMapArr = await Promise.all(
-      addressId.map(it => {
+      addressId.map((it) => {
         return this._getAddressIdBalance(it, heightRange);
       })
     );
@@ -795,13 +774,13 @@ export class BruceService extends BaseService<ActorsEntity> {
       return acc;
     }, new Map<string, string>());
 
-    let ret = keDus.map(kd => {
+    let ret = keDus.map((kd) => {
       return {
         height: kd,
         balance: addressId.reduce((pre, cur) => {
           const key = `${cur}_${kd}`;
-          return bigAdd(pre, allDtMap.get(key) || '0').toString();
-        }, '0'),
+          return bigAdd(pre, allDtMap.get(key) || "0").toString();
+        }, "0"),
         time: getTimeByHeight(kd),
       };
     });
