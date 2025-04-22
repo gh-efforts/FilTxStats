@@ -6,7 +6,7 @@ RUN apk update
 WORKDIR /home
 COPY . .
 
-RUN npm install --registry=https://npm.i.cool/  -g turbo@1.6.3
+RUN npm install  -g turbo@1.6.3
 RUN npm run build_mode
 RUN turbo prune --scope=lily-schedule --docker
 
@@ -19,7 +19,7 @@ WORKDIR /home
 COPY --from=builder /home/out/json/ .
 COPY --from=builder /home/out/package-lock.json ./package-lock.json
 COPY .gitignore .gitignore
-RUN npm install --registry=https://npm.i.cool/ 
+RUN npm install
 
 COPY turbo.json turbo.json
 COPY --from=builder /home/out/full/ .
