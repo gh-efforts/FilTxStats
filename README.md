@@ -46,6 +46,15 @@ Our data read from the lily database. We obtain transaction data from the messag
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='global config';
 
+CREATE TABLE `daily_cache` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `data_key` varchar(500) NOT NULL COMMENT '数据 key',
+  `data_height` int(11) NOT NULL COMMENT '数据高度',
+  `data_json` json DEFAULT NULL COMMENT '数据存储',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_key_height` (`data_key`,`data_height`)
+) ENGINE=InnoDB AUTO_INCREMENT=3209 DEFAULT CHARSET=utf8mb4;
+
   ```
 4. Search for or build a lily data sources by yourself
 5. Create a .env config in location:  apps/lily-schedule/.env

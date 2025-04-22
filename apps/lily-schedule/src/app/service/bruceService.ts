@@ -28,7 +28,7 @@ dayjs.extend(utc);
 @Provide()
 export class BruceService extends BaseService<ActorsEntity> {
   @Inject()
-  mapping: lilyentity.ActorsMapping;
+  mapping: lilyEntity.ActorsMapping;
 
   @Inject()
   exchangeAddressMapping: ExchangeAddressMapping;
